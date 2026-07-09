@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, parse } from "date-fns";
 import { Clock, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
+import { ProgressIndicator } from "/components/ProgressIndicator";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/time")({
   component: TimePickerPage,
@@ -13,14 +17,19 @@ export const Route = createFileRoute("/time")({
 const QUICK = ["18:00", "19:30", "20:00", "21:00"];
 
 function pretty(time: string) {
-  return format(parse(time, "HH:mm", new Date()), "h:mm a");
+  return format(parse(time, "hh:mm"), "h:mm a");
 }
 
 function TimePickerPage() {
   const navigate = useNavigate();
-  const { time, setTime, date } = useDateStore();
+  const { time, setTime, date, setStep } = useDateStore();
   const [value, setValue] = useState(time ?? "");
   const [error, setError] = useState<string | null>(null);
+
+  // Set current step (time is step 5)
+  useEffect(() => {
+    setStep(5);
+  }, [setStep]);
 
   // Guard: if someone deep-links here without a date, send them back.
   if (!date && typeof window !== "undefined") {
@@ -36,9 +45,30 @@ function TimePickerPage() {
     navigate({ to: "/movie" });
   };
 
+  // Get a time-related message
+  const timeMessage = useRandomMessage("time");
+
   return (
-    <PageShell particles={12}>
-      <div className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9">
+    <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={5} totalSteps={6} />
+      </div>
+
+      {timeMessage && (
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
+          "{timeMessage}"
+        </p>
+      )}
+
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
+      >
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
           <Clock className="h-8 w-8" />
         </div>
@@ -91,7 +121,7 @@ function TimePickerPage() {
         <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
           Next <ArrowRight className="h-5 w-5" />
         </AnimatedButton>
-      </div>
+      </motion.div>
     </PageShell>
   );
 }

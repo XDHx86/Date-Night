@@ -1,0 +1,15 @@
+# Commit Message Convention
+
+# Type:  feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+# Scope: (optional) module or component name
+# Subject: imperative mood, max 50 chars, no period
+#
+# Body:  detailed explanation, wrap at 72 chars
+# Footer:  references to issues, breaking changes
+
+# Example:
+# feat(auth): add JWT token refresh endpoint
+#
+# Added refresh token endpoint to improve authentication flow.
+# Fixes #123
+# BREAKING CHANGE: old token format no longer supported
