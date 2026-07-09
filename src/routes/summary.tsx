@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format, parse, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarHeart, Clock, Film, Heart } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
@@ -10,6 +12,7 @@ import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/summary")({
   component: SummaryPage,
@@ -40,6 +43,7 @@ function SummaryPage() {
       value: time ? format(parse(time, "HH:mm", new Date()), "h:mm a") : "—",
     },
     { icon: Film, label: "Movie", value: movie?.title ?? "—" },
+    { icon: Clock, label: "Duration", value: movie?.duration ? `${movie.duration} min` : "—" },
   ];
 
   const confirm = () => {
@@ -49,6 +53,36 @@ function SummaryPage() {
 
   // Get a romantic message for this screen
   const romanticMessage = useRandomMessage("romantic");
+
+  const handleShare = async () => {
+    const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
+    const url = new URL(window.location.origin + window.location.pathname);
+    if (date) url.searchParams.set("date", date);
+    if (time) url.searchParams.set("time", time);
+    if (movie) url.searchParams.set("movie", movie.id.toString());
+    if (loveMessage) url.searchParams.set("love", loveMessage);
+    if (isDarkMode) url.searchParams.set("theme", "dark");
+
+    const shareUrl = url.toString();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Our Date Night",
+          text: "Check out our date plan!",
+          url: shareUrl,
+        });
+        toast.success("Link shared!");
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied to clipboard! resetting...");
+      }
+    } catch (err) {
+      // fallback to clipboard if share failed
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard! (fallback)");
+    }
+  };
 
   return (
     <PageShell>
@@ -83,18 +117,19 @@ function SummaryPage() {
           <div className="mb-6">
             <h2 className="mb-2 text-lg font-medium text-muted-foreground">
               Countdown to our date
-            </p>
-            <CountdownTimer dateString={date} />
+            </h2>
+            {/* Combine date and time for accurate countdown - default to midnight if no time */}
+            <CountdownTimer dateTimeString={`${date}T${time || '00:00'}:00`} />
           </div>
         )}
 
         {movie && (
           <div
             className="mx-auto mt-6 flex h-28 w-28 items-center justify-center rounded-2xl text-5xl shadow-[var(--shadow-soft)]"
-            style={{ backgroundImage: movie.posterGradient }}
             aria-hidden
           >
-            {movie.emoji}
+            {/* Show first letter of movie title as placeholder */}
+            {movie.title.charAt(0).toUpperCase()}
           </div>
         )}
 
@@ -119,12 +154,12 @@ function SummaryPage() {
 
         {movie && (
           <div className="mt-4 flex flex-wrap justify-center gap-1">
-            {movie.genres.map((g) => (
+            {movie.tags.map((tag) => (
               <span
-                key={g}
+                key={tag}
                 className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"
               >
-                {g}
+                {tag}
               </span>
             ))}
           </div>
@@ -133,6 +168,9 @@ function SummaryPage() {
         <p className="mt-6 text-xl font-bold text-primary">Let's gooooo 🥹</p>
 
         <div className="mt-6 flex flex-col gap-3">
+          <AnimatedButton variant="no" size="md" onClick={handleShare}>
+            Share our date plan 📤
+          </AnimatedButton>
           <AnimatedButton variant="yes" size="md" onClick={confirm}>
             Confirm our date ❤️
           </AnimatedButton>
