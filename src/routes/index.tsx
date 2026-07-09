@@ -6,6 +6,10 @@ import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { HeartBurst } from "@/components/HeartBurst";
 import { sounds } from "@/lib/sound";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { useDateStore } from "@/lib/store";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -13,8 +17,14 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
+  const { step, setStep } = useDateStore();
   const [burst, setBurst] = useState(false);
   const [yesText, setYesText] = useState<string | null>(null);
+
+  // Set step to 1 (landing page)
+  useEffect(() => {
+    setStep(1);
+  }, [setStep]);
 
   const handleYes = () => {
     sounds.celebrate();
@@ -24,9 +34,26 @@ function Landing() {
     setTimeout(() => navigate({ to: "/confirmation" }), 2200);
   };
 
+  // Get a playful or encouraging message for the landing page
+  const openingMessage = useRandomMessage("encouragement");
+
   return (
     <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={1} totalSteps={6} />
+      </div>
+
       <HeartBurst active={burst} />
+
+      {openingMessage && (
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
+          "{openingMessage}"
+        </p>
+      )}
 
       <motion.img
         src={landingImg}

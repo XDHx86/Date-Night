@@ -1,11 +1,12 @@
 /**
- * Movie catalog + search.
+ * Movie catalog + search with TMDB integration.
  *
  * Data is normalized into a single `Movie` interface so a live provider
- * (e.g. TMDb) can be swapped in later behind `searchMovies` without touching
- * any UI code. The MVP ships with a curated offline catalog so the experience
- * never breaks — no API keys, no network failures.
+ * (e.g. TMDB) can be used when API keys are available, falling back to
+ * the curated offline catalog when needed.
  */
+
+import { env } from "./env";
 
 export interface Movie {
   id: string;
@@ -15,12 +16,51 @@ export interface Movie {
   runtime: number; // minutes
   genres: string[];
   overview: string;
-  /** Gradient used to render a poster when no image is available. */
+  /** Poster URL from TMDB or gradient for fallback */
+  posterUrl?: string;
+  posterGradient: string;
+  /** Backdrop URL for background effects */
+  backdropUrl?: string;
+  /** Whether this is a staff/recommended pick */
+  isRecommendation?: boolean;
+  emoji: string;
+}
+
+// TMDB API response types
+interface ТmdbMovie {
+  id: number;
+  title: string;
+  release_date: string;
+  vote_average: number;
+  runtime: number;
+  genres: { id: number; name: string }[];
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}
+
+interface ТmdbResponse {
+  page: number;
+  results: ТmdbMovie[];
+  total_pages: number;
+  total_results: number;
+}
+
+// Legacy movie interface for backward compatibility during transition
+interface LegacyMovie {
+  id: string;
+  title: string;
+  year: number;
+  rating: number;
+  runtime: number;
+  genres: string[];
+  overview: string;
   posterGradient: string;
   emoji: string;
 }
 
-export const MOVIES: Movie[] = [
+// Current curated catalog (fallback)
+const LEGACY_MOVIES: LegacyMovie[] = [
   {
     id: "httyd",
     title: "How to Train Your Dragon",
@@ -164,24 +204,201 @@ export const MOVIES: Movie[] = [
       "A weary laundromat owner must connect with parallel-universe versions of herself to save existence.",
     posterGradient: "linear-gradient(160deg, oklch(0.55 0.18 330), oklch(0.45 0.16 200))",
     emoji: "🥯",
-  },
+  }
 ];
 
-/** Movies surfaced first on the picker page. */
-export const SUGGESTED_MOVIES: Movie[] = [MOVIES[0], MOVIES[1], MOVIES[2]];
+/**
+ * Movies surfaced first on the picker page.
+ */
+export const SUGGESTED_MOVIES: Movie[] = [
+  {
+    ...LEGACY_MOVIES[0],
+    id: LEGACY_MOVIES[0].id,
+    isRecommendation: false
+  },
+  {
+    ...LEGACY_MOVIES[1],
+    id: LEGACY_MOVIES[1].id,
+    isRecommendation: false
+  },
+  {
+    ...LEGACY_MOVIES[2],
+    id: LEGACY_MOVIES[2].id,
+    isRecommendation: true // Mark first movie as recommendation by default
+  }
+];
 
 /**
- * Search the catalog by title, genre or year.
- * Async + provider-agnostic so a real API can replace the body later.
+ * Converts a TMDB movie to our internal Movie format
+ */
+const mapTmdbToMovie = (tmdbMovie: ТmdbMovie): Movie => {
+  const releaseDate = new Date(tmdbMovie.release_date);
+  const year = releaseDate.getFullYear();
+
+  // Convert vote_average (out of 10) to our rating scale (already out of 10)
+  const rating = tmdbMovie.vote_average;
+
+  return {
+    id: tmdbMovie.id.toString(),
+    title: tmdbMovie.title,
+    year: year,
+    rating: rating,
+    runtime: tmdbMovie.runtime,
+    genres: tmdbMovie.genres.map(g => g.name),
+    overview: tmdbMovie.overview,
+    posterUrl: tmdbMovie.poster_path
+      ? `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}`
+      : undefined,
+    posterGradient: tmdbMovie.poster_path
+      ? "" // Will use posterUrl instead
+      : "linear-gradient(160deg, oklch(0.5 0.1 200), oklch(0.4 0.1 50))", // Default gradient
+    backdropUrl: tmdbMovie.backdrop_path
+      ? `https://image.tmdb.org/t/p/original${tmdbMovie.backdrop_path}`
+      : undefined,
+    // Mark as recommendation if it's highly rated and popular
+    isRecommendation: tmdbMovie.vote_average >= 8.0 && tmdbMovie.popularity > 50,
+    emoji: "🎬" // Default emoji, could be enhanced based on genre
+  };
+};
+
+/**
+ * Fetches movies from TMDB API
+ */
+const fetchMoviesFromTmdb = async (query: string): Promise<Movie[]> => {
+  if (!env.isTmdbConfigured) {
+    throw new Error("TMDB not configured");
+  }
+
+  try {
+    const endpoint = query
+      ? `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&include_adult=false&language=en-US&page=1`
+      : `https://api.themoviedb.org/3/movie/popular?language=en-US&page=1`;
+
+    const response = await fetch(endpoint, {
+      headers: {
+        Authorization: `Bearer ${env.tmdbReadAccessToken}`,
+        "Content-Type": "application/json;charset=utf-8"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`TMDB API error: ${response.status}`);
+    }
+
+    const data: ТmdbResponse = await response.json();
+    return data.results.map(mapTmdbToMovie);
+  } catch (error) {
+    console.error("Failed to fetch from TMDB:", error);
+    throw error;
+  }
+};
+
+/**
+ * Converts legacy movie to new format
+ */
+const mapLegacyToMovie = (legacyMovie: LegacyMovie): Movie => ({
+  ...legacyMovie,
+  id: legacyMovie.id,
+  posterUrl: undefined, // Will use gradient
+  backdropUrl: undefined,
+  isRecommendation: false
+});
+
+/**
+ * Search for movies - tries TMDB first, falls back to local cache
  */
 export async function searchMovies(query: string): Promise<Movie[]> {
   const q = query.trim().toLowerCase();
-  if (!q) return SUGGESTED_MOVIES;
-  return MOVIES.filter((m) => {
+
+  // If query is empty, return suggested movies
+  if (!q) {
+    return SUGGESTED_MOVIES;
+  }
+
+  // Try TMDB first if configured
+  if (env.isTmdbConfigured) {
+    try {
+      const tmdbResults = await fetchMoviesFromTmdb(q);
+      if (tmdbResults.length > 0) {
+        return tmdbResults;
+      }
+    } catch (error) {
+      console.warn("TMDB search failed, falling back to local cache:", error);
+      // Fall through to local search
+    }
+  }
+
+  // Fallback to local search (backward compatibility)
+  const legacyResults = LEGACY_MOVIES.filter((m) => {
     return (
       m.title.toLowerCase().includes(q) ||
       m.genres.some((g) => g.toLowerCase().includes(q)) ||
       String(m.year).includes(q)
     );
   });
+
+  // Convert legacy movies to new format
+  return legacyResults.map(mapLegacyToMovie);
 }
+
+/**
+ * Get movie by ID - tries TMDB first, falls back to local cache
+ */
+export const getMovieById = async (id: string): Promise<Movie | null> => {
+  const movieId = parseInt(id, 10);
+
+  // Try TMDB first if configured
+  if (env.isTmdbConfigured && !isNaN(movieId)) {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/${movieId}?language=en-US`,
+        {
+          headers: {
+            Authorization: `Bearer ${env.tmdbReadAccessToken}`,
+            "Content-Type": "application/json;charset=utf-8"
+          }
+        }
+      );
+
+      if (response.ok) {
+        const tmdbMovie: ТmdbMovie = await response.json();
+        return mapTmdbToMovie(tmdbMovie);
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch movie ${id} from TMDB, falling back to local cache:`, error);
+    }
+  }
+
+  // Fallback to local search
+  const legacyMovie = LEGACY_MOVIES.find(m => m.id === id);
+  return legacyMovie ? mapLegacyToMovie(legacyMovie) : null;
+};
+
+/**
+ * Get suggested movies (with recommendation flags)
+ */
+export const getSuggestedMovies = (): Movie[] => {
+  return [
+    {
+      ...LEGACY_MOVIES[0],
+      id: LEGACY_MOVIES[0].id,
+      posterUrl: undefined,
+      backdropUrl: undefined,
+      isRecommendation: false
+    },
+    {
+      ...LEGACY_MOVIES[1],
+      id: LEGACY_MOVIES[1].id,
+      posterUrl: undefined,
+      backdropUrl: undefined,
+      isRecommendation: false
+    },
+    {
+      ...LEGACY_MOVIES[2],
+      id: LEGACY_MOVIES[2].id,
+      posterUrl: undefined,
+      backdropUrl: undefined,
+      isRecommendation: true
+    }
+  ];
+};

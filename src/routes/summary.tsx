@@ -6,6 +6,10 @@ import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { SpotifyEmbed } from "@/components/SpotifyEmbed";
 
 export const Route = createFileRoute("/summary")({
   component: SummaryPage,
@@ -13,7 +17,12 @@ export const Route = createFileRoute("/summary")({
 
 function SummaryPage() {
   const navigate = useNavigate();
-  const { date, time, movie } = useDateStore();
+  const { date, time, movie, step, setStep } = useDateStore();
+
+  // Set current step (summary is step 6? Actually, we have 6 steps, and summary is after movie, so we'll show as completed)
+  useEffect(() => {
+    setStep(6); // Show as completed since we're after movie selection
+  }, [setStep]);
 
   if ((!date || !time || !movie) && typeof window !== "undefined") {
     navigate({ to: "/date" });
@@ -38,18 +47,46 @@ function SummaryPage() {
     navigate({ to: "/success" });
   };
 
+  // Get a romantic message for this screen
+  const romanticMessage = useRandomMessage("romantic");
+
   return (
-    <PageShell particles={16}>
+    <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator - show as completed */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={6} totalSteps={6} />
+      </div>
+
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
       >
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 mb-4">
           <Heart className="h-6 w-6 fill-primary text-primary" />
           <h1 className="text-3xl font-bold text-gradient">Our Date</h1>
           <Heart className="h-6 w-6 fill-primary text-primary" />
         </div>
+
+        {/* Romantic message */}
+        {romanticMessage && (
+          <p className="mb-4 text-center text-muted-foreground italic">
+            "{romanticMessage}"
+          </p>
+        )}
+
+        {/* Countdown timer */}
+        {date && (
+          <div className="mb-6">
+            <h2 className="mb-2 text-lg font-medium text-muted-foreground">
+              Countdown to our date
+            </p>
+            <CountdownTimer dateString={date} />
+          </div>
+        )}
 
         {movie && (
           <div
@@ -103,6 +140,9 @@ function SummaryPage() {
             Change something
           </AnimatedButton>
         </div>
+
+        {/* Spotify Embed (if configured) */}
+        <SpotifyEmbed />
       </motion.div>
     </PageShell>
   );

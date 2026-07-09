@@ -7,10 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, useState } from "react";
+import { HeartBurst } from "@/components/HeartBurst";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useShakeEffect } from "@/hooks/useShakeEffect";
 
 function NotFoundComponent() {
   return (
@@ -136,9 +138,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [burst, setBurst] = useState(false);
+
+  // Shake effect to trigger heart explosion
+  useShakeEffect(() => {
+    setBurst(true);
+    setTimeout(() => setBurst(false), 1500);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Shake-triggered heart burst (full screen) */}
+      {burst && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <HeartBurst active={burst} pieces={100} className="pointer-events-none" />
+        </div>
+      )}
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

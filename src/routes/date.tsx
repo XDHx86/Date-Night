@@ -1,10 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { CalendarHeart, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
+import { ProgressIndicator } = "/components/ProgressIndicator";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/date")({
   component: DatePickerPage,
@@ -16,9 +20,14 @@ function todayISO() {
 
 function DatePickerPage() {
   const navigate = useNavigate();
-  const { date, setDate } = useDateStore();
+  const { date, setDate, setStep } = useDateStore();
   const [value, setValue] = useState(date ?? "");
   const [error, setError] = useState<string | null>(null);
+
+  // Set current step (date is step 4)
+  useEffect(() => {
+    setStep(4);
+  }, [setStep]);
 
   const submit = () => {
     if (!value) {
@@ -33,9 +42,30 @@ function DatePickerPage() {
     navigate({ to: "/time" });
   };
 
+  // Get a date-related message
+  const dateMessage = useRandomMessage("date");
+
   return (
-    <PageShell particles={12}>
-      <div className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9">
+    <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={4} totalSteps={6} />
+      </div>
+
+      {dateMessage && (
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
+          "{dateMessage}"
+        </p>
+      )}
+
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
+      >
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
           <CalendarHeart className="h-8 w-8" />
         </div>
@@ -68,7 +98,7 @@ function DatePickerPage() {
         <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
           Next <ArrowRight className="h-5 w-5" />
         </AnimatedButton>
-      </div>
+      </motion.div>
     </PageShell>
   );
 }

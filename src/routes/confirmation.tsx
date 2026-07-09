@@ -1,11 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import celebrationImg from "@/assets/celebration.jpg";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { HeartBurst } from "@/components/HeartBurst";
 import { sounds } from "@/lib/sound";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { useDateStore } from "@/lib/store";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/confirmation")({
   component: Confirmation,
@@ -13,14 +17,43 @@ export const Route = createFileRoute("/confirmation")({
 
 function Confirmation() {
   const navigate = useNavigate();
+  const { setStep } = useDateStore();
+  const [burst, setBurst] = useState(false);
 
+  // Set current step (confirmation is step 3)
+  useEffect(() => {
+    setStep(3);
+  }, [setStep]);
+
+  // Play celebration sound on mount
   useEffect(() => {
     sounds.celebrate();
   }, []);
 
+  // Get a celebratory or romantic message
+  const celebrationMessage = useRandomMessage("celebration");
+
+  const handleContinue = () => {
+    navigate({ to: "/date" });
+  };
+
   return (
-    <PageShell particles={26}>
-      <HeartBurst active pieces={36} />
+    <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={3} totalSteps={6} />
+      </div>
+
+      {celebrationMessage && (
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
+          "{celebrationMessage}"
+        </p>
+      )}
+
+      <HeartBurst active={burst} pieces={36} />
 
       <motion.img
         src={celebrationImg}
@@ -55,7 +88,7 @@ function Confirmation() {
         variant="gold"
         size="lg"
         className="mt-10"
-        onClick={() => navigate({ to: "/date" })}
+        onClick={handleContinue}
       >
         Continue →
       </AnimatedButton>

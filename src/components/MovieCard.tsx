@@ -5,6 +5,28 @@ import { AnimatedButton } from "./AnimatedButton";
 import { cn } from "@/lib/utils";
 
 function Poster({ movie }: { movie: Movie }) {
+  // If we have a poster URL from TMDB, use it
+  if (movie.posterUrl) {
+    return (
+      <div
+        className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-2xl"
+        style={{
+          backgroundImage: `url(${movie.posterUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        }}
+      >
+        <span className="text-6xl drop-shadow-lg" aria-hidden>
+          {movie.emoji}
+        </span>
+        <div className="absolute inset-x-0 bottom-0 bg-black/25 p-2 text-center backdrop-blur-sm">
+          <p className="line-clamp-2 font-display text-sm font-semibold text-white">{movie.title}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to gradient background
   return (
     <div
       className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-2xl"
@@ -40,17 +62,38 @@ export function MovieCard({
       className={cn(
         "flex flex-col overflow-hidden rounded-3xl border bg-card p-3 text-left shadow-[var(--shadow-card)] transition-colors",
         selected ? "border-primary ring-2 ring-primary" : "border-border",
+        // Add subtle backdrop for recommended movies
+        movie.isRecommendation ? "border-[2px] border-gold/20" : ""
       )}
     >
+      {/* Backdrop background effect for recommended movies */}
+      {movie.isRecommendation && movie.backdropUrl && (
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={movie.backdropUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-20"
+          />
+        </div>
+      )}
+
       <Poster movie={movie} />
 
       <div className="flex flex-1 flex-col gap-2 px-1 pt-3">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display text-lg font-semibold leading-tight text-card-foreground">
-            {movie.title}
-          </h3>
+          <div className="flex-1">
+            <h3 className="font-display text-lg font-semibold leading-tight text-card-foreground">
+              {movie.title}
+              {/* Recommendation badge */}
+              {movie.isRecommendation && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-gold/20 text-gold-foreground rounded-full">
+                  ⭐ My Pick
+                </span>
+              )}
+            </h3>
+          </div>
           <span className="mt-0.5 flex shrink-0 items-center gap-1 rounded-full bg-gold/25 px-2 py-0.5 text-xs font-bold text-gold-foreground">
-            <Star className="h-3 w-3 fill-current" /> {movie.rating.toFixed(1)}
+            <Star className="h-3 w-3" /> {movie.rating.toFixed(1)}
           </span>
         </div>
 

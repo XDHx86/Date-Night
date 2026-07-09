@@ -1,13 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { format, parseISO } from "date-fns";
+import { Moon, Sparkles, Heart, Film, Calendar, Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { format, parse, parseISO } from "date-fns";
-import finalImg from "@/assets/final.jpg";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { HeartBurst } from "@/components/HeartBurst";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
+import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { SpotifyEmbed } from "@/components/SpotifyEmbed";
+import finalImg from "@/assets/final.jpg";
 
 export const Route = createFileRoute("/success")({
   component: SuccessPage,
@@ -15,23 +19,36 @@ export const Route = createFileRoute("/success")({
 
 function SuccessPage() {
   const navigate = useNavigate();
-  const { date, time, movie, reset } = useDateStore();
+  const { date, time, movie, reset, step, setStep } = useDateStore();
 
+  // Set current step (success is step 7? We have 6 steps, but we'll show as completed)
   useEffect(() => {
-    sounds.celebrate();
-  }, []);
+    setStep(6); // Show as completed
+  }, [setStep]);
 
-  const when =
-    date && time
-      ? `${format(parseISO(date), "EEEE, MMM do")} at ${format(
-          parse(time, "HH:mm", new Date()),
-          "h:mm a",
-        )}`
-      : null;
+  const handleReset = () => {
+    sounds.celebrate();
+    reset();
+    navigate({ to: "/" });
+  };
+
+  const formattedDate = date ? format(parseISO(date), "EEEE, MMMM do, yyyy") : "";
+  const formattedTime = time ? format(parse(time, "HH:mm", new Date()), "h:mm a") : "";
+
+  // Get a celebratory message
+  const celebrationMessage = useRandomMessage("celebration");
 
   return (
-    <PageShell particles={30}>
-      <HeartBurst active pieces={40} />
+    <PageShell>
+      {/* Animated background */}
+      <AnimatedBackground className="pointer-events-none" />
+
+      {/* Progress Indicator - show as completed */}
+      <div className="mb-4">
+        <ProgressIndicator currentStep={6} totalSteps={6} />
+      </div>
+
+      <HeartBurst active pieces={40} className="mb-6" />
 
       <motion.img
         src={finalImg}
@@ -48,24 +65,59 @@ function SuccessPage() {
       <h1 className="text-5xl font-bold text-gradient sm:text-6xl">I can't wait ❤️</h1>
       <p className="mt-4 text-xl text-muted-foreground">See you soon. Love you 🥰</p>
 
-      {when && movie && (
-        <div className="mt-6 rounded-2xl border border-border bg-card/80 px-6 py-4 shadow-[var(--shadow-soft)] backdrop-blur">
-          <p className="font-bold text-card-foreground">{when}</p>
-          <p className="text-primary">watching {movie.title} 🍿</p>
+      {/* Celebration message */}
+      {celebrationMessage && (
+        <p className="mt-4 text-center text-muted-foreground italic max-w-xl">
+          "{celebrationMessage}"
+        </p>
+      )}
+
+      {date && time && movie && (
+        <div className="mt-8 space-y-4 text-center">
+          <div className="mb-2">
+            <p className="text-lg font-medium text-muted-foreground">
+              Countdown to our date
+            </p>
+            <CountdownTimer dateString={date} />
+          </div>
+
+          <div className="mt-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              On {formattedDate} at {formattedTime}
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              Watching {movie.title} 🍿
+            </p>
+          </div>
         </div>
       )}
 
-      <AnimatedButton
-        variant="ghost"
-        size="sm"
-        className="mt-8"
-        onClick={() => {
-          reset();
-          navigate({ to: "/" });
-        }}
-      >
-        Start over 💌
-      </AnimatedButton>
+      {/* Love Letter link */}
+      <div className="mt-6 text-center">
+        <AnimatedButton
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate({ to: "/love-letter" })}
+        >
+          View our love letter 💌
+        </AnimatedButton>
+      </div>
+
+      {/* Spotify Embed (if configured) */}
+      <SpotifyEmbed />
+
+      <div className="mt-8 flex flex-col gap-3">
+        <AnimatedButton
+          variant="gold"
+          size="md"
+          onClick={handleReset}
+        >
+          Plan another date <ArrowRight className="h-4 w-4" />
+        </AnimatedButton>
+      </div>
     </PageShell>
   );
 }
