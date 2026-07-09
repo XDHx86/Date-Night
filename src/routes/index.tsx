@@ -52,7 +52,7 @@ function Landing() {
       ) : (
         <>
           <h1 className="text-balance text-4xl font-bold leading-tight text-gradient sm:text-5xl">
-            Will you go out with me?
+            Will you spend the night with me?
           </h1>
           <p className="mt-4 text-balance text-lg text-muted-foreground sm:text-xl">
             Would you honor me with the privilege of stealing you away for a date? 🥺
