@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Secrets
+.env
+
 # Npm
 build
 node_modules
@@ -33,7 +36,6 @@ dist-ssr
 *.sln
 *.sw?
 .lovable
-docs
 dProjosdatenightdocs
 
 # Claude Code metadata
