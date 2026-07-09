@@ -3,22 +3,32 @@ import { Star, Clock, Calendar, Check } from "lucide-react";
 import type { Movie } from "@/lib/movies";
 import { AnimatedButton } from "./AnimatedButton";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 function Poster({ movie }: { movie: Movie }) {
-  // If we have a poster URL from TMDB, use it
-  if (movie.posterUrl) {
+  const [imageError, setImageError] = useState(false);
+
+  // Default gradient for when poster is not available
+  const DEFAULT_POSTER_GRADIENT = "linear-gradient(160deg, oklch(0.5 0.1 200), oklch(0.4 0.1 50))";
+
+  // If we have a poster_path from TMDB, use it to build the poster URL
+  if (movie.poster_path) {
     return (
-      <div
-        className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-2xl"
-        style={{
-          backgroundImage: `url(${movie.posterUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center"
-        }}
-      >
-        <span className="text-6xl drop-shadow-lg" aria-hidden>
-          {movie.emoji}
-        </span>
+      <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-2xl">
+        {!imageError && (
+          <img
+            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            alt={`${movie.title} poster`}
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        )}
+        {(imageError || !movie.poster_path) && (
+          <div
+            className="absolute inset-0 w-full h-full"
+            style={{ backgroundImage: DEFAULT_POSTER_GRADIENT }}
+          />
+        )}
         <div className="absolute inset-x-0 bottom-0 bg-black/25 p-2 text-center backdrop-blur-sm">
           <p className="line-clamp-2 font-display text-sm font-semibold text-white">{movie.title}</p>
         </div>
@@ -30,11 +40,8 @@ function Poster({ movie }: { movie: Movie }) {
   return (
     <div
       className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden rounded-2xl"
-      style={{ backgroundImage: movie.posterGradient }}
+      style={{ backgroundImage: DEFAULT_POSTER_GRADIENT }}
     >
-      <span className="text-6xl drop-shadow-lg" aria-hidden>
-        {movie.emoji}
-      </span>
       <div className="absolute inset-x-0 bottom-0 bg-black/25 p-2 text-center backdrop-blur-sm">
         <p className="line-clamp-2 font-display text-sm font-semibold text-white">{movie.title}</p>
       </div>
@@ -61,22 +68,9 @@ export function MovieCard({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "flex flex-col overflow-hidden rounded-3xl border bg-card p-3 text-left shadow-[var(--shadow-card)] transition-colors",
-        selected ? "border-primary ring-2 ring-primary" : "border-border",
-        // Add subtle backdrop for recommended movies
-        movie.isRecommendation ? "border-[2px] border-gold/20" : ""
+        selected ? "border-primary ring-2 ring-primary" : "border-border"
       )}
     >
-      {/* Backdrop background effect for recommended movies */}
-      {movie.isRecommendation && movie.backdropUrl && (
-        <div className="absolute inset-0 -z-10">
-          <img
-            src={movie.backdropUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-20"
-          />
-        </div>
-      )}
-
       <Poster movie={movie} />
 
       <div className="flex flex-1 flex-col gap-2 px-1 pt-3">
@@ -84,12 +78,6 @@ export function MovieCard({
           <div className="flex-1">
             <h3 className="font-display text-lg font-semibold leading-tight text-card-foreground">
               {movie.title}
-              {/* Recommendation badge */}
-              {movie.isRecommendation && (
-                <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-bold bg-gold/20 text-gold-foreground rounded-full">
-                  ⭐ My Pick
-                </span>
-              )}
             </h3>
           </div>
           <span className="mt-0.5 flex shrink-0 items-center gap-1 rounded-full bg-gold/25 px-2 py-0.5 text-xs font-bold text-gold-foreground">
@@ -98,18 +86,18 @@ export function MovieCard({
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {movie.genres.map((g) => (
+          {movie.tags.map((tag) => (
             <span
-              key={g}
+              key={tag}
               className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-secondary-foreground"
             >
-              {g}
+              {tag}
             </span>
           ))}
         </div>
 
         {!compact && (
-          <p className="line-clamp-3 text-sm text-muted-foreground">{movie.overview}</p>
+          <p className="line-clamp-3 text-sm text-muted-foreground">{movie.description}</p>
         )}
 
         <div className="mt-1 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
@@ -117,7 +105,7 @@ export function MovieCard({
             <Calendar className="h-3.5 w-3.5" /> {movie.year}
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" /> {movie.runtime}m
+            <Clock className="h-3.5 w-3.5" /> {movie.duration}m
           </span>
         </div>
 
