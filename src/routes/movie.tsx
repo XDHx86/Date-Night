@@ -6,18 +6,11 @@ import { AnimatedButton } from "@/components/AnimatedButton";
 import { MovieCard } from "@/components/MovieCard";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { useDateStore } from "@/lib/store";
-import { useStorage } from "@/lib/storage";
-import { searchMovies, SUGGESTED_MOVIES, type Movie, getMovieIdFromUrl, createShareableUrl } from "@/lib/movies";
+import { syncUrlWithState as useStorage, getMovieIdFromUrl, createShareableUrl } from "@/lib/storage";
+import { searchMovies, getMovieById, type Movie, fetchOriginalRecommendations } from "@/lib/movies";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-
-// Initialize URL state sync on component mount
-useEffect(() => {
-  const updateUrl = useStorage();
-  // Call it once to sync URL -> state
-  updateUrl();
-  // We could also set up a listener, but for simplicity we'll call it on mount
-  // In a production app, we'd want to synchronize both ways continuously
-}, []);
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/movie")({
   component: MoviePickerPage,
@@ -25,22 +18,52 @@ export const Route = createFileRoute("/movie")({
 
 function MoviePickerPage() {
   const navigate = useNavigate();
-  const { movie, setMovie, date, step, setStep } = useDateStore();
+  const { movie, setMovie, date, time, setStep, loveMessage, setLoveMessage, isDarkMode, setDarkMode } = useDateStore();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Movie[]>(SUGGESTED_MOVIES);
+  const [results, setResults] = useState<Movie[]>([]); // Will be populated with original recommendations or search results
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true); // To track if we've loaded the initial recommendations
   const [shareUrl, setShareUrl] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const randomMessage = useRandomMessage("playful"); // Get a playful message
+
+  // Format date and time for sharing
+  const formattedDate = date ? new Date(date).toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : '';
+  const formattedTime = time ? new Date(`1970-01-01T${time}:00`).toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit'
+  }) : '';
 
   // Check if we came from URL with movie ID and try to hydrate
   useEffect(() => {
     const movieIdFromUrl = getMovieIdFromUrl();
     if (movieIdFromUrl && !movie) {
-      // In a real implementation, we'd fetch the movie here
-      // For now, we'll rely on the search to find it
-      // This is a simplified approach
+      // Fetch the movie by ID
+      const fetchMovie = async () => {
+        try {
+          setError(null);
+          const movieData = await getMovieById(movieIdFromUrl.toString());
+          if (movieData) {
+            setMovie(movieData);
+          } else {
+            setError("Movie not found");
+            toast.error("Movie not found");
+          }
+        } catch (err) {
+          console.error('Failed to fetch movie from URL:', err);
+          setError("Failed to load movie");
+          toast.error("Failed to load movie");
+          // Fallback to search
+        }
+      };
+      fetchMovie();
     }
-  }, [movie]);
+  }, [movie, setMovie]);
 
   if (!date && typeof window !== "undefined") {
     navigate({ to: "/date" });
@@ -51,16 +74,57 @@ function MoviePickerPage() {
     setStep(6);
   }, [setStep]);
 
-  // Debounced realtime search that gracefully falls back to suggestions.
+  // Load original recommendations on initial mount
   useEffect(() => {
+    if (initialLoad) {
+      const loadInitialRecommendations = async () => {
+        try {
+          setLoading(true);
+          const recommendations = await fetchOriginalRecommendations();
+          setResults(recommendations);
+          setLoading(false);
+        } catch (err) {
+          console.error('Failed to load initial recommendations:', err);
+          setError("Failed to load recommendations");
+          toast.error("Failed to load recommendations");
+          setLoading(false);
+        }
+      };
+      loadInitialRecommendations();
+      setInitialLoad(false);
+    }
+  }, [initialLoad]);
+
+  // Debounced realtime search that shows search results when query is not empty, otherwise shows original recommendations
+  useEffect(() => {
+    if (initialLoad) return; // Skip during initial load
+
     let cancelled = false;
     setLoading(true);
+    setError(null);
     const t = setTimeout(async () => {
       try {
-        const res = await searchMovies(query);
-        if (!cancelled) setResults(res);
-      } catch {
-        if (!cancelled) setResults(SUGGESTED_MOVIES);
+        if (query.trim() === "") {
+          // If query is empty, show original recommendations
+          const recommendations = await fetchOriginalRecommendations();
+          if (!cancelled) {
+            setResults(recommendations);
+            setError(null);
+          }
+        } else {
+          // Otherwise, show search results
+          const res = await searchMovies(query);
+          if (!cancelled) {
+            setResults(res);
+            setError(null);
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setResults([]); // Clear results on error
+          setError("Failed to search movies");
+          toast.error("Failed to search movies");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -69,28 +133,83 @@ function MoviePickerPage() {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [query]);
+  }, [query, initialLoad]);
 
-  // Update shareable URL whenever state changes
+  // Update shareable URL and sync URL whenever state changes
   useEffect(() => {
     const url = createShareableUrl();
     setShareUrl(url);
-  }, [date, time, movie]);
+    const updateUrl = useStorage();
+    updateUrl();
+  }, [date, time, movie, loveMessage, isDarkMode]);
 
-  const choose = (m: Movie) => {
-    setMovie(m);
-    setTimeout(() => navigate({ to: "/summary" }), 450);
+  // Initialize URL state sync on component mount
+  useEffect(() => {
+    const updateUrl = useStorage();
+    // Call it once to sync URL -> state
+    updateUrl();
+  }, []);
+
+  const choose = async (m: Movie) => {
+    // When a movie is selected, we need to get the full details to ensure we have runtime, etc.
+    try {
+      setLoading(true);
+      const fullMovie = await getMovieById(m.id);
+      if (fullMovie) {
+        setMovie(fullMovie);
+        setTimeout(() => navigate({ to: "/summary" }), 450);
+      } else {
+        setError("Failed to load movie details");
+        toast.error("Failed to load movie details");
+      }
+    } catch (err) {
+      console.error('Failed to get movie details:', err);
+      setError("Failed to load movie details");
+      toast.error("Failed to load movie details");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShareClick = async () => {
+    const url = shareUrl;
+    if (!url) return;
+
+    // Build share message
+    const messageParts = [
+      "Check out our date plan! 📅",
+      formattedDate && `📅 ${formattedDate}`,
+      formattedTime && `⏰ ${formattedTime}`,
+      movie && `🎬 ${movie.title}`,
+      loveMessage && `💌 "${loveMessage}"`,
+      `🔗 ${url}`
+    ].filter(Boolean).join(' ');
+    const message = messageParts.trim();
+
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      // Show temporary feedback
-      const originalText = shareUrl;
-      setShareUrl("Link copied! 📋");
-      setTimeout(() => setShareUrl(shareUrl), 2000);
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Our Date Plan',
+          text: message,
+          url: url
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(url);
+        setShareUrl("Link copied! 📋");
+        setTimeout(() => setShareUrl(url), 2000);
+      }
     } catch (err) {
-      console.error("Failed to copy: ", err);
+      console.error('Share failed', err);
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareUrl("Link copied! 📋");
+        setTimeout(() => setShareUrl(url), 2000);
+      } catch (copyErr) {
+        console.error('Clipboard fallback failed', copyErr);
+        alert('Could not share or copy link');
+      }
     }
   };
 
@@ -105,12 +224,21 @@ function MoviePickerPage() {
       <h1 className="text-3xl font-bold text-gradient">Pick our movie</h1>
       <p className="mt-2 text-muted-foreground">{randomMessage}</p>
 
+      {error && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="relative mt-6 w-full">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setError(null);
+          }}
           placeholder="Search movies, genres, years..."
           aria-label="Search movies"
           className="w-full rounded-full border border-input bg-card py-4 pl-12 pr-12 text-base font-semibold text-foreground shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -121,12 +249,12 @@ function MoviePickerPage() {
       </div>
 
       <p className="mt-6 w-full text-left text-sm font-bold uppercase tracking-wide text-muted-foreground">
-        {query.trim() ? "Results" : "Suggested for us"}
+        {query.trim() ? "Results" : "Our recommendations"}
       </p>
 
       {results.length === 0 ? (
         <p className="mt-8 text-muted-foreground">
-          No movies found for "{query}" — try another title 💭
+          {query.trim() ? `No movies found for "${query}" — try another title 💭` : "No recommendations available — try again later 💭"}
         </p>
       ) : (
         <div className="mt-3 grid w-full grid-cols-2 gap-4 md:grid-cols-3">
@@ -156,7 +284,8 @@ function MoviePickerPage() {
               <button
                 onClick={handleShareClick}
                 className="p-2 rounded hover:bg-muted transition-colors"
-                title="Share your movie pick"
+                title="Share Our Date ❤️"
+                aria-label="Share Our Date ❤️"
               >
                 <Share2 className="h-4 w-4" />
               </button>
@@ -173,7 +302,7 @@ function MoviePickerPage() {
                 <Moon className="h-4 w-4" />
               </button>
 
-              {/* Heart Easter Ed - for fun */}
+              {/* Heart Easter Egg - for fun */}
               <button
                 onClick={() => {
                   // Could trigger a small celebration or message
