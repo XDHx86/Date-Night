@@ -10,11 +10,16 @@ The application guides users through a linear progression:
 3. **Confirmation** (`/confirmation`): Celebration after saying "YES"
 4. **Date** (`/date`): Selecting the date
 5. **Time** (`/time`): Choosing the time of day
-6. **Movie** (`/movie`): Selecting a film to watch
-7. **Summary** (`/summary`): Reviewing all selections
-8. **Success** (`/success`): Final celebration with details and restart option
+6. **Movie** (`/movie`): Selecting a film to watch (with live TMDb search)
+7. **Love Letter** (`/love-letter`): Customizable love letter with templates
+8. **Summary** (`/summary`): Reviewing all selections
+9. **Success** (`/success`): Final celebration with details and restart option
 
-Users can also restart the process at any time from the Success page.
+Users can navigate between steps using:
+- Next/Continue buttons
+- Browser back/forward buttons
+- Progress bar buttons (to jump back to previous steps)
+- State is preserved across all navigation methods via URL synchronization
 
 ## 1. Landing Page (`/`)
 
