@@ -1,23 +1,51 @@
 /**
  * Storage utilities for synchronizing state with localStorage and URL parameters
+ *
+ * NOTE: This file is being migrated to use @/hooks/useUrlSync for proper
+ * TanStack Router integration. The old syncUrlWithState function is deprecated
+ * and should not be used in new code.
+ *
+ * For new code, use:
+ * ```tsx
+ * import { useUrlSync } from "@/hooks/useUrlSync";
+ * const { syncUrl, syncState } = useUrlSync();
+ * ```
  */
 
 import { useDateStore } from "./store";
 
+const MANAGED_KEYS = ["date", "time", "movie", "love", "theme"] as const;
+
 /**
- * Synchronizes date plan state with URL query parameters
- * Format: ?date=YYYY-MM-DD&time=HH:MM&movie=movieId
+ * @deprecated Use `useUrlSync` hook instead.
+ * This function directly manipulates window.history which conflicts with TanStack Router.
+ * It's kept for temporarily backwards compatibility but will be removed.
  */
 export const syncUrlWithState = () => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return () => {};
+  }
 
-  const { date, time, movie, setDate, setTime, setMovie } = useDateStore.getState();
+  const {
+    date,
+    time,
+    movie,
+    loveMessage,
+    isDarkMode,
+    setDate,
+    setTime,
+    setMovie,
+    setLoveMessage,
+    setDarkMode,
+  } = useDateStore.getState();
   const urlParams = new URLSearchParams(window.location.search);
 
   // Update state from URL parameters
   const urlDate = urlParams.get("date");
   const urlTime = urlParams.get("time");
   const urlMovieId = urlParams.get("movie");
+  const urlLove = urlParams.get("love");
+  const urlTheme = urlParams.get("theme");
 
   if (urlDate && date !== urlDate) {
     setDate(urlDate);
@@ -28,23 +56,40 @@ export const syncUrlWithState = () => {
   if (urlMovieId && movie) {
     // Note: We can't directly set movie by ID without fetching it
     // This would require movie service integration
-    // For now, we'll handle this in the movie service when it loads
+  }
+  if (urlLove && loveMessage !== urlLove) {
+    setLoveMessage(urlLove);
+  }
+  if (urlTheme === "dark" && !isDarkMode) {
+    setDarkMode(true);
+  } else if (urlTheme !== "dark" && isDarkMode) {
+    setDarkMode(false);
   }
 
-  // Update URL from state (when state changes)
+  // Update URL from state
   const updateUrlFromState = () => {
-    const newParams = new URLSearchParams();
-    if (date) newParams.set("date", date);
-    if (time) newParams.set("time", time);
-    if (movie) newParams.set("movie", movie.id.toString());
+    const existing = new URLSearchParams(window.location.search);
+    MANAGED_KEYS.forEach((k) => existing.delete(k));
 
-    const newUrl = `${window.location.pathname}${newParams.toString() ? `?${newParams}` : ""}`;
-    window.history.replaceState({ ...window.history.state }, "", newUrl);
+    const currentState = useDateStore.getState();
+    if (currentState.date) existing.set("date", currentState.date);
+    if (currentState.time) existing.set("time", currentState.time);
+    if (currentState.movie) existing.set("movie", currentState.movie.id.toString());
+    if (currentState.loveMessage) existing.set("love", currentState.loveMessage);
+    if (currentState.isDarkMode) existing.set("theme", "dark");
+
+    const query = existing.toString();
+    const newUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+
+    // IMPORTANT: Use router.navigate instead of window.history.replaceState
+    // For now, fall back to window.history but log a warning
+    console.warn(
+      `[DEPRECATED] syncUrlWithState using window.history.replaceState. ` +
+        `Use useUrlSync hook instead for proper TanStack Router integration.`,
+    );
+    window.history.replaceState({ ...window.history.state, us: Date.now() }, "", newUrl);
   };
 
-  // Listen for state changes and update URL
-  // We'll use a subscription approach - in practice, this would be done
-  // through a middleware or by calling this function in useEffect in components
   return updateUrlFromState;
 };
 
@@ -60,18 +105,19 @@ export const getMovieIdFromUrl = (): number | null => {
 
 /**
  * Creates a shareable URL with current state
+ * @deprecated Use createShareableUrl from @/hooks/useUrlSync instead
  */
 export const createShareableUrl = (): string => {
   if (typeof window === "undefined") return window.location.origin;
 
-  const { date, time, movie } = useDateStore.getState();
+  const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
   const params = new URLSearchParams(window.location.search);
 
   if (date) params.set("date", date);
   if (time) params.set("time", time);
   if (movie) params.set("movie", movie.id.toString());
+  if (loveMessage) params.set("love", loveMessage);
+  if (isDarkMode) params.set("theme", "dark");
 
-  return `${window.location.pathname}${params.toString() ? ` =>
-      ? `?${params}` : ""
-    }`;
+  return `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
 };

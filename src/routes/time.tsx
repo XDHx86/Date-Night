@@ -1,14 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { format, parse } from "date-fns";
 import { Clock, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
-import { ProgressIndicator } from "/components/ProgressIndicator";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { useUrlSync } from "@/hooks/useUrlSync";
 
 export const Route = createFileRoute("/time")({
   component: TimePickerPage,
@@ -17,51 +16,77 @@ export const Route = createFileRoute("/time")({
 const QUICK = ["18:00", "19:30", "20:00", "21:00"];
 
 function pretty(time: string) {
-  return format(parse(time, "hh:mm"), "h:mm a");
+  return format(parse(time, "HH:mm", new Date()), "h:mm a");
 }
 
 function TimePickerPage() {
   const navigate = useNavigate();
-  const { time, setTime, date, setStep } = useDateStore();
+  const { time, setTime, date } = useDateStore();
   const [value, setValue] = useState(time ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  // Set current step (time is step 5)
+  // Use centralized URL sync
+  const { syncUrl, syncState } = useUrlSync();
+
+  // Sync state from URL on mount
   useEffect(() => {
-    setStep(5);
-  }, [setStep]);
+    syncState();
+  }, [syncState]);
+
+  // Sync local value with store state
+  useEffect(() => {
+    if (time && time !== value) {
+      setValue(time);
+    }
+  }, [time, value]);
+
+  // Sync URL when local value changes
+  useEffect(() => {
+    if (value) {
+      setTime(value);
+      syncUrl();
+    }
+  }, [value, setTime, syncUrl]);
 
   // Guard: if someone deep-links here without a date, send them back.
-  if (!date && typeof window !== "undefined") {
-    navigate({ to: "/date" });
-  }
+  // Use useEffect to avoid render-time side effects
+  useEffect(() => {
+    if (!date) {
+      navigate({ to: "/date" });
+    }
+  }, [date, navigate]);
 
-  const submit = () => {
+  const submit = useCallback(() => {
     if (!value) {
       setError("Pick a time so I know when to be ready 🥹");
       return;
     }
     setTime(value);
-    navigate({ to: "/movie" });
-  };
+    syncUrl();
+    // Use setTimeout to ensure state is updated before navigation
+    setTimeout(() => {
+      navigate({ to: "/movie" });
+    }, 0);
+  }, [value, setTime, syncUrl, navigate]);
 
   // Get a time-related message
   const timeMessage = useRandomMessage("time");
 
+  // Quick time chip selection
+  const handleQuickSelect = useCallback(
+    (t: string) => {
+      setValue(t);
+      setTime(t);
+      syncUrl();
+      setError(null);
+    },
+    [setTime, syncUrl],
+  );
+
   return (
     <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
-
-      {/* Progress Indicator */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={5} totalSteps={6} />
-      </div>
-
       {timeMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
-          "{timeMessage}"
-        </p>
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{timeMessage}"</p>
       )}
 
       <motion.div
@@ -69,7 +94,7 @@ function TimePickerPage() {
         animate={{ scale: 1, opacity: 1 }}
         className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
       >
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
           <Clock className="h-8 w-8" />
         </div>
         <h1 className="text-3xl font-bold text-gradient">Pick a time</h1>
@@ -84,7 +109,8 @@ function TimePickerPage() {
             type="time"
             value={value}
             onChange={(e) => {
-              setValue(e.target.value);
+              const val = e.target.value;
+              setValue(val);
               setError(null);
             }}
             className="w-full rounded-2xl border border-input bg-background px-4 py-4 text-lg font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -95,10 +121,7 @@ function TimePickerPage() {
               <button
                 key={t}
                 type="button"
-                onClick={() => {
-                  setValue(t);
-                  setError(null);
-                }}
+                onClick={() => handleQuickSelect(t)}
                 className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
                   value === t
                     ? "bg-primary text-primary-foreground"
@@ -109,19 +132,19 @@ function TimePickerPage() {
               </button>
             ))}
           </div>
-
-          {value && !error && (
-            <p className="mt-4 text-center text-lg font-semibold text-primary">
-              See you at {pretty(value)} 💫
-            </p>
-          )}
-          {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
         </div>
 
-        <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
-          Next <ArrowRight className="h-5 w-5" />
-        </AnimatedButton>
+        {value && !error && (
+          <p className="mt-4 text-center text-lg font-semibold text-primary">
+            See you at {pretty(value)} 💫
+          </p>
+        )}
+        {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
       </motion.div>
+
+      <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
+        Next <ArrowRight className="h-5 w-5" />
+      </AnimatedButton>
     </PageShell>
   );
 }

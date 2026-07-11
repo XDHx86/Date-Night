@@ -1,64 +1,111 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { format, parseISO, addDays } from "date-fns";
 import { CalendarHeart, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
-import { ProgressIndicator } = "/components/ProgressIndicator";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { useUrlSync } from "@/hooks/useUrlSync";
 
 export const Route = createFileRoute("/date")({
   component: DatePickerPage,
 });
 
-function todayISO() {
-  return format(new Date(), "yyyy-MM-dd");
+function formatToday(d: Date) {
+  return format(d, "yyyy-MM-dd");
 }
 
 function DatePickerPage() {
   const navigate = useNavigate();
-  const { date, setDate, setStep } = useDateStore();
+  const router = useRouter();
+  const { date, setDate } = useDateStore();
   const [value, setValue] = useState(date ?? "");
   const [error, setError] = useState<string | null>(null);
+  // `today` is computed on the client‑only after hydration to avoid a
+  // server/client timezone mismatch on the first render.
+  const [today, setToday] = useState<string | null>(null);
 
-  // Set current step (date is step 4)
+  // Use centralized URL sync
+  const { syncUrl, syncState } = useUrlSync();
+
+  const dateMessage = useRandomMessage("date");
+
+  // Log router state for debugging
   useEffect(() => {
-    setStep(4);
-  }, [setStep]);
+    console.log("Router location:", router.state.location);
+  }, [router.state.location]);
 
-  const submit = () => {
+  // Sync URL with state on mount
+  useEffect(() => {
+    syncState();
+  }, [syncState]);
+
+  // Sync value with store state
+  useEffect(() => {
+    if (date && date !== value) {
+      setValue(date);
+    }
+  }, [date, value]);
+
+  // Compute `today` **after** mount so SSR and first client render match.
+  useEffect(() => {
+    setToday(formatToday(new Date()));
+  }, []);
+
+  // Sync URL when local value changes
+  useEffect(() => {
+    if (value) {
+      setDate(value);
+      syncUrl();
+    }
+  }, [value, setDate, syncUrl]);
+
+  const submit = useCallback(() => {
     if (!value) {
       setError("Pick a day for our date 🥰");
       return;
     }
-    if (value < todayISO()) {
+    if (today && value < today) {
       setError("Let's pick a day that hasn't happened yet 😅");
       return;
     }
     setDate(value);
-    navigate({ to: "/time" });
-  };
+    syncUrl();
+    // Use setTimeout to ensure state is updated before navigation
+    // This prevents race conditions
+    setTimeout(() => {
+      navigate({ to: "/time" });
+    }, 0);
+  }, [value, today, setDate, syncUrl, navigate]);
 
-  // Get a date-related message
-  const dateMessage = useRandomMessage("date");
+  // Quick date chips – only built once `today` is known (post‑hydration).
+  const dateChips = useMemo(() => {
+    if (!today) return [] as { label: string; dateStr: string }[];
+    const base = new Date(today);
+    return [
+      { label: "Today", dateStr: today },
+      { label: "Tomorrow", dateStr: format(addDays(base, 1), "yyyy-MM-dd") },
+      { label: "Day After", dateStr: format(addDays(base, 2), "yyyy-MM-dd") },
+      { label: "Next Week", dateStr: format(addDays(base, 7), "yyyy-MM-dd") },
+    ];
+  }, [today]);
+
+  const handleDateSelect = useCallback(
+    (dateStr: string) => {
+      setValue(dateStr);
+      setDate(dateStr);
+      syncUrl();
+      setError(null);
+    },
+    [setDate, syncUrl],
+  );
 
   return (
     <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
-
-      {/* Progress Indicator */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={4} totalSteps={6} />
-      </div>
-
       {dateMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
-          "{dateMessage}"
-        </p>
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{dateMessage}"</p>
       )}
 
       <motion.div
@@ -79,26 +126,46 @@ function DatePickerPage() {
           <input
             id="date"
             type="date"
-            min={todayISO()}
+            min={today ?? undefined}
             value={value}
             onChange={(e) => {
-              setValue(e.target.value);
+              const val = e.target.value;
+              setValue(val);
               setError(null);
             }}
             className="w-full rounded-2xl border border-input bg-background px-4 py-4 text-lg font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          {value && !error && (
-            <p className="mt-3 text-center text-lg font-semibold text-primary">
-              {format(parseISO(value), "EEEE, MMMM do yyyy")} 💕
-            </p>
+          {dateChips.length > 0 && (
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {dateChips.map(({ label, dateStr }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => handleDateSelect(dateStr)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
+                    value === dateStr
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground hover:bg-accent"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
-          {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
         </div>
 
-        <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
-          Next <ArrowRight className="h-5 w-5" />
-        </AnimatedButton>
+        {value && !error && (
+          <p className="mt-3 text-center text-lg font-semibold text-primary">
+            {format(parseISO(value), "EEEE, MMMM do yyyy")} 💕
+          </p>
+        )}
+        {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
       </motion.div>
+
+      <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
+        Next <ArrowRight className="h-5 w-5" />
+      </AnimatedButton>
     </PageShell>
   );
 }
