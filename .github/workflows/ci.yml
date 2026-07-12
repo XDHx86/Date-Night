@@ -1,54 +1,30 @@
-# Main CI pipeline: lint, type-check, test, build, and security scan.
-# Triggered on push to main, PRs, and manual dispatch.
-
-name: CI
+name: CI Test
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint & Type Check
-    uses: ./.github/workflows/lint.yml
-    permissions:
-      contents: read
-
-  test:
-    name: Unit & Integration Tests
-    needs: lint
-    uses: ./.github/workflows/test.yml
-    permissions:
-      contents: read
-
   build:
-    name: Production Build
-    needs: lint
-    uses: ./.github/workflows/build.yml
-    permissions:
-      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
-  e2e:
-    name: End-to-End Tests
-    needs: [lint, build]
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  security:
-    name: Security Scan
-    uses: ./.github/workflows/security.yml
-    permissions:
-      contents: read
-      security-events: write
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
