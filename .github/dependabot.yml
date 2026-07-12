@@ -1,16 +1,10 @@
-# =============================================================================
-# Dependabot Configuration
-# =============================================================================
-# This file configures Dependabot to automatically check for updates.
-# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+# Dependabot configuration.
+# Weekly roll-ups for Bun/npm dependency and GitHub Action updates.
+# Security updates happen independently and are not configured here.
 
 version: 2
 
-# Enable automatic updates
 updates:
-  # =============================================================================
-  # Bun dependencies (primary)
-  # =============================================================================
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
@@ -18,9 +12,8 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
-    versioning-strategy: increase
     commit-message:
-      prefix: "chore(bun)"
+      prefix: "chore"
       include: "scope"
     labels:
       - "dependencies"
@@ -31,9 +24,6 @@ updates:
       development-dependencies:
         dependency-type: "development"
 
-  # =============================================================================
-  # npm dependencies (secondary for compatibility)
-  # =============================================================================
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -42,7 +32,7 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 10
     commit-message:
-      prefix: "chore(npm)"
+      prefix: "chore"
       include: "scope"
     labels:
       - "dependencies"
@@ -53,9 +43,6 @@ updates:
       development-dependencies:
         dependency-type: "development"
 
-  # =============================================================================
-  # GitHub Actions
-  # =============================================================================
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -69,19 +56,3 @@ updates:
     labels:
       - "ci"
       - "github-actions"
-
-# =============================================================================
-# Dependabot options
-# =============================================================================
-# Options applied to all packages
-
-# Global gitignore for dependabot
-# dependabot.yml uses gitignore automatically
-
-# Pull request security updates
-# Security updates are independent of version updates
-# and will create PRs for vulnerability fixes
-
-# Auto-rebase strategy
-# When dependabot.yml is available in the repo, by default
-# Dependabot rebases PRs when conflicts arise
