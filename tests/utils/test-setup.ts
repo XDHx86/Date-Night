@@ -42,14 +42,15 @@ beforeAll(() => {
   console.error = vi.fn((...args) => {
     // Filter out common warnings that don't affect test outcomes
     const message = args[0];
-    const isReactWarning = typeof message === "string" &&
+    const isReactWarning =
+      typeof message === "string" &&
       (message.includes("Warning:") ||
         message.includes("was called more than once") ||
         message.includes("Missing a title") ||
         message.includes("React does not recognize"));
 
-    const isNextTickWarning = typeof message === "string" &&
-      message.includes("setTimeout/RunTask has not been defined");
+    const isNextTickWarning =
+      typeof message === "string" && message.includes("setTimeout/RunTask has not been defined");
 
     if (!isReactWarning && !isNextTickWarning) {
       originalConsoleError(...args);
