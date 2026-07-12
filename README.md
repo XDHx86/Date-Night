@@ -39,7 +39,7 @@ Detailed documentation is available in the [`/docs`](docs) directory:
 # Install dependencies (Bun is the project's primary package manager)
 bun install
 
-# Start the dev server (defaults to http://localhost:3000)
+# Start the dev server (defaults to http://localhost:8080)
 bun run dev
 ```
 

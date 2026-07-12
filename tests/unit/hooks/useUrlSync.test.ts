@@ -202,11 +202,11 @@ describe("useUrlSync", () => {
       // Mock window.location
       Object.defineProperty(mockWindow, "location", {
         value: {
-          origin: "http://localhost:3000",
+          origin: "http://localhost:8080",
           pathname: "/test",
           search: "",
           hash: "",
-          toString: () => "http://localhost:3000/test",
+          toString: () => "http://localhost:8080/test",
         },
       });
 

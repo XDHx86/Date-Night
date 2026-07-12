@@ -69,7 +69,7 @@ Issues labelled `good first issue` are scoped to be approachable.
    ```bash
    bun run dev
    ```
-   Defaults to <http://localhost:3000>.
+   Defaults to <http://localhost:8080>.
 
 ## Making Changes
 

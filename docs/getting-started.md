@@ -50,7 +50,7 @@ bun run dev
 npm run dev
 ```
 
-The server listens on `http://localhost:3000` by default. Override with
+The server listens on `http://localhost:8080` by default. Override with
 the `PORT` or `VITE_PORT` env var.
 
 ## Type-Check / Lint / Format
