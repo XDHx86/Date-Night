@@ -1,116 +1,141 @@
-# Datenight 2
+# Datenight
 
 A playful, interactive date-night planner built with TanStack Start, React, and modern web technologies.
 
 ## Overview
 
 Datenight guides users through planning a perfect date night step-by-step:
-1. Ask a fun yes/no question to start
-2. Pick a date for your outing
-3. Select a time of day
-4. Choose a movie to watch together (with real TMDb integration)
-5. Review your selections
-6. Celebrate your completed plan!
 
-The app features engaging animations, persistent state storage, URL synchronization, and a delightful user experience.
+1. Ask a fun yes/no question to start ([`/`](src/routes/index.tsx))
+2. Pick a date for your outing ([`/date`](src/routes/date.tsx))
+3. Select a time of day ([`/time`](src/routes/time.tsx))
+4. Choose a movie to watch together with live TMDb search ([`/movie`](src/routes/movie.tsx))
+5. Customise a love letter ([`/love-letter`](src/routes/love-letter.tsx))
+6. Compute a shared countdown timer ([`/summary`](src/routes/summary.tsx))
+7. Celebrate your completed plan ([`/success`](src/routes/success.tsx))
+
+The app features route-aware animated backgrounds, persistent state storage (URL + localStorage), a shake-to-celebrate Easter egg, optional background audio, optional Spotify embed, share-as-image love cards, and a delightful user experience.
 
 ## Documentation
 
-Detailed documentation is available in the [`/docs`](./docs) directory:
+Detailed documentation is available in the [`/docs`](docs) directory:
 
-- [Overview](./docs/overview.md) - Project purpose and features
-- [Technology Stack](./docs/tech-stack.md) - Detailed breakdown of dependencies
-- [Getting Started](./docs/getting-started.md) - Installation and setup guide
-- [Project Structure](./docs/project-structure.md) - Code organization explained
-- [Routing System](./docs/routing.md) - File-based routing with TanStack Router
-- [State Management](./docs/state-management.md) - Zustand store implementation and URL sync
-- [Features](./docs/features.md) - Walkthrough of each step in the user flow
-- [Contributing](./docs/contributing.md) - How to contribute to the project
-- [FAQ](./docs/faq.md) - Frequently asked questions
+- [Overview](docs/overview.md) — Project purpose and feature highlights
+- [Technology Stack](docs/tech-stack.md) — Dependency breakdown
+- [Getting Started](docs/getting-started.md) — Installation, environment, scripts
+- [Project Structure](docs/project-structure.md) — Source tree walkthrough
+- [Routing System](docs/routing.md) — File-based routing & URL sync
+- [State Management](docs/state-management.md) — Zustand + URL sync
+- [Features](docs/features.md) — Per-screen behaviour
+- [Testing Guide](docs/testing.md) — Unit / integration / E2E patterns
+- [CI/CD Documentation](docs/ci-cd.md) — Workflows and release process
+- [Contributing](docs/contributing.md) — Coding standards & PR process
+- [FAQ](docs/faq.md) — Common questions
+- [Missing / TODO](docs/missing.md) — Known gaps & follow-up ideas
 
 ## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/datenight.git
-cd datenight
-
-# Install dependencies (using bun recommended)
+# Install dependencies (Bun is the project's primary package manager)
 bun install
 
-# Start the development server
+# Start the dev server (defaults to http://localhost:3000)
 bun run dev
 ```
 
-The application will be available at [http://localhost:5173](http://localhost:5173) by default.
+The application boots on port `3000` by default (configurable via `PORT` or
+`VITE_PORT`). Authentication is not required.
 
-## Recent Changes
+## Environment
 
-### Navigation & URL Synchronization Fix (July 2026)
+Optional integrations are enabled through environment variables. Copy
+[`.env.example`](.env.example) to `.env` and fill in the values you need:
 
-**Problem:** Navigation between routes (`/date`, `/time`, `/movie`) was unreliable - clicking "Next" would update the URL but not the displayed page.
+| Variable                       | Purpose                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `VITE_TMDB_API_KEY`            | TMDb v3 API key (required together with the read token for live movie data)                      |
+| `VITE_TMDB_READ_ACCESS_TOKEN`  | TMDb v4 read token (preferred for TMDB searches — see `src/lib/movies.ts`)                       |
+| `VITE_SPOTIFY_PLAYLIST_ID`     | Shows an embedded Spotify player on summary / success when set                                   |
+| `VITE_RESEND_API_KEY`          | Reserved for future email integration                                                            |
+| `VITE_LOVE_LETTER_CATEGORY`    | Choose which love-letter set is active: `default` \| `birthday` \| `anniversary` \| `valentine`  |
 
-**Root Causes:**
-1. `window.history.replaceState()` in `syncUrlWithState` conflicted with TanStack Router's internal state management
-2. Duplicate URL synchronization logic across multiple route components with stale closures
-3. Render-time side effects (navigation calls during render in `time.tsx` and `movie.tsx`)
-4. Direct `window.history.back()` usage in `love-letter.tsx`
+The detailed feature-gating contract lives in [`src/lib/env.ts`](src/lib/env.ts). The app boots without any
+of these set — each integration only renders when its variable is populated.
 
-**Solution:**
-- Created new centralized `useUrlSync` hook (`src/hooks/useUrlSync.ts`) that uses TanStack Router's `navigate()` API
-- Moved all navigation calls into `useEffect` hooks to avoid render-time side effects
-- Replaced `window.history.back()` with `navigate({ to: -1 })`
-- Deprecated old `syncUrlWithState` function in `storage.ts`
+## Scripts
 
-**Files Changed:**
-- `src/hooks/useUrlSync.ts` (NEW) - Centralized URL synchronization
-- `src/lib/storage.ts` - Deprecated old sync function
-- `src/routes/date.tsx` - Use new hook, fix render-time effects
-- `src/routes/time.tsx` - Use new hook, move guard to useEffect
-- `src/routes/movie.tsx` - Use new hook, fix guard timing
-- `src/routes/love-letter.tsx` - Replace window.history with router API
+| Command                   | What it does                                                      |
+| ------------------------- | ----------------------------------------------------------------- |
+| `bun run dev`             | Start the dev server (Vite)                                       |
+| `bun run build`           | Production build                                                  |
+| `bun run preview`         | Preview the production build                                      |
+| `bun run typecheck`       | `tsc --noEmit`                                                    |
+| `bun run lint`            | ESLint across the project                                         |
+| `bun run lint:fix`        | ESLint with `--fix`                                               |
+| `bun run format`          | Prettier write                                                    |
+| `bun run test`           | Vitest (unit + integration) single run                           |
+| `bun run test:watch`     | Vitest in watch mode                                              |
+| `bun run test:coverage`  | Vitest with V8 coverage                                           |
+| `bun run test:e2e`       | Playwright (all projects)                                         |
+| `bun run test:e2e:ui`    | Playwright with the test runner UI                                |
+| `bun run test:all`       | Run unit and E2E tests concurrently                               |
+| `bun run check`          | `typecheck` + `lint` + `test`                                     |
+| `bun run validate:build` | Production build with a success marker                            |
 
-**Result:** ✅ Navigation now works reliably on first click, URL search params stay in sync, browser back/forward works correctly.
+## Testing & Quality
 
-### TMDb Integration (July 2026)
+Comprehensive test infrastructure under [`tests/`](tests):
 
-**Status:** Fully implemented with live TMDb API data
+- **Unit tests** — hooks and library code (`tests/unit/`)
+- **Integration tests** — components and stores (`tests/integration/`)
+- **E2E tests** — Playwright user journeys across Chromium / Firefox / WebKit
+- **Visual regression** — committed baselines for the landing page
+- **Accessibility** — `axe-core` scans via Playwright
+- **API mocking** — MSW handlers for deterministic responses
 
-**Changes:**
-- All hardcoded/placeholder movie data replaced with live TMDb API calls
-- Movie cards display real posters, backdrops, ratings, genres, and durations
-- Search limited to 6 results for optimal UX
-- Success page uses selected movie's poster as full-screen background
-- Genre caching to minimize API calls
+See [docs/testing.md](docs/testing.md) for the full layout and conventions.
 
-**Files Changed:**
-- `src/lib/movies.ts` - Full TMDb integration
-- `src/routes/movie.tsx` - Live search with recommendations
-- `src/components/MovieCard.tsx` - Real movie data display
-- `src/routes/summary.tsx` - Duration display
-- `src/routes/success.tsx` - Poster background
+The repository is set up with continuous integration on `.github/workflows/`
+covering lint, unit tests, E2E, build verification, coverage and security —
+see [docs/ci-cd.md](docs/ci-cd.md).
 
-See [missing.md](./missing.md) for complete TMDb implementation details.
+## Recent Highlights (May — July 2026)
 
-## Project Health
+- **Persistent backdrop system** — `BackgroundContext`, `BackgroundLayer`,
+  `BackgroundVariantSync` keep a cross-fading gradient alive across route
+  changes without remounting.
+- **Lock-screen progress bar** — `TopProgressBar` lives at the root,
+  derives the active step from the URL, and locks navigation on
+  `/success`.
+- **Bottom control bar** — global dark / audio / love-letter shortcuts
+  factoring out the once-floating buttons.
+- **Live TMDb integration** — `src/lib/movies.ts` normalises search / details
+  responses into a single `Movie` shape, caches the curated IDs locally for
+  seven days, and gracefully falls back to recommendations on failure.
+- **Love-letter categories** — `src/data/loveLetters.ts` ships default,
+  birthday, anniversary and valentine sets; `VITE_LOVE_LETTER_CATEGORY`
+  picks which to render.
+- **Share-as-image love card** — `/love-letter` exports a PNG via
+  `canvas`, with Web Share API + download fallback.
+- **URL ⇄ store sync** — `src/hooks/useUrlSync.ts` is the single source of
+  truth; everything uses `navigate()` rather than `window.history`.
+- **Hydration-safe randomness** — `useRandomMessage`,
+  `ConfettiCelebration`, and friends defer random values to `useEffect`
+  so SSR / first client render line up.
 
-| Aspect | Status |
-|--------|--------|
-| Build | ✅ Passing |
-| Lint | ✅ Passing |
-| TypeScript | ✅ No errors |
-| Navigation | ✅ Fixed |
-| URL Sync | ✅ Fixed |
-| TMDb Integration | ✅ Complete |
+## Project Health (snapshot)
 
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](./docs/contributing.md) for details on our code of conduct, development process, and coding standards.
+| Aspect                  | Status                  |
+| ----------------------- | ----------------------- |
+| TypeScript strict       | ✅ clean                |
+| ESLint + Prettier       | ✅ clean                |
+| Vitest unit / coverage  | ✅                      |
+| Playwright (3 browsers) | ✅, with accessibility  |
+| Visual regression       | ✅                      |
+| CI / Coverage / Release | ✅ GitHub Actions       |
+| TMDb integration        | ✅                      |
+| Backgrounds / progress  | ✅                      |
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](./license) file for details.
-
----
-
-*Last updated: July 11, 2026*
+MIT — see the [LICENSE](license) file.
