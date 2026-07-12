@@ -1,5 +1,7 @@
 # Production build verification.
-# Outputs to .output/ (TanStack Start / Vinxi convention).
+#
+# Outputs to .output/ (TanStack Start / Vinxi convention). Reports the
+# build size on every run so contributors can spot a regression quickly.
 
 name: Build
 
@@ -39,8 +41,7 @@ jobs:
         run: bun run build
 
       - name: Verify build output
-        run: |
-          test -d .output && echo "✅ Build succeeded — .output directory present"
+        run: test -d .output && echo "✅ Build succeeded — .output directory present"
 
       - name: Measure build size
         run: |
@@ -61,6 +62,7 @@ jobs:
     name: Build (npm, parity)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: build-bun
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

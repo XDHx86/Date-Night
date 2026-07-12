@@ -1,6 +1,12 @@
+# Main CI pipeline. Composes the suites via reusable workflows and
+# parallel jobs, with concurrency on the same ref.
+
 name: CI
+
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch: {}
 
@@ -12,23 +18,46 @@ permissions:
   contents: read
 
 jobs:
+  # ---- Static analysis ----------------------------------------------------
   lint:
     name: Lint & Type Check
     uses: ./.github/workflows/lint.yml
     permissions:
       contents: read
 
-  test:
+  format-check:
+    name: Prettier Format Check
+    uses: ./.github/workflows/format-check.yml
+    permissions:
+      contents: read
+
+  # ---- Build verification -------------------------------------------------
+  build:
+    name: Production Build
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+
+  # ---- Tests --------------------------------------------------------------
+  unit-tests:
     name: Unit & Integration Tests
     needs: lint
     uses: ./.github/workflows/test.yml
     permissions:
       contents: read
 
-  build:
-    name: Production Build
+  api-tests:
+    name: API Contract Tests
     needs: lint
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/api-tests.yml
+    permissions:
+      contents: read
+
+  smoke-tests:
+    name: Build Smoke Tests
+    needs: [lint, build]
+    if: "github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-smoke')"
+    uses: ./.github/workflows/smoke-tests.yml
     permissions:
       contents: read
 
@@ -40,9 +69,17 @@ jobs:
     permissions:
       contents: read
 
+  # ---- Security -----------------------------------------------------------
   security:
     name: Security Scan
     uses: ./.github/workflows/security.yml
     permissions:
       contents: read
       security-events: write
+
+  # ---- Dependency hygiene -------------------------------------------------
+  dependencies:
+    name: Dependency Validation
+    uses: ./.github/workflows/dependency-validation.yml
+    permissions:
+      contents: read

@@ -1,6 +1,8 @@
 # End-to-end Playwright tests.
-# Server lifecycle is owned by playwright.config.ts (`webServer.webServer`).
-# Jobs only spin up Playwright browser binaries and execute the suites.
+#
+# The matrix covers `setup`, smoke, all three browsers, two mobile
+# profiles, visual regression and accessibility. Server lifecycle is
+# owned by `playwright.config.ts` (`webServer`).
 
 name: E2E
 
@@ -15,187 +17,190 @@ permissions:
   contents: read
 
 jobs:
-  e2e-chromium:
-    name: E2E (Chromium)
+  e2e-setup:
+    name: Setup
+    uses: ./.github/workflows/reusable/setup-bun-playwright.yml
+    permissions:
+      contents: read
+
+  e2e-user-journeys:
+    name: User journeys
+    needs: e2e-setup
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/download-artifact@v4
         with:
-          bun-version: latest
-          cache: true
-          cache-dependency-glob: |
-            **/bun.lock
-            **/package.json
-            **/bunfig.toml
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers (Chromium)
-        run: bunx playwright install --with-deps chromium
-
-      - name: Run Playwright tests (Chromium)
-        run: bunx playwright test --project=chromium
-
-      - name: Upload Playwright report
+          name: e2e-cache
+          path: ~/.cache
+      - name: Run user journeys (desktop Chrome)
+        run: bunx playwright test --project=user-journeys-desktop --project=setup
+        env:
+          PORT: 3000
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-chromium
+          name: playwright-user-journeys
           path: |
             playwright-report/
             playwright-results/
           retention-days: 14
 
-  e2e-firefox:
-    name: E2E (Firefox)
+  e2e-cross-browser:
+    name: Cross-browser matrix
+    needs: e2e-setup
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-          cache: true
-          cache-dependency-glob: |
-            **/bun.lock
-            **/package.json
-            **/bunfig.toml
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers (Firefox)
-        run: bunx playwright install --with-deps firefox
-
-      - name: Run Playwright tests (Firefox)
-        run: bunx playwright test --project=firefox
-
-      - name: Upload Playwright report
+      - name: Run browser matrix
+        run: bunx playwright test --project=${{ matrix.browser }}
+        env:
+          PORT: 3000
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-firefox
+          name: playwright-${{ matrix.browser }}
           path: |
             playwright-report/
             playwright-results/
           retention-days: 14
 
-  e2e-webkit:
-    name: E2E (WebKit)
+  e2e-responsive:
+    name: Responsive matrix
+    needs: e2e-setup
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [mobile-chrome, mobile-safari, tablet]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-          cache: true
-          cache-dependency-glob: |
-            **/bun.lock
-            **/package.json
-            **/bunfig.toml
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers (WebKit)
-        run: bunx playwright install --with-deps webkit
-
-      - name: Run Playwright tests (WebKit)
-        run: bunx playwright test --project=webkit
-
-      - name: Upload Playwright report
+      - name: Run responsive matrix
+        run: bunx playwright test --project=${{ matrix.profile }}
+        env:
+          PORT: 3000
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-webkit
+          name: playwright-${{ matrix.profile }}
           path: |
             playwright-report/
             playwright-results/
           retention-days: 14
 
   e2e-visual:
-    name: Visual Regression
+    name: Visual regression
+    needs: e2e-setup
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-          cache: true
-          cache-dependency-glob: |
-            **/bun.lock
-            **/package.json
-            **/bunfig.toml
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers (Chromium + system deps)
-        run: bunx playwright install --with-deps chromium
-
-      - name: Run visual regression tests
+      - name: Run visual regression
         run: bunx playwright test --project=visual
-
+        env:
+          PORT: 3000
       - name: Upload visual diff
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-regression
+          name: playwright-visual
           path: |
             playwright-report/
             tests/e2e/visual/baselines/
           retention-days: 14
 
   e2e-a11y:
-    name: Accessibility Scan
+    name: Accessibility (axe)
+    needs: e2e-setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run accessibility scans
+        run: bunx playwright test --project=accessibility
+        env:
+          PORT: 3000
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-accessibility
+          path: |
+            playwright-report/
+            playwright-results/
+          retention-days: 14
+
+  e2e-performance:
+    name: Performance budgets
+    needs: e2e-setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-          cache: true
-          cache-dependency-glob: |
-            **/bun.lock
-            **/package.json
-            **/bunfig.toml
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers (Chromium + system deps)
-        run: bunx playwright install --with-deps chromium
-
-      - name: Run accessibility tests
-        run: bunx playwright test --project=accessibility
-
-      - name: Upload accessibility report
+      - name: Run performance suite
+        run: bunx playwright test --project=performance
+        env:
+          PORT: 3000
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: accessibility-report
-          path: |
-            playwright-report/
-            playwright-results/
+          name: playwright-performance
+          path: playwright-report/
           retention-days: 14
+
+  e2e-regression:
+    name: Regression suite
+    needs: e2e-setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run regression suite
+        run: bunx playwright test --project=regression
+        env:
+          PORT: 3000
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-regression
+          path: playwright-report/
+          retention-days: 14
+
+  e2e-smoke:
+    name: E2E smoke
+    needs: e2e-setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run smoke suite
+        run: bunx playwright test --project=smoke --project=setup
+        env:
+          PORT: 3000
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke
+          path: playwright-report/
+          retention-days: 7

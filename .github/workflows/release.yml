@@ -27,12 +27,12 @@ on:
       draft:
         description: "Create as a draft release"
         required: false
-        default: "true"
+        default: true
         type: boolean
       prerelease:
         description: "Mark as a pre-release"
         required: false
-        default: "false"
+        default: false
         type: boolean
       release-notes:
         description: "Optional release notes body"
