@@ -1,58 +1,48 @@
 name: CI
-
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+concurrency:
+  group: "ci-${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint & Type Check
+    uses: ./.github/workflows/lint.yml
+    permissions:
+      contents: read
+
+  test:
+    name: Unit & Integration Tests
+    needs: lint
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+
   build:
-    runs-on: ubuntu-latest
+    name: Production Build
+    needs: lint
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-      
-      - name: Install dependencies
-        run: bun install
-      
-      - name: Build
-        run: bun run build
+  e2e:
+    name: End-to-End Tests
+    needs: [lint, build]
+    if: "github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-e2e')"
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
 
-      - name: Configure GitHub Pages
-        if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-
-  deploy:
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  security:
+    name: Security Scan
+    uses: ./.github/workflows/security.yml
+    permissions:
+      contents: read
+      security-events: write
