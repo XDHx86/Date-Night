@@ -1,74 +1,38 @@
-# =============================================================================
-# Reusable Workflow: Setup Bun
-# =============================================================================
-# This workflow sets up Bun with caching for faster dependency installation.
+# Reusable workflow: set up Bun and install dependencies.
+# Consumes no inputs, returns no outputs. Callers chain off `needs: setup-bun`.
 
 name: Setup Bun
 
 on:
   workflow_call:
-    inputs:
-      bun-version:
-        description: "Bun version to install"
-        required: false
-        default: "latest"
-        type: string
-      cache-key:
-        description: "Custom cache key suffix"
-        required: false
-        default: ""
-        type: string
-    outputs:
-      bun-version:
-        description: "Installed Bun version"
-        value: ${{ steps.setup.outputs.version }}
+
+permissions:
+  contents: read
 
 jobs:
-  setup:
+  setup-bun:
     name: Setup Bun
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Bun with caching
-        id: setup
+      - name: Setup Bun with built-in cache
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ inputs.bun-version }}
+          bun-version: latest
           cache: true
           cache-dependency-glob: |
             **/bun.lock
-            **/bun.lockb
             **/package.json
             **/bunfig.toml
 
-      - name: Output Bun version
-        id: version
-        run: echo "version=$(bun --version)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: |
-            node_modules
-            bun.lock
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-${{ inputs.cache-key }}
-          restore-keys: |
-            ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-${{ inputs.cache-key }}
-            ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      - name: Install dependencies (frozen lockfile)
         run: bun install --frozen-lockfile
 
       - name: Verify Bun installation
         run: |
           bun --version
-          bun run --version
+          echo "node_modules=$(test -d node_modules && echo yes || echo no)"
