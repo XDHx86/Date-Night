@@ -64,40 +64,79 @@ of these set — each integration only renders when its variable is populated.
 
 ## Scripts
 
-| Command                   | What it does                                                      |
-| ------------------------- | ----------------------------------------------------------------- |
-| `bun run dev`             | Start the dev server (Vite)                                       |
-| `bun run build`           | Production build                                                  |
-| `bun run preview`         | Preview the production build                                      |
-| `bun run typecheck`       | `tsc --noEmit`                                                    |
-| `bun run lint`            | ESLint across the project                                         |
-| `bun run lint:fix`        | ESLint with `--fix`                                               |
-| `bun run format`          | Prettier write                                                    |
-| `bun run test`           | Vitest (unit + integration) single run                           |
-| `bun run test:watch`     | Vitest in watch mode                                              |
-| `bun run test:coverage`  | Vitest with V8 coverage                                           |
-| `bun run test:e2e`       | Playwright (all projects)                                         |
-| `bun run test:e2e:ui`    | Playwright with the test runner UI                                |
-| `bun run test:all`       | Run unit and E2E tests concurrently                               |
-| `bun run check`          | `typecheck` + `lint` + `test`                                     |
-| `bun run validate:build` | Production build with a success marker                            |
+| Command                       | What it does                                                              |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `bun run dev`                 | Start the dev server (Vite)                                               |
+| `bun run build`               | Production build                                                          |
+| `bun run preview`             | Preview the production build                                              |
+| `bun run typecheck`           | `tsc --noEmit`                                                            |
+| `bun run lint`                | ESLint across the project                                                 |
+| `bun run lint:fix`            | ESLint with `--fix`                                                       |
+| `bun run format`              | Prettier write                                                            |
+| `bun run format:check`        | Prettier verify                                                           |
+| `bun run test`                | Vitest run (all projects, no coverage)                                    |
+| `bun run test:watch`          | Vitest in watch mode                                                      |
+| `bun run test:coverage`       | Vitest with V8 coverage for the `unit` project                            |
+| `bun run test:unit`           | Vitest only the `unit` project                                            |
+| `bun run test:integration`    | Vitest only the `integration` project                                     |
+| `bun run test:ssr`            | Vitest only the `ssr` project                                             |
+| `bun run test:api`            | Vitest only the `api` project                                             |
+| `bun run test:smoke`          | Vitest only the `smoke` project                                           |
+| `bun run test:e2e`            | Playwright (all projects)                                                 |
+| `bun run test:e2e:smoke`      | Playwright `smoke` project only                                           |
+| `bun run test:e2e:visual`     | Playwright `visual` project only                                          |
+| `bun run test:e2e:accessibility` | Playwright `accessibility` project only                                |
+| `bun run test:e2e:performance`| Playwright `performance` project only                                     |
+| `bun run test:e2e:regression` | Playwright `regression` project only                                      |
+| `bun run test:e2e:security`   | Playwright `security` project only                                        |
+| `bun run test:e2e:user-journeys` | Playwright `user-journeys-desktop` project only                        |
+| `bun run newman:run`          | Run the bundled Postman collection against the dev server                 |
+| `bun run check`               | typecheck + lint + format:check + unit tests                              |
+| `bun run check:full`          | The full local pipeline mirror of CI                                      |
+| `bun run validate:build`      | Production build with a success marker                                    |
 
 ## Testing & Quality
 
 Comprehensive test infrastructure under [`tests/`](tests):
 
-- **Unit tests** — hooks and library code (`tests/unit/`)
-- **Integration tests** — components and stores (`tests/integration/`)
-- **E2E tests** — Playwright user journeys across Chromium / Firefox / WebKit
-- **Visual regression** — committed baselines for the landing page
+- **Unit tests** — hooks and library code (`tests/unit/`, Vitest `unit` project)
+- **Integration tests** — components, router, state, error boundary (`tests/integration/`, Vitest `integration` project)
+- **SSR & hydration** — `tests/integration/ssr/`, Vitest `ssr` project (happy-dom)
+- **API tests** — MSW-backed TMDb contract tests (`tests/api/`, Vitest `api` project) plus the bundled Postman/Newman collection
+- **Smoke tests** — post-build sanity invariants (`tests/smoke/` and `tests/e2e/smoke/`)
+- **End-to-end** — Playwright user journeys across Chromium / Firefox / WebKit and mobile + tablet viewports
+- **Visual regression** — committed baselines for `landing`, `date`, `time`, `movie`
 - **Accessibility** — `axe-core` scans via Playwright
+- **Performance** — FCP / DCL / transfer budgets pinned in `tests/e2e/performance/`
+- **Security** — key hygiene, header checks, input boundaries (`tests/e2e/security/`)
+- **Regression** — previously fixed issues (`tests/e2e/regression/`)
+- **Error boundary** — graceful runtime-error handling (`tests/e2e/error-boundary/`)
+- **Cross-browser / Responsive** — `*.browser.test.ts` and `*.responsive.test.ts`
 - **API mocking** — MSW handlers for deterministic responses
+- **Test data** — `@faker-js/faker` factories, static fixtures (`factories/`, `fixtures/`)
 
 See [docs/testing.md](docs/testing.md) for the full layout and conventions.
 
-The repository is set up with continuous integration on `.github/workflows/`
-covering lint, unit tests, E2E, build verification, coverage and security —
-see [docs/ci-cd.md](docs/ci-cd.md).
+The repository is set up with continuous integration under
+[`.github/workflows/`](.github/workflows/) covering:
+
+- **Main CI** (`ci.yml`) — orchestrator with format-check, lint, build, unit, integration, SSR, API, smoke, E2E, security, dependency validation
+- **Lint** (`lint.yml`, Bun + npm parity)
+- **Format-check** (`format-check.yml`, isolated Prettier check)
+- **Test** (`test.yml`, Vitest unit + integration + SSR + coverage)
+- **Build** (`build.yml`, Bun + npm parity, bundle-size report)
+- **API tests** (`api-tests.yml`, Vitest + Newman)
+- **Smoke tests** (`smoke-tests.yml`, post-build Playwright smoke)
+- **E2E** (`e2e.yml`, full browser + device matrix)
+- **Security** (`security.yml`, audits + CodeQL + dep-review)
+- **Dependency validation** (`dependency-validation.yml`, lockfile parity + supply-chain guard)
+- **Coverage summary** (`coverage-summary.yml`, PR-comment coverage table)
+- **Preview deploy** (`preview-deploy.yml`, Cloudflare Pages)
+- **Release** (`release.yml`, manual draft release with asset bundling)
+- **Reusable setups** (`reusable/setup-bun.yml`, `setup-npm.yml`,
+  `setup-bun-playwright.yml`) for a single source of install truth.
+
+See [docs/ci-cd.md](docs/ci-cd.md).
 
 ## Recent Highlights (May — July 2026)
 
