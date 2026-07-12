@@ -17,7 +17,7 @@ dist
 dist-ssr
 .output
 .vinxi
-.tanstack/**
+.tanstack
 .nitro
 *.local
 
@@ -36,7 +36,19 @@ dist-ssr
 *.sln
 *.sw?
 .lovable
-dProjosdatenightdocs
+
+# Test output and reports
+coverage/
+playwright-report/
+playwright-results/
+test-results/
+vitest-uuid-map.json
+
+# MSW cache
+.msw/
+
+# Playwright browsers (can be large - consider if you want to commit these)
+# playwright/
 
 # Claude Code metadata
 .claude/

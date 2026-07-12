@@ -2,123 +2,146 @@
 
 ## Overview
 
-Datenight is built using a modern web development stack focused on developer experience, performance, and maintainability. The project leverages the TanStack Start framework (built on Vite) for full-stack capabilities, React for the UI, and a curated set of libraries for state management, styling, animations, and more.
+Datenight is built with a modern, batteries-included web stack —
+TanStack Start on top of Vite, React 19, Tailwind CSS v4, Zustand for
+state, Radix UI primitives for accessibility and Zod for validation.
 
-## Frontend Dependencies
+## Core Framework
 
-### Core Framework
-- **[@tanstack/react-start](https://tanstack.com/start/latest)**: Full-stack React framework providing routing, data fetching, and server-side rendering capabilities (v1.168.26).
-- **[@tanstack/router-plugin](https://tanstack.com/router/latest)**: File-based routing plugin for seamless integration with Vite (v1.168.18).
-- **[@tanstack/react-query](https://tanstack.com/query/latest)**: Powerful state management for server state and asynchronous operations (v5.101.1).
-- **[@tanstack/react-router](https://tanstack.com/router/latest)**: Type-safe, file-based routing library (v1.170.16).
-- **React & React DOM**: Core UI library for building user interfaces (v19.2.0).
-- **TypeScript**: Typed superset of JavaScript for enhanced code quality and developer experience (v5.8.3).
+| Package                                | Why                                                                                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@tanstack/react-start` ^1.168.27      | Full-stack framework around Vite: routing, SSR, server functions.                         |
+| `@tanstack/react-router` ^1.170.17     | Type-safe file-based routing.                                                            |
+| `@tanstack/router-plugin` ^1.168.19    | Auto-generates the route tree (`src/routeTree.gen.ts`).                                  |
+| `@tanstack/react-query` ^5.101.2       | Async state cache (available at the root).                                                |
+| `react` / `react-dom` ^19.2.7          | Latest stable React.                                                                      |
+| `typescript` ^5.9.3                    | Strict type safety.                                                                       |
 
-### State Management
-- **Zustand**: Minimalist state management solution for client-state persistence (v5.0.14).
-  - Used for storing date, time, and movie selections across the application flow.
-  - Persisted to `sessionStorage` to survive page reloads.
+## State Management
 
-### Styling & UI
-- **Tailwind CSS**: Utility-first CSS framework for rapid UI development (v4.2.1).
-  - Configured via `tailwind.config.js` (inherited from `@lovable.dev/vite-tanstack-config`).
-  - PostCSS setup handled by Vite.
-- **Headless UI (via Radix)**: Accessible, unstyled UI components as the foundation for custom designs.
-  - `@radix-ui/*` primitives for dialogs, menus, tooltips, toggles, and more.
-- **Tailwind Merge**: Utility for efficiently combining Tailwind classes without style conflicts (v3.5.0).
-- **Class Variance Authority**: Utility for creating variant-based component classes (v0.7.1).
-- **Clsx**: Utility for conditionally joining classNames (v2.1.1).
-- **Tw-animate.css**: Animate.css integration tailored for Tailwind CSS (v1.3.4).
+- **Zustand** `^5.0.14` — minimalist state with first-class TypeScript.
+  Persists to `localStorage` through the built-in `persist` middleware
+  and lives at `src/lib/store.ts`.
 
-### Animations & Motion
-- **Framer Motion**: Production-ready motion library for React (v12.42.2).
-  - Used for page transitions, button animations, and celebratory effects.
-- **Embla Carousel React**: Touch-friendly carousel component for image sliders (v8.6.0).
+## Styling & UI
 
-### Forms & Validation
-- **React Hook Form**: Performant, flexible form validation library (v7.71.2).
-- **Zod**: TypeScript-first schema declaration and validation library (v3.24.2).
-  - Integrated with React Hook Form via `@hookform/resolvers` (v5.2.2).
-- **Cmdk**: Accessible, command/menu component inspired by Command palette (v1.1.1).
+- **Tailwind CSS** `^4.3.2` via `@tailwindcss/vite` + `tw-animate-css`
+  — utility-first styling, CSS variables for the palette, and
+  keyframe-driven animations.
+- **Radix UI primitives** (`@radix-ui/react-*` 1.x–2.x) — accessible
+  primitives under `src/components/ui/`.
+- **class-variance-authority** `^0.7.1` + **tailwind-merge** `^3.6.0` +
+  **clsx** `^2.1.1` — variants and class composition (`cn()` helper).
+- **lucide-react** `^0.575.0` — icon set.
 
-### Data & Utilities
-- **Date-fns**: Modern date utility library (v4.1.0).
-  - Used for date formatting, parsing, and manipulation.
-- **Lucide React**: Beautifully simple, open-source icons (v0.575.0).
-- **Sonner**: Toast notification system for pleasant user feedback (v2.0.7).
-- **Vaul**: Accessible drawer component for mobile navigation (v1.1.1).
-- **Input OTP**: Input component optimized for one-time passcodes (v1.4.2).
+## Animations & Motion
 
-### Data Visualization
-- **Recharts**: Charting library built on React and D3 (v2.15.4).
-  - Currently unused but included for potential future enhancements.
+- **framer-motion** `^12.42.2` — springs, `AnimatePresence`,
+  gesture-driven celebrations, the persistent background cross-fade.
+- **embla-carousel-react** `^8.6.0` — pulled in for future use.
 
-### Development Tools & DevDependencies
-- **Vite**: Next-generation frontend tooling for fast builds and HMR (v8.0.16).
-- **ESLint**: Pluggable linting utility for identifying and reporting on patterns (v9.32.0).
-  - Configured with plugins for React, Prettier, and accessibility.
-- **Prettier**: Opinionated code formatter for consistent code style (v3.7.3).
-- **TypeScript Enterprise**: TypeScript language services for IDE support (via `@typescript-eslint/parser` and `@typescript-eslint/typescript-estree`).
-- **Nitro**: Lightweight, performant HTTP server framework (v3.0.260603-beta).
-  - Used under the hood by TanStack Start for server-side utilities.
-- **@types/***: TypeScript definition files for all libraries.
-- **Vite TSConfig Paths**: Vite plugin for resolving TypeScript path aliases (v6.0.2).
-- **@lovable.dev/vite-tanstack-config**: Preset configuration for TanStack Start projects integrated with Lovable platform (v2.7.1).
+## Forms & Validation
 
-## Development Scripts
+- **react-hook-form** `^7.81.0` + **@hookform/resolvers** `^5.4.0`
+- **zod** `^4.4.3`
 
-See [`package.json`](https://github.com/your-username/datenight/blob/main/package.json) for the full list of scripts, including:
-- `npm run dev`: Start development server with HMR
-- `npm run build`: Production build
-- `npm run build:dev`: Development build with debug info
-- `npm run preview`: Preview production build locally
-- `npm run lint`: Run ESLint across the project
-- `npm run format`: Format code with Prettier
+## Data & Utilities
+
+- **date-fns** `^4.4.0` — date formatting / arithmetic.
+- **sonner** `^2.0.7` — toast notifications.
+- **vaul** `^1.1.2` — mobile drawer.
+- **input-otp** `^1.4.2` — OTP input.
+- **cmdk** `^1.1.1` — command palette.
+- **recharts** `^2.15.4` — charting (not currently used by product code).
+- **react-day-picker** `^9.14.0` — date picker (available in UI).
+- **react-resizable-panels** `^4.12.1` — layout helpers.
+
+## Build & Server
+
+- **vite** `^8.1.3` powered by `@lovable.dev/vite-tanstack-config`
+  `^2.7.2` (in `vite.config.ts`).
+- **nitro** `3.0.260603-beta` — provides the HTTP server behind TanStack
+  Start.
+
+## Development Tooling
+
+- **eslint** `^9.39.4` with `@eslint/js`, `typescript-eslint`,
+  `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`,
+  `eslint-plugin-prettier`, `eslint-config-prettier`.
+- **prettier** `^3.9.4`.
+- **globals** `^15.15.0`, **@types/node** `^22.20.1`,
+  `@types/react`, `@types/react-dom`.
+
+## Testing
+
+| Tool                | Version      | Role                                          |
+| ------------------- | ------------ | --------------------------------------------- |
+| `vitest`            | ^3.2.4       | Unit + integration runner                     |
+| `@vitest/coverage-v8` | ^3.2.4    | Coverage                                      |
+| `@vitest/browser`   | ^3.2.4       | Optional in-browser runner                    |
+| `jsdom`             | ^25.0.1      | DOM emulation for Vitest                      |
+| `@testing-library/react` | ^16.0.1 | Component testing                              |
+| `@testing-library/jest-dom` | ^6.6.2 | Custom matchers                              |
+| `@testing-library/user-event` | ^14.5.2 | Event simulation                              |
+| `@playwright/test`  | ^1.48.0      | E2E browser testing                            |
+| `axe-core`          | ^4.11.0      | Accessibility scans during E2E                 |
+| `msw`               | ^2.7.0       | API mocking in unit / integration tests        |
+| `@faker-js/faker`   | ^9.5.0       | Synthetic test data                            |
 
 ## Environment Variables
 
-The project uses environment variables for configuration:
-- `VITE_TMDB_API_KEY`: Optional key for accessing The Movie Database API (if extending movie search beyond the curated list).
-- `VITE_TMDB_READ_ACCESS_TOKEN`: Optional bearer token for TMDB v4 authentication.
+All variables live in `.env` and are typed in `src/lib/env.ts`.
+See [`.env.example`](../.env.example) for the canonical list. Required
+combinations:
 
-These variables should be defined in a `.env` file at the project root (see `.env.example`).
+| Variable                       | Notes                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`            | TMDb v3 API key (required together with the read token)                                |
+| `VITE_TMDB_READ_ACCESS_TOKEN`  | Preferred for production TMDb requests (`Authorization: Bearer`)                      |
+| `VITE_SPOTIFY_PLAYLIST_ID`     | Optional — gates the Spotify embed                                                     |
+| `VITE_RESEND_API_KEY`          | Reserved for future email integration                                                  |
+| `VITE_LOVE_LETTER_CATEGORY`    | `default` \| `birthday` \| `anniversary` \| `valentine` (defaults to `default`)        |
 
 ## Browser Support
 
-Datenight targets modern browsers that support:
+Targets evergreen Chromium, Firefox, Safari and Edge. Features in use:
+
 - ES modules
-- CSS custom properties
-- Fetch API
-- Promise
-- async/await
+- CSS custom properties (`:root` variables, `oklch` colours)
+- Fetch API + `Promise` + `async/await`
+- `DeviceMotionEvent` (for the shake Easter egg)
 
-Tested in latest versions of Chrome, Firefox, Safari, and Edge.
-
-## Architecture Overview
-
-The application follows a modular structure:
+## Architecture at a Glance
 
 ```
-src/
-├── assets/          # Static images and media
-├── components/      # Reusable UI components (buttons, modals, cards, etc.)
-├── hooks/           # Custom React hooks
-├── lib/             # Core logic (store, movie data, utilities, sound)
-├── routes/          # File-based route definitions (pages)
-├── router.tsx       # Router configuration (auto-generated route tree)
-├── server.ts        # Server-side API routes and middleware
-├── start.ts         # Application entry point
-└── styles.css       | Global CSS and Tailwind directives
+┌──────────────────────────────────────────────────────────┐
+│ Browser                                                  │
+│                                                          │
+│  React 19  ←  Zustand store  ←  useUrlSync  ←  URL       │
+│      │            │                  │                   │
+│      ▼            ▼                  ▼                   │
+│   UI components   localStorage      TanStack Router       │
+│   (PageShell,                                         │  │
+│    TopProgressBar,
+//    BackgroundLayer)                                    │
+└──────────────────────────────────────────────────────────┘
 ```
-
-Data flows from the Zustand store (`src/lib/store.ts`) through React context to components, with mutations handled via actions defined in the store.
 
 ## Why This Stack?
 
-- **TanStack Start**: Provides a modern, batteries-included full-stack solution with minimal configuration.
-- **Zustand**: Offers simple, scalable state management without boilerplate.
-- **Tailwind + Radix**: Enables rapid UI development while maintaining accessibility and design flexibility.
-- **TypeScript**: Catches errors early and improves IDE autocompletion and refactoring safety.
-- **Vite**: Delivers lightning-fast development server and optimized production builds.
+- **TanStack Start** — a single, batteries-included framework with
+  strong types through every layer.
+- **Zustand + `useUrlSync`** — gives us persistent and shareable
+  state without Redux or context boilerplate.
+- **Tailwind v4** — fast iteration with first-class support for CSS
+  variables, keyframes, and the design-system primitives in `styles.css`.
+- **Vitest + Playwright + axe + MSW** — a comprehensive test pyramid
+  without leaving JavaScript.
+- **Vite** — the de facto fast build tool for modern web apps.
 
-For a complete list of dependencies and their versions, see the [`package.json`](package.json) file.
+## Further Reading
+
+- [package.json](../package.json) — exact pinned versions.
+- [vite.config.ts](../vite.config.ts) and the
+  [@lovable.dev/vite-tanstack-config](https://www.npmjs.com/package/@lovable.dev/vite-tanstack-config)
+  preset.
