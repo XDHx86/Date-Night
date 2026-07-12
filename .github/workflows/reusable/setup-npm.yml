@@ -1,0 +1,72 @@
+# =============================================================================
+# Reusable Workflow: Setup npm
+# =============================================================================
+# This workflow sets up npm with caching for faster dependency installation.
+
+name: Setup npm
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: "Node.js version to install"
+        required: false
+        default: "20"
+        type: string
+      cache-key:
+        description: "Custom cache key suffix"
+        required: false
+        default: ""
+        type: string
+    outputs:
+      node-version:
+        description: "Installed Node.js version"
+        value: ${{ steps.setup.outputs.version }}
+
+jobs:
+  setup:
+    name: Setup npm
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        id: setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            package.json
+
+      - name: Output Node.js version
+        id: version
+        run: echo "version=$(node --version)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            package-lock.json
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ inputs.cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ inputs.cache-key }}
+            ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Verify Node.js installation
+        run: |
+          node --version
+          npm --version

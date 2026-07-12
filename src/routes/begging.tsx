@@ -4,12 +4,10 @@ import { motion } from "framer-motion";
 import beggingImg from "@/assets/begging.jpg";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
-import { HeartBurst } from "@/components/HeartBurst";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { sounds } from "@/lib/sound";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/begging")({
   component: Begging,
@@ -26,16 +24,12 @@ const PLEAS = [
 
 function Begging() {
   const navigate = useNavigate();
-  const { setStep } = useDateStore();
+  const { } = useDateStore();
   const [burst, setBurst] = useState(false);
   const [dodges, setDodges] = useState(0);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [flip, setFlip] = useState(1);
 
-  // Set current step (begging is step 2)
-  useEffect(() => {
-    setStep(2);
-  }, [setStep]);
 
   const pleaIndex = Math.min(dodges, PLEAS.length - 1);
   const yesScale = 1 + Math.min(dodges, 6) * 0.12;
@@ -62,21 +56,13 @@ function Begging() {
 
   return (
     <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
-
-      {/* Progress Indicator */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={2} totalSteps={6} />
-      </div>
-
-      {playfulMessage && (
+{playfulMessage && (
         <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
           "{playfulMessage}"
         </p>
       )}
 
-      <HeartBurst active={burst} />
+      <ConfettiCelebration active={burst} />
 
       <motion.img
         src={beggingImg}

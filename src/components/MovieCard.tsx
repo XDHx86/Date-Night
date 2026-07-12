@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Clock, Calendar, Check } from "lucide-react";
+import { Star, Clock, Calendar, Check, Film } from "lucide-react";
 import type { Movie } from "@/lib/movies";
 import { AnimatedButton } from "./AnimatedButton";
 import { cn } from "@/lib/utils";
@@ -54,12 +54,22 @@ export function MovieCard({
   selected,
   onChoose,
   compact = false,
+  category,
 }: {
   movie: Movie;
   selected?: boolean;
   onChoose: (movie: Movie) => void;
   compact?: boolean;
+  category?: "recommended" | "classic";
 }) {
+  // Category-specific styles: border, ring, and overlay badge
+  const categoryStyles =
+    category === "recommended"
+      ? "border-amber-400 ring-2 ring-amber-400 bg-amber-50/30 dark:bg-amber-950/20"
+      : category === "classic"
+        ? "border-slate-400 ring-1 ring-slate-400 bg-slate-50/30 dark:bg-slate-900/20"
+        : "";
+
   return (
     <motion.article
       layout
@@ -67,10 +77,32 @@ export function MovieCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border bg-card p-3 text-left shadow-[var(--shadow-card)] transition-colors",
-        selected ? "border-primary ring-2 ring-primary" : "border-border"
+        "relative flex flex-col overflow-hidden rounded-3xl border bg-card p-3 text-left shadow-[var(--shadow-card)] transition-colors",
+        selected ? "border-primary ring-2 ring-primary" : categoryStyles
       )}
     >
+      {/* Category badge overlay */}
+      {category && (
+        <div
+          className={cn(
+            "absolute z-10 left-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide shadow",
+            category === "recommended"
+              ? "bg-amber-400 text-amber-950"
+              : "bg-slate-400 text-slate-950"
+          )}
+        >
+          {category === "recommended" ? (
+            <>
+              <Star className="h-3 w-3" /> Recommended
+            </>
+          ) : (
+            <>
+              <Film className="h-3 w-3" /> Classic
+            </>
+          )}
+       </div>
+      )}
+
       <Poster movie={movie} />
 
       <div className="flex flex-1 flex-col gap-2 px-1 pt-3">

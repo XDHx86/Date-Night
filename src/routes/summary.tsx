@@ -4,11 +4,11 @@ import { format, parse, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarHeart, Clock, Film, Heart } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { MovieBackdropBackground } from "@/components/MovieBackdropBackground";
+import { MoviePoster } from "@/components/MoviePoster";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
@@ -20,16 +20,12 @@ export const Route = createFileRoute("/summary")({
 
 function SummaryPage() {
   const navigate = useNavigate();
-  const { date, time, movie, step, setStep } = useDateStore();
-
-  // Set current step (summary is step 6? Actually, we have 6 steps, and summary is after movie, so we'll show as completed)
+ const { date, time, movie } = useDateStore();
   useEffect(() => {
-    setStep(6); // Show as completed since we're after movie selection
-  }, [setStep]);
-
-  if ((!date || !time || !movie) && typeof window !== "undefined") {
-    navigate({ to: "/date" });
-  }
+    if (!date || !time || !movie) {
+      navigate({ to: "/date" });
+    }
+  }, [date, time, movie, navigate]);
 
   const rows = [
     {
@@ -86,13 +82,9 @@ function SummaryPage() {
 
   return (
     <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
+      {/* Full‑page blurred backdrop from the selected movie's artwork */}
+      <MovieBackdropBackground movie={movie} />
 
-      {/* Progress Indicator - show as completed */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={6} totalSteps={6} />
-      </div>
 
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
@@ -103,13 +95,13 @@ function SummaryPage() {
           <Heart className="h-6 w-6 fill-primary text-primary" />
           <h1 className="text-3xl font-bold text-gradient">Our Date</h1>
           <Heart className="h-6 w-6 fill-primary text-primary" />
-        </div>
+       </div>
 
         {/* Romantic message */}
         {romanticMessage && (
           <p className="mb-4 text-center text-muted-foreground italic">
             "{romanticMessage}"
-          </p>
+         </p>
         )}
 
         {/* Countdown timer */}
@@ -117,20 +109,18 @@ function SummaryPage() {
           <div className="mb-6">
             <h2 className="mb-2 text-lg font-medium text-muted-foreground">
               Countdown to our date
-            </h2>
-            {/* Combine date and time for accurate countdown - default to midnight if no time */}
+           </h2>
             <CountdownTimer dateTimeString={`${date}T${time || '00:00'}:00`} />
-          </div>
+         </div>
         )}
 
         {movie && (
-          <div
-            className="mx-auto mt-6 flex h-28 w-28 items-center justify-center rounded-2xl text-5xl shadow-[var(--shadow-soft)]"
-            aria-hidden
-          >
-            {/* Show first letter of movie title as placeholder */}
-            {movie.title.charAt(0).toUpperCase()}
-          </div>
+          <div className="mt-6 flex justify-center">
+            <MoviePoster
+              movie={movie}
+              className="h-48 w-32 sm:h-56 sm:w-40"
+            />
+         </div>
         )}
 
         <div className="mt-6 space-y-3 text-left">
@@ -141,16 +131,16 @@ function SummaryPage() {
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
                 <r.icon className="h-5 w-5" />
-              </span>
+             </span>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   {r.label}
-                </p>
+               </p>
                 <p className="text-lg font-bold text-card-foreground">{r.value}</p>
-              </div>
-            </div>
+             </div>
+           </div>
           ))}
-        </div>
+       </div>
 
         {movie && (
           <div className="mt-4 flex flex-wrap justify-center gap-1">
@@ -160,9 +150,9 @@ function SummaryPage() {
                 className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"
               >
                 {tag}
-              </span>
+             </span>
             ))}
-          </div>
+         </div>
         )}
 
         <p className="mt-6 text-xl font-bold text-primary">Let's gooooo 🥹</p>
@@ -170,18 +160,18 @@ function SummaryPage() {
         <div className="mt-6 flex flex-col gap-3">
           <AnimatedButton variant="no" size="md" onClick={handleShare}>
             Share our date plan 📤
-          </AnimatedButton>
+         </AnimatedButton>
           <AnimatedButton variant="yes" size="md" onClick={confirm}>
             Confirm our date ❤️
-          </AnimatedButton>
+         </AnimatedButton>
           <AnimatedButton variant="ghost" size="sm" onClick={() => navigate({ to: "/movie" })}>
             Change something
-          </AnimatedButton>
-        </div>
+         </AnimatedButton>
+       </div>
 
         {/* Spotify Embed (if configured) */}
         <SpotifyEmbed />
-      </motion.div>
-    </PageShell>
+     </motion.div>
+   </PageShell>
   );
 }

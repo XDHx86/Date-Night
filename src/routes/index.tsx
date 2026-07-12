@@ -1,15 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import landingImg from "@/assets/landing.jpg";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
-import { HeartBurst } from "@/components/HeartBurst";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { sounds } from "@/lib/sound";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -17,14 +15,10 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
-  const { step, setStep } = useDateStore();
+  const { } = useDateStore();
   const [burst, setBurst] = useState(false);
   const [yesText, setYesText] = useState<string | null>(null);
 
-  // Set step to 1 (landing page)
-  useEffect(() => {
-    setStep(1);
-  }, [setStep]);
 
   const handleYes = () => {
     sounds.celebrate();
@@ -38,16 +32,9 @@ function Landing() {
   const openingMessage = useRandomMessage("encouragement");
 
   return (
-    <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
-
-      {/* Progress Indicator */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={1} totalSteps={6} />
-      </div>
-
-      <HeartBurst active={burst} />
+    <PageShell particles={8}>
+      {/* Confetti celebration */}
+      <ConfettiCelebration active={burst} />
 
       {openingMessage && (
         <p className="mb-4 text-center text-muted-foreground italic max-w-xl">

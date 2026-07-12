@@ -7,12 +7,21 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode, useState } from "react";
-import { HeartBurst } from "@/components/HeartBurst";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { HeartExplosion } from "@/components/HeartExplosion";
+import { BottomControlBar } from "@/components/BottomControlBar";
+import { BackgroundProvider } from "@/components/BackgroundContext";
+import { BackgroundLayer } from "@/components/BackgroundLayer";
+import { BackgroundVariantSync } from "@/components/BackgroundVariantSync";
+import { FloatingDecorations } from "@/components/FloatingDecorations";
+import { TopProgressBar } from "@/components/TopProgressBar";
+import { Toaster } from "@/components/ui/sonner";
+import { useDateStore } from "@/lib/store";
+import { useShakeEffect } from "@/hooks/useShakeEffect";
+import { useBackgroundAudio } from "@/hooks/useBackgroundAudio";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { useShakeEffect } from "@/hooks/useShakeEffect";
 
 function NotFoundComponent() {
   return (
@@ -21,18 +30,18 @@ function NotFoundComponent() {
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+          The page you’re looking for doesn’t exist or has been moved.
+      </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Go home
-          </Link>
-        </div>
+        </Link>
       </div>
     </div>
+  </div>
   );
 }
 
@@ -47,11 +56,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
+          This page didn’t load
+      </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
-        </p>
+      </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -61,16 +70,16 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
-          </button>
+        </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
-          </a>
-        </div>
+        </a>
       </div>
     </div>
+  </div>
   );
 }
 
@@ -82,27 +91,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "Will You Go Out With Me? 🥺❤️" },
+      { title: "Can i book you for a night? ❤️" },
       {
         name: "description",
         content:
-          "A little something I made just for you — say yes and let's plan the cutest date night together.",
+          "A little something I made just for you — say yes and let’s plan the cutest date night together.",
       },
       { name: "author", content: "Made with love" },
       { name: "theme-color", content: "#ffb3c6" },
-      { property: "og:title", content: "Will You Go Out With Me? 🥺❤️" },
+      { property: "og:title", content: "Can i book you for a night? ❤️" },
       {
         property: "og:description",
-        content: "A playful little invitation, made just for you. Will you say yes?",
+        content:
+          "A playful little invitation, made just for you. Will you say yes?",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -127,35 +134,62 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-      </head>
+    </head>
       <body>
         {children}
         <Scripts />
-      </body>
-    </html>
+    </body>
+  </html>
   );
 }
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const [burst, setBurst] = useState(false);
+  const lastShakeRef = useRef(0);
+  const { isDarkMode } = useDateStore();
 
-  // Shake effect to trigger heart explosion
+  // Listen for device shakes — fires the heart explosion.
+  // 3 s cooldown prevents accidental double‑triggering.
   useShakeEffect(() => {
-    setBurst(true);
-    setTimeout(() => setBurst(false), 1500);
-  }, []);
+    const now = Date.now();
+    if (now - lastShakeRef.current > 3000) {
+      lastShakeRef.current = now;
+      setBurst(true);
+      window.setTimeout(() => setBurst(false), 1500);
+    }
+  }, { threshold: 25 });
+
+  // Sync dark mode with the document root – keeps CSS variables in sync.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
+
+  // Background audio — autoplay, unlock‑after‑first‑interaction fallback,
+  // and stays synchronised with the store‑driven UI toggle.
+  useBackgroundAudio();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Shake-triggered heart burst (full screen) */}
-      {burst && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none">
-          <HeartBurst active={burst} pieces={100} className="pointer-events-none" />
-        </div>
-      )}
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-    </QueryClientProvider>
+      <BackgroundProvider>
+        <BackgroundVariantSync />
+        <BackgroundLayer />
+
+        {/* Persistent, route‑aware progress bar */}
+        <TopProgressBar />
+
+        {/* Heart explosion Easter egg */}
+        <HeartExplosion active={burst} />
+
+        <Outlet />
+
+        {/* Persistent decorations and bottom control bar */}
+        <FloatingDecorations />
+        <BottomControlBar />
+
+        <Toaster />
+    </BackgroundProvider>
+  </QueryClientProvider>
   );
 }

@@ -14,6 +14,7 @@ import { Route as SummaryRouteImport } from './routes/summary'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MovieRouteImport } from './routes/movie'
+import { Route as LoveLetterRouteImport } from './routes/love-letter'
 import { Route as DateRouteImport } from './routes/date'
 import { Route as ConfirmationRouteImport } from './routes/confirmation'
 import { Route as BeggingRouteImport } from './routes/begging'
@@ -44,6 +45,11 @@ const MovieRoute = MovieRouteImport.update({
   path: '/movie',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoveLetterRoute = LoveLetterRouteImport.update({
+  id: '/love-letter',
+  path: '/love-letter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DateRoute = DateRouteImport.update({
   id: '/date',
   path: '/date',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/begging': typeof BeggingRoute
   '/confirmation': typeof ConfirmationRoute
   '/date': typeof DateRoute
+  '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/begging': typeof BeggingRoute
   '/confirmation': typeof ConfirmationRoute
   '/date': typeof DateRoute
+  '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/begging': typeof BeggingRoute
   '/confirmation': typeof ConfirmationRoute
   '/date': typeof DateRoute
+  '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/begging'
     | '/confirmation'
     | '/date'
+    | '/love-letter'
     | '/movie'
     | '/sitemap.xml'
     | '/success'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/begging'
     | '/confirmation'
     | '/date'
+    | '/love-letter'
     | '/movie'
     | '/sitemap.xml'
     | '/success'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/begging'
     | '/confirmation'
     | '/date'
+    | '/love-letter'
     | '/movie'
     | '/sitemap.xml'
     | '/success'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   BeggingRoute: typeof BeggingRoute
   ConfirmationRoute: typeof ConfirmationRoute
   DateRoute: typeof DateRoute
+  LoveLetterRoute: typeof LoveLetterRoute
   MovieRoute: typeof MovieRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MovieRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/love-letter': {
+      id: '/love-letter'
+      path: '/love-letter'
+      fullPath: '/love-letter'
+      preLoaderRoute: typeof LoveLetterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/date': {
       id: '/date'
       path: '/date'
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   BeggingRoute: BeggingRoute,
   ConfirmationRoute: ConfirmationRoute,
   DateRoute: DateRoute,
+  LoveLetterRoute: LoveLetterRoute,
   MovieRoute: MovieRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,

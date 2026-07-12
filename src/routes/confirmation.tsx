@@ -4,12 +4,10 @@ import { motion } from "framer-motion";
 import celebrationImg from "@/assets/celebration.jpg";
 import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
-import { HeartBurst } from "@/components/HeartBurst";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { sounds } from "@/lib/sound";
-import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export const Route = createFileRoute("/confirmation")({
   component: Confirmation,
@@ -17,13 +15,9 @@ export const Route = createFileRoute("/confirmation")({
 
 function Confirmation() {
   const navigate = useNavigate();
-  const { setStep } = useDateStore();
+  const { } = useDateStore();
   const [burst, setBurst] = useState(false);
 
-  // Set current step (confirmation is step 3)
-  useEffect(() => {
-    setStep(3);
-  }, [setStep]);
 
   // Play celebration sound on mount
   useEffect(() => {
@@ -38,22 +32,14 @@ function Confirmation() {
   };
 
   return (
-    <PageShell>
-      {/* Animated background */}
-      <AnimatedBackground className="pointer-events-none" />
-
-      {/* Progress Indicator */}
-      <div className="mb-4">
-        <ProgressIndicator currentStep={3} totalSteps={6} />
-      </div>
-
-      {celebrationMessage && (
+    <PageShell particles={8}>
+{celebrationMessage && (
         <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
           "{celebrationMessage}"
         </p>
       )}
 
-      <HeartBurst active={burst} pieces={36} />
+      <ConfettiCelebration active={burst} />
 
       <motion.img
         src={celebrationImg}

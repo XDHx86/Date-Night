@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
 /**
- * Countdown timer that shows time until a given date
+ * Countdown timer that shows time until a given date/time
  */
 export function CountdownTimer({
-  dateString, // Expected format: YYYY-MM-DD (ISO date string)
+  dateTimeString, // Expected format: ISO date string (includes date and time)
 }: {
-  dateString: string;
+  dateTimeString: string;
 }) {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -16,9 +16,7 @@ export function CountdownTimer({
   } | null>(null);
 
   useEffect(() => {
-    const targetDate = new Date(dateString);
-    // Set target to start of the day (00:00:00) of the selected date
-    targetDate.setHours(0, 0, 0, 0);
+    const targetDate = new Date(dateTimeString);
 
     const updateCountdown = () => {
       const now = new Date();
@@ -49,7 +47,7 @@ export function CountdownTimer({
     updateCountdown();
     const intervalId = setInterval(updateCountdown, 1000);
     return () => clearInterval(intervalId);
-  }, [dateString]);
+  }, [dateTimeString]);
 
   if (!timeLeft) {
     return <div className="text-center text-muted-foreground">Calculating...</div>;

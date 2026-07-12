@@ -1,0 +1,87 @@
+# =============================================================================
+# Dependabot Configuration
+# =============================================================================
+# This file configures Dependabot to automatically check for updates.
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+# Enable automatic updates
+updates:
+  # =============================================================================
+  # Bun dependencies (primary)
+  # =============================================================================
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    commit-message:
+      prefix: "chore(bun)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "bun"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+
+  # =============================================================================
+  # npm dependencies (secondary for compatibility)
+  # =============================================================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore(npm)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+
+  # =============================================================================
+  # GitHub Actions
+  # =============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "ci"
+      - "github-actions"
+
+# =============================================================================
+# Dependabot options
+# =============================================================================
+# Options applied to all packages
+
+# Global gitignore for dependabot
+# dependabot.yml uses gitignore automatically
+
+# Pull request security updates
+# Security updates are independent of version updates
+# and will create PRs for vulnerability fixes
+
+# Auto-rebase strategy
+# When dependabot.yml is available in the repo, by default
+# Dependabot rebases PRs when conflicts arise

@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
-const EMOJIS = ["💕", "💖", "✨", "🌸", "⭐", "💫", "🌷", "💗"];
+const EMOJIS = [
+  "💕", "💖", "✨", "🌸", "⭐", "💫", "🌷", "💗",
+  "💓", "💞", "💘", "💝", "🎀", "🌺", "🍀", "🌼",
+  "🪄", "🪐", "🌙", "☀️", "⚡", "🎪", "🎈", "🎉"
+];
 
 interface Particle {
   id: number;
@@ -9,33 +13,45 @@ interface Particle {
   duration: number;
   delay: number;
   opacity: number;
+  scale: number;
   emoji: string;
 }
 
 /**
  * Full-screen decorative layer of gently floating hearts, sparkles and petals.
- * Purely presentational, pointer-events disabled, GPU-friendly (transform/opacity).
- * Particles are generated after mount to avoid SSR hydration mismatches.
+ * Increased density, variety, and visual quality with randomized sizes, speeds,
+ * and positions while staying GPU-friendly (transform/opacity).
  */
-export function FloatingBackground({ count = 18 }: { count?: number }) {
+export function FloatingBackground({ count = 35 }: { count?: number }) {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    const items: Particle[] = Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      size: 14 + Math.random() * 26,
-      duration: 12 + Math.random() * 12,
-      delay: Math.random() * 14,
-      opacity: 0.4 + Math.random() * 0.5,
-      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-    }));
+    const items: Particle[] = Array.from({ length: count }, (_, i) => {
+      const size = 12 + Math.random() * 20; // 12-32px
+      const duration = 10 + Math.random() * 12; // 10-22s
+      const delay = Math.random() * 20; // 0-20s
+      const opacity = 0.15 + Math.random() * 0.55; // 0.15-0.7
+      const scale = 0.6 + Math.random() * 0.6; // 0.6-1.2
+      return {
+        id: i,
+        left: Math.random() * 100, // 0-100%
+        size,
+        duration,
+        delay,
+        opacity,
+        scale,
+        emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+      };
+    });
     setParticles(items);
   }, [count]);
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* soft gradient blobs */}
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+    >
+      {/* subtle gradient blobs */}
       <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-accent/40 blur-3xl" />
       <div className="absolute -right-20 top-1/3 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
       <div className="absolute bottom-0 left-1/4 h-72 w-72 rounded-full bg-secondary/50 blur-3xl" />
@@ -48,9 +64,10 @@ export function FloatingBackground({ count = 18 }: { count?: number }) {
             left: `${p.left}%`,
             fontSize: `${p.size}px`,
             opacity: p.opacity,
+            // Custom properties used by the float-up keyframes
+            "--o": p.opacity,
+            "--s": p.scale,
             animation: `float-up ${p.duration}s linear ${p.delay}s infinite`,
-            // custom props consumed by the float-up keyframes
-            ["--o" as string]: p.opacity,
           }}
         >
           {p.emoji}

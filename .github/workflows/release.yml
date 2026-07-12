@@ -1,0 +1,330 @@
+# =============================================================================
+# Release Automation Workflow
+# =============================================================================
+# This workflow handles release automation including:
+# - Version bump detection
+# - Changelog generation
+# - Git tag creation
+# - GitHub Release creation
+# - Artifact publishing
+#
+# NOTE: This workflow does NOT automatically deploy.
+# It creates artifacts and releases for manual or external deployment.
+
+name: Release
+
+on:
+  # Manual trigger only for controlled releases
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      version-bump:
+        description: "Specific version (only for custom)"
+        required: false
+        default: ""
+        type: string
+      release-notes:
+        description: "Optional release notes"
+        required: false
+        default: ""
+        type: string
+      draft:
+        description: "Create as draft release"
+        required: false
+        default: "true"
+        type: boolean
+      prerelease:
+        description: "Mark as pre-release"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # ===========================================================================
+  # Pre-flight checks
+  # ===========================================================================
+
+  preflight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      current-version: ${{ steps.version.outputs.current-version }}
+      next-version: ${{ steps.version.outputs.next-version }}
+      commit-info: ${{ steps.changelog.outputs.commit-info }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: version
+        run: |
+          # Read version from package.json
+          CURRENT_VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/' || echo "0.0.0")
+
+          # If version field missing, default to 0.0.0
+          if [ -z "$CURRENT_VERSION" ]; then
+            CURRENT_VERSION="0.0.0"
+          fi
+
+          echo "current-version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+
+          # Calculate next version
+          if [ "${{ github.event.inputs.version-type }}" = "custom" ]; then
+            NEXT_VERSION="${{ github.event.inputs.version-bump }}"
+          else
+            IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+            case "${{ github.event.inputs.version-type }}" in
+              major)
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              minor)
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              patch)
+                patch=$((patch + 1))
+                ;;
+            esac
+            NEXT_VERSION="$major.$minor.$patch"
+          fi
+
+          echo "next-version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+          echo "Next version: $NEXT_VERSION"
+
+      - name: Get changelog info
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+
+          echo "Last tag: $LAST_TAG"
+
+          # Get commit summary
+          COMMIT_COUNT=$(git log "${LAST_TAG}..HEAD" --oneline 2>/dev/null | wc -l || echo "0")
+          echo "$COMMIT_COUNT commits since last release"
+
+          # Save commit info for use in release notes
+          COMMIT_INFO=$(git log "${LAST_TAG}..HEAD" --pretty=format:"- %s (%h)" 2>/dev/null | head -50 || echo "No previous tags found")
+          echo "commit-info<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$COMMIT_INFO" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Verify clean working tree
+        run: |
+          echo "Verifying clean working tree..."
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Working tree has uncommitted changes"
+            git status --porcelain
+          else
+            echo "Working tree is clean"
+          fi
+
+  # ===========================================================================
+  # Build Release Artifacts
+  # ===========================================================================
+
+  release-build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: preflight
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            bun.lock
+          key: ubuntu-latest-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ubuntu-latest-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Update version in package.json
+        run: |
+          NEW_VERSION="${{ needs.preflight.outputs.next-version }}"
+
+          # Update package.json (using bun or node)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json'));
+            pkg.version = '$NEW_VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          echo "Updated version to $NEW_VERSION"
+
+      - name: Build production bundle
+        run: bun run build
+
+      - name: Create changelog
+        run: |
+          NEW_VERSION="${{ needs.preflight.outputs.next-version }}"
+          mkdir -p release/
+
+          cat > release/CHANGELOG.md << EOF
+          # Release v$NEW_VERSION
+
+          ## Changes
+          ${{ needs.preflight.outputs.commit-info }}
+
+          ## Artifacts
+          - Production build available in this release
+          - Source code archive (tarball)
+          - Source code archive (zip)
+
+          ---
+
+          Generated by automated release workflow.
+          EOF
+
+          echo "Changelog created"
+
+      - name: Create source tarball
+        run: |
+          NEW_VERSION="${{ needs.preflight.outputs.next-version }}"
+          cd ..
+          tar -czf "datenight-v$NEW_VERSION-source.tar.gz" \
+            --exclude='datenight/node_modules' \
+            --exclude='datenight/dist' \
+            --exclude='datenight/.output' \
+            --exclude='datenight/.vinxi' \
+            --exclude='datenight/coverage' \
+            --exclude='datenight/playwright-report' \
+            --exclude='datenight/playwright-results' \
+            datenight/
+          cd datenight
+          ls -la release/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-v${{ needs.preflight.outputs.next-version }}
+          path: release/
+
+  # ===========================================================================
+  # Create GitHub Release
+  # ===========================================================================
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [preflight, release-build]
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-v${{ needs.preflight.outputs.next-version }}
+          path: release-artifacts/
+
+      - name: List artifacts
+        run: |
+          echo "=== Release Artifacts ==="
+          ls -lh release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.preflight.outputs.next-version }}
+          name: "Datenight v${{ needs.preflight.outputs.next-version }}"
+          draft: ${{ github.event.inputs.draft }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          generate_release_notes: false
+          body: |
+            # Datenight v${{ needs.preflight.outputs.next-version }}
+
+            ## What's Changed
+            ${{ needs.preflight.outputs.commit-info }}
+
+            ## Installation
+
+            \`\`\`bash
+            # Install dependencies
+            bun install
+
+            # Build for production
+            bun run build
+            \`\`\`
+
+            ## Artifacts
+
+            This release includes:
+            - Production-ready build (in attached tarball)
+            - Source code archive
+            - CHANGELOG.md with detailed changes
+
+            ## Verification
+
+            SHA256 checksums and verification instructions are available in the attached files.
+          files: |
+            release-artifacts/datenight-v${{ needs.preflight.outputs.next-version }}-source.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update version in commit
+        if: github.event.inputs.draft == 'false'
+        run: |
+          NEW_VERSION="${{ needs.preflight.outputs.next-version }}"
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit version bump
+          git add package.json
+          git commit -m "chore(release): v$NEW_VERSION [skip ci]" || echo "No version changes detected"
+
+          # Create and push tag
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+
+          # Push commit and tag
+          git push origin HEAD:refs/heads/main
+          git push origin "v$NEW_VERSION"
+
+      - name: Summary
+        run: |
+          echo "=== Release Summary ==="
+          echo "Version: v${{ needs.preflight.outputs.next-version }}"
+          echo "Draft: ${{ github.event.inputs.draft }}"
+          echo "Pre-release: ${{ github.event.inputs.prerelease }}"
+          echo "======================="

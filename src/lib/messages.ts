@@ -106,9 +106,10 @@ export const messages = {
  * Hook to get a random message from a category
  */
 export function useRandomMessage(category: keyof typeof messages): string {
-  const messagesForCategory = mptr. 1,
+  const messagesForCategory = messages[category];
+  const count = messagesForCategory.length;
   const randomIndex = Math.floor(Math.random() * count);
-  return messages[category][randomIndex];
+  return messagesForCategory[randomIndex];
 }
 
 /**

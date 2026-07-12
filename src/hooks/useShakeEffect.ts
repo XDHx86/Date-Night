@@ -3,9 +3,13 @@ import { useEffect } from "react";
 /**
  * Hook to detect device shake and trigger a callback
  * @param callback - Function to call when shake is detected
- * @param threshold - Shake sensitivity (default: 15)
+ * @param options - Configuration options for shake detection
+ * @param options.threshold - Shake sensitivity (default: 20)
+ * @param options.timeout - Time between allowed shakes in ms (default: 100)
  */
-export function useShakeEffect(callback: () => void, threshold = 15) {
+export function useShakeEffect(callback: () => void, options: { threshold?: number; timeout?: number } = {}) {
+  const { threshold = 20, timeout = 100 } = options;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -15,12 +19,14 @@ export function useShakeEffect(callback: () => void, threshold = 15) {
     let lastZ = 0;
 
     const handleDeviceMotion = (event: DeviceMotionEvent) => {
-      const { accelerationIncludingGravity } = event;
+      const accelerationIncludingGravity = event.accelerationIncludingGravity;
       if (!accelerationIncludingGravity) return;
 
-      const { x, y, z } = accelerationIncludingGravity;
+      const x = accelerationIncludingGravity.x;
+      const y = accelerationIncludingGravity.y;
+      const z = accelerationIncludingGravity.z;
       const currentTime = Date.now();
-      if ((currentTime - lastTime) < 100) return; // Limit to once every 100ms
+      if ((currentTime - lastTime) < timeout) return; // Limit frequency
       const diffTime = Math.abs(currentTime - lastTime);
       const speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
 
@@ -37,5 +43,5 @@ export function useShakeEffect(callback: () => void, threshold = 15) {
     return () => {
       window.removeEventListener("devicemotion", handleDeviceMotion, true);
     };
-  }, [callback, threshold]);
+  }, [callback, threshold, timeout]);
 }

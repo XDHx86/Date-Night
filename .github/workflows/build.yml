@@ -1,0 +1,137 @@
+# =============================================================================
+# Build Verification Workflow
+# =============================================================================
+# This workflow verifies the production build succeeds and uploads artifacts.
+
+name: Build
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "bun.lock"
+      - "vite.config.ts"
+      - "tsconfig.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "bun.lock"
+      - "vite.config.ts"
+      - "tsconfig.json"
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-bun:
+    name: Build (Bun)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            bun.lock
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run production build
+        run: bun run build
+
+      - name: Verify build output
+        run: |
+          if [ "${{ runner.os }}" = "Windows_NT" ]; then
+            test -d dist && echo "Build completed successfully"
+          else
+            test -d dist && echo "Build completed successfully"
+          fi
+
+      - name: Check build size
+        run: |
+          if [ "${{ runner.os }}" = "Windows_NT" ]; then
+            du -sh dist/ || true
+          else
+            du -sh dist/ || true
+          fi
+
+      - name: Analyze bundle with bun
+        run: |
+          if [ -d "dist" ]; then
+            find dist -type f \( -name "*.js" -o -name "*.css" \) | head -20
+            echo "---"
+            echo "Total files: $(find dist -type f | wc -l)"
+            echo "Total size: $(du -sh dist/ | cut -f1)"
+          fi
+
+      - name: Upload build artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ runner.os }}
+          path: dist/
+          retention-days: 7
+
+  build-npm:
+    name: Build (npm)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            package-lock.json
+          key: ubuntu-latest-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ubuntu-latest-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run production build with npm
+        run: npm run build
+
+      - name: Verify npm build output
+        run: |
+          test -d dist && echo "npm build completed successfully"
+
+      - name: Compare bun vs npm build
+        if: always()
+        run: |
+          if [ -d "dist" ]; then
+            echo "Build size: $(du -sh dist/ | cut -f1)"
+            find dist -type f \( -name "*.js" -o -name "*.css" \) | wc -l | xargs echo "Compiled files:"
+          fi

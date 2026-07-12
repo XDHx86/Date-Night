@@ -1,0 +1,74 @@
+# =============================================================================
+# Reusable Workflow: Setup Bun
+# =============================================================================
+# This workflow sets up Bun with caching for faster dependency installation.
+
+name: Setup Bun
+
+on:
+  workflow_call:
+    inputs:
+      bun-version:
+        description: "Bun version to install"
+        required: false
+        default: "latest"
+        type: string
+      cache-key:
+        description: "Custom cache key suffix"
+        required: false
+        default: ""
+        type: string
+    outputs:
+      bun-version:
+        description: "Installed Bun version"
+        value: ${{ steps.setup.outputs.version }}
+
+jobs:
+  setup:
+    name: Setup Bun
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun with caching
+        id: setup
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+          cache: true
+          cache-dependency-glob: |
+            **/bun.lock
+            **/bun.lockb
+            **/package.json
+            **/bunfig.toml
+
+      - name: Output Bun version
+        id: version
+        run: echo "version=$(bun --version)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            node_modules
+            bun.lock
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-${{ inputs.cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-${{ inputs.cache-key }}
+            ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}-
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: bun install --frozen-lockfile
+
+      - name: Verify Bun installation
+        run: |
+          bun --version
+          bun run --version

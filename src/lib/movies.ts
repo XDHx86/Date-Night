@@ -6,6 +6,7 @@
  */
 
 import { env } from "./env";
+import { CURATED_MOVIE_IDS } from "../data/curatedMovies";
 
 export interface Movie {
   id: string;
@@ -239,60 +240,43 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
 };
 
 /**
- * Fetches the original recommended movies (popular movies with details)
+ * Fetches the curated recommended movies (date-night movies) with caching in localStorage (7-day TTL)
  * @returns Promise of Movie[] (6 movies with full details)
  */
 export async function fetchOriginalRecommendations(): Promise<Movie[]> {
-  try {
-    // First, get the list of popular movies (we'll take the first 6)
-    const popularUrl = buildTmdbUrl('/movie/popular?language=en-US&page=1');
-    const popularResponse = await fetch(popularUrl, {
-      headers: {
-        ...(env.tmdbReadAccessToken ? { Authorization: `Bearer ${env.tmdbReadAccessToken}` } : {}),
-        "Content-Type": "application/json;charset=utf-8"
-      }
-    });
+  const CACHE_KEY = 'curatedRecommendations';
+  const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-    if (!popularResponse.ok) {
-      throw new Error(`Failed to fetch popular movies: ${popularResponse.status}`);
+  try {
+    // Try to load from cache
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { timestamp, data } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_TTL_MS) {
+        return data as Movie[];
+      }
     }
 
-    const popularData: TmdbSearchResponse = await popularResponse.json();
+    // Cache miss or expired: fetch details for each curated movie ID
+    const movieDetailsPromises: Promise<Movie | null>[] = CURATED_MOVIE_IDS.map((id: number) => getMovieById(id.toString()));
+    const movieDetailsArray: (Movie | null)[] = await Promise.all(movieDetailsPromises);
 
-    // Take the first 6 popular movies
-    const top6 = popularData.results.slice(0, 6);
+    // Filter out any null results (failed fetches)
+    const movies: Movie[] = movieDetailsArray.filter((movie): movie is Movie => movie !== null);
 
-    // For each movie, fetch the detailed information to get runtime, genres, etc.
-    const detailedMovies = await Promise.all(
-      top6.map(async (tmdbMovie) => {
-        const detailUrl = buildTmdbUrl(`/movie/${tmdbMovie.id}?language=en-US`);
-        const detailResponse = await fetch(detailUrl, {
-          headers: {
-            ...(env.tmdbReadAccessToken ? { Authorization: `Bearer ${env.tmdbReadAccessToken}` } : {}),
-            "Content-Type": "application/json;charset=utf-8"
-          }
-        });
+    // Limit to 6 movies (if we have more, take first 6; if fewer, we still return what we have)
+    const limitedMovies: Movie[] = movies.slice(0, 6);
 
-        if (!detailResponse.ok) {
-          // If we can't get the details, we return a movie with default values for missing fields
-          // But we want to avoid showing incomplete data, so we'll log and return a basic movie object
-          console.warn(`Failed to fetch details for movie ${tmdbMovie.id}: ${detailResponse.status}`);
-          return mapTmdbToMovie(tmdbMovie); // This will have duration=0 and tags=[]
-        }
+    // Cache the result
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      timestamp: Date.now(),
+      data: limitedMovies
+    }));
 
-        const tmdbMovieDetail: TmdbMovie = await detailResponse.json();
-        const tags = tmdbMovieDetail.genres.map(g => g.name);
-        const movie = mapTmdbToMovie(tmdbMovieDetail);
-        return {
-          ...movie,
-          tags: tags
-        };
-      })
-    );
-
-    return detailedMovies;
+    return limitedMovies;
   } catch (error) {
     console.error("Failed to fetch original recommendations:", error);
-    throw error;
+    // Fallback: return empty array to avoid breaking UI
+    return [];
   }
 }

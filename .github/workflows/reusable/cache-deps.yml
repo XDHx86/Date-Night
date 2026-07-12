@@ -1,0 +1,56 @@
+# =============================================================================
+# Reusable Workflow: Cache Dependencies
+# =============================================================================
+# This workflow provides centralized dependency caching for Bun and npm.
+
+name: Cache Dependencies
+
+on:
+  workflow_call:
+    inputs:
+      package-manager:
+        description: "Package manager to use (bun or npm)"
+        required: true
+        default: "bun"
+        type: string
+      lockfile-hash:
+        description: "Hash of lockfile for cache key"
+        required: false
+        default: ""
+        type: string
+    outputs:
+      cache-hit:
+        description: "Whether cache was hit"
+        value: ${{ steps.cache.outputs.cache-hit }}
+
+jobs:
+  cache:
+    name: Cache Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine lockfile
+        id: lockfile
+        run: |
+          if [ "${{ inputs.package-manager }}" = "bun" ]; then
+            echo "file=bun.lock" >> "$GITHUB_OUTPUT"
+            echo "hash=${{ hashFiles('**/bun.lock') }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "file=package-lock.json" >> "$GITHUB_OUTPUT"
+            echo "hash=${{ hashFiles('**/package-lock.json') }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ${{ steps.lockfile.outputs.file }}
+            .bun
+            bun.lock
+            package-lock.json
+          key: ${{ runner.os }}-${{ inputs.package-manager }}-${{ steps.lockfile.outputs.hash }}-${{ inputs.lockfile-hash }}
+          restore-keys: |
+            ${{ runner.os }}-${{ inputs.package-manager }}-${{ steps.lockfile.outputs.hash }}-
+            ${{ runner.os }}-${{ inputs.package-manager }}-

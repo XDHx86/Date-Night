@@ -21,8 +21,7 @@ export function SpotifyEmbed() {
     <div className="mt-8 rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-semibold text-card-foreground">🎵 Date Night Playlist</h3>
-        <p>
-          className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Spotify
         </p>
       </div>
@@ -31,7 +30,7 @@ export function SpotifyEmbed() {
         width="100%"
         height="380"
         frameBorder="0"
-        allowTransparency="true"
+        allowTransparency={true}
         allow="encrypted-media"
         className="rounded-lg"
       ></iframe>

@@ -1,75 +1,99 @@
-import { ProgressCircle } from "./ProgressCircle";
+import { clsx } from "clsx";
+import { useRouteStep } from "@/hooks/useRouteStep";
 
-export function ProgressIndicator({
-  currentStep,
-  totalSteps,
-}: {
-  currentStep: number;
-  totalSteps: number;
-}) {
-  const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+type StepLabel =
+  | "Start"
+  | "Date"
+  | "Time"
+  | "Movie"
+  | "Summary"
+  | "Celebrate";
 
-  return (
-    <div className="w-full">
-      <div className="flex h-4 w-full rounded-full bg-muted">
-        <div
-          className="flex-1 h-full bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M0,0 H100 V100 H0 Z%22 fill=%22%2300000000%22 stroke=%22%23ffffff%22 stroke-width=%224%22/%22></svg>')]
-          background-size:cover
-          background-repeat:no-repeat
-          background-position:left
-          background-origin:content-box
-          background-clip:content-box
-          mask-image:linear-gradient(to right, black 0%, black var(--mask-position), transparent var(--mask-position))
-          mask-size:200% 100%
-          mask-position:{{progressPercent}}% 0
-          transition:mask-position 0.3s ease
-          style={{ "--mask-position": `${progressPercent}%` }}
-        />
-      </div>
-      <div className="mt-2 flex justify-between text-xs text-muted-foreground font-mono">
-        <span>Step {currentStep} of {totalSteps}</span>
-        <span>{["Start", "Date", "Time", "Movie", "Summary", "Celebrate"][currentStep - 1] || ""}</span>
-      </div>
-    </div>
-  );
+const STEP_LABELS: StepLabel[] = [
+  "Start",
+  "Date",
+  "Time",
+  "Movie",
+  "Summary",
+  "Celebrate",
+];
+
+interface ProgressIndicatorProps {
+  /** Optional override — defaults to the route‑derived step. */
+  currentStep?: number;
+  /** Optional override for total step count (default 6). */
+  totalSteps?: number;
 }
 
-// Simple circular progress indicator as an alternative
-function ProgressCircle({
-  currentStep,
-  totalSteps,
-}: {
-  currentStep: number;
-  totalSteps: number;
-}) {
-  const progress = (currentStep - 1) / (totalSteps - 1);
-  const dashed = `(${2 * Math.PI * 24}s) ${2 * Math.PI * 24 * (1 -
-      progress)}`;
+export function ProgressIndicator({
+  currentStep: currentStepProp,
+  totalSteps: totalStepsProp,
+}: ProgressIndicatorProps) {
+  const {
+    currentStep: routeStep,
+    totalSteps: routeTotal,
+  } = useRouteStep(totalStepsProp ?? 6);
+
+  // Falls back to the route‑derived step when no override is given.
+  const currentStep = currentStepProp ?? routeStep;
+  const totalSteps = totalStepsProp ?? routeTotal;
+
+  // Clamp values
+  const step = Math.max(1, Math.min(currentStep, totalSteps));
+  const total = Math.max(1, totalSteps);
+
   return (
-    <div className="relative h-10 w-10">
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 48 48">
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          fill="none"
-          strokeWidth="4"
-          stroke="hsl(var(--border))"
-        />
-        <circle
-          cx="24"
-          cy="24"
-          r="22"
-          fill="none"
-          strokeWidth="4"
-          stroke="hsl(var(--primary))"
-          strokeDasharray="141.3"
-          strokeDashoffset={dashed}
-          strokeLinecap="round"
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
-        {currentStep}/{totalSteps}
+    <div className="relative w-full">
+      {/* Background line */}
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full h-0.5 bg-muted"></div>
+      </div>
+
+      {/* Steps */}
+      <div className="flex flex-wrap justify-center -mx-1">
+        {Array.from({ length: total }, (_, i) => {
+          const stepNumber = i + 1;
+          const isActive = stepNumber <= step;
+          const isCurrent = stepNumber === step;
+          const label: StepLabel = STEP_LABELS[i] ?? `${i + 1}`;
+
+          return (
+            <div
+              key={i}
+              className="flex-1 flex flex-col items-center px-2"
+              // Ensure equalSlate
+            >
+              {/* Dot */}
+              <div className={`relative z-10 w-8 h-8 flex items-center justify-center rounded-full
+                transition-all duration-300
+                ${isActive
+                  ? "border-2 border-primary-foreground bg-primary-foreground"
+                  : "border-2 border-muted-foreground bg-transparent"}
+                ${isCurrent && "animate-pulse"}
+              `}>
+                {isActive && (
+                  <div className="w-4 h-4 rounded-full bg-primary-foreground" />
+                )}
+              </div>
+
+              {/* Label */}
+              <div className={clsx(
+                "mt-1.5 text-xs text-center text-muted-foreground",
+                {
+                  "font-medium": isCurrent,
+                  "font-normal": !isCurrent,
+                }
+              )}>
+                {label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Accessible label */}
+      <div className="sr-only">
+        Step {step} of {total}
       </div>
     </div>
   );
