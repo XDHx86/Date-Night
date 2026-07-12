@@ -1,60 +1,36 @@
-# =============================================================================
-# Build Verification Workflow
-# =============================================================================
-# This workflow verifies the production build succeeds and uploads artifacts.
+# Production build verification.
+# Outputs to .output/ (TanStack Start / Vinxi convention).
 
 name: Build
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "src/**"
-      - "package.json"
-      - "package-lock.json"
-      - "bun.lock"
-      - "vite.config.ts"
-      - "tsconfig.json"
-  pull_request:
-    branches: [main]
-    paths:
-      - "src/**"
-      - "package.json"
-      - "package-lock.json"
-      - "bun.lock"
-      - "vite.config.ts"
-      - "tsconfig.json"
-  workflow_dispatch:
+  workflow_call:
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build-bun:
     name: Build (Bun)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: "latest"
-
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            bun.lock
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
+          bun-version: latest
+          cache: true
+          cache-dependency-glob: |
+            **/bun.lock
+            **/package.json
+            **/bunfig.toml
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -64,74 +40,45 @@ jobs:
 
       - name: Verify build output
         run: |
-          if [ "${{ runner.os }}" = "Windows_NT" ]; then
-            test -d dist && echo "Build completed successfully"
-          else
-            test -d dist && echo "Build completed successfully"
-          fi
+          test -d .output && echo "✅ Build succeeded — .output directory present"
 
-      - name: Check build size
+      - name: Measure build size
         run: |
-          if [ "${{ runner.os }}" = "Windows_NT" ]; then
-            du -sh dist/ || true
-          else
-            du -sh dist/ || true
-          fi
-
-      - name: Analyze bundle with bun
-        run: |
-          if [ -d "dist" ]; then
-            find dist -type f \( -name "*.js" -o -name "*.css" \) | head -20
-            echo "---"
-            echo "Total files: $(find dist -type f | wc -l)"
-            echo "Total size: $(du -sh dist/ | cut -f1)"
-          fi
+          echo "=== Build size ==="
+          du -sh .output || true
+          echo "=== Top entries ==="
+          find .output -maxdepth 2 -type d -printf "%p\t%s bytes\n" 2>/dev/null | head -20
 
       - name: Upload build artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ runner.os }}
-          path: dist/
+          name: production-build
+          path: .output/
           retention-days: 7
 
   build-npm:
-    name: Build (npm)
+    name: Build (npm, parity)
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
+          cache: npm
+          cache-dependency-path: |
             package-lock.json
-          key: ubuntu-latest-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ubuntu-latest-node-
+            package.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run production build with npm
+      - name: Run production build
         run: npm run build
 
-      - name: Verify npm build output
-        run: |
-          test -d dist && echo "npm build completed successfully"
-
-      - name: Compare bun vs npm build
-        if: always()
-        run: |
-          if [ -d "dist" ]; then
-            echo "Build size: $(du -sh dist/ | cut -f1)"
-            find dist -type f \( -name "*.js" -o -name "*.css" \) | wc -l | xargs echo "Compiled files:"
-          fi
+      - name: Verify build output
+        run: test -d .output && echo "✅ npm build succeeded"
