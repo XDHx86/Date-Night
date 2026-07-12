@@ -146,17 +146,17 @@ export default defineConfig({
       : "none"
     : "missing",
 
-  // Web server configuration for local testing
-  webServer: isCi
-    ? undefined
-    : {
-        command: "bun run dev",
-        url: BASE_URL,
-        reuseExistingServer: true,
-        timeout: 60000,
-        // Wait for server to be ready
-        // stdio is not a valid property on Playwright's TestConfigWebServer
-      },
+  // Web server is provided by Playwright in *all* modes — locally and in CI.
+  // The `reuseExistingServer` flag lets a developer keep `bun run dev` running
+  // without Playwright spawning a second copy.
+  webServer: {
+    command: `bun run dev`,
+    url: BASE_URL,
+    reuseExistingServer: !isCi,
+    timeout: 60_000,
+    stdout: "pipe",
+    stderr: "pipe",
+  },
 
   // Use global setup/teardown
   // globalSetup: path.join(__dirname, "tests/e2e/setup.ts"),
