@@ -6,7 +6,7 @@ import { PageShell } from "@/components/PageShell";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { sounds } from "@/lib/sound";
-import { useDateStore } from "@/lib/store";
+// import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 
 export const Route = createFileRoute("/confirmation")({
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/confirmation")({
 
 function Confirmation() {
   const navigate = useNavigate();
-  const {} = useDateStore();
+  // const {movie, date} = useDateStore();
   const [burst, setBurst] = useState(false);
 
   // Play celebration sound on mount
