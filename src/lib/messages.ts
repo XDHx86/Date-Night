@@ -14,7 +14,7 @@ export const messages = {
     "Love is in the details you're choosing 💖",
     "Each choice brings you closer to your perfect day 💫",
     "The anticipation is half the fun! 😊",
-    "You're creating memories before they even happen 📸"
+    "You're creating memories before they even happen 📸",
   ],
 
   // Playful messages for teasing interactions
@@ -28,7 +28,7 @@ export const messages = {
     "You're officially on the path to awesomeness 🛤️",
     "Slow down, speed racer! Enjoy the journey 🏁",
     "Your future self is already thanking you 🙏",
-    "Plot twist: You're amazing. The rest is just details 📖"
+    "Plot twist: You're amazing. The rest is just details 📖",
   ],
 
   // Romantic moments
@@ -42,7 +42,7 @@ export const messages = {
     "The way you look at options says everything about your heart ❤️",
     "You're building a masterpiece one choice at a time 🎨",
     "Your attention to detail is seriously adorable 😍",
-    "Fun fact: You're basically a love wizard 🧙‍♂️💫"
+    "Fun fact: You're basically a love wizard 🧙‍♂️💫",
   ],
 
   // Movie-specific
@@ -56,7 +56,7 @@ export const messages = {
     "This choice is getting a standing ovation from your future self 👏",
     "Warning: May cause sudden urges to reenact scenes 🎭",
     "You're not picking a movie - you're selecting a vibe 🌈",
-    "The critics agree: This selection is flawless 🏆"
+    "The critics agree: This selection is flawless 🏆",
   ],
 
   // Time-specific
@@ -70,7 +70,7 @@ export const messages = {
     "You're syncing up with the universe's perfect rhythm 🎵",
     "Time flies when you're having fun planning 🚀",
     "This isn't just a time - it's a promise 💫",
-    "You're essentially a time wizard right now 🧙‍♂️⏱️"
+    "You're essentially a time wizard right now 🧙‍♂️⏱️",
   ],
 
   // Date-specific
@@ -84,7 +84,7 @@ export const messages = {
     "The stars are aligning for this very special day ⭐",
     "You're not just selecting a date - you're invoking romance 💞",
     "This date is going to be memorable - you can feel it 💫",
-    "You're basically a date-matchmaking maestro 🎻"
+    "You're basically a date-matchmaking maestro 🎻",
   ],
 
   // Completion/milestone
@@ -98,8 +98,8 @@ export const messages = {
     "The anticipation is real... and it's delicious 😋",
     "You've transformed planning into an art form 🎨",
     "Well done! You've earned your romantic planner badge 🎖️",
-    "This isn't just a plan - it's a love story in the making 📖"
-  ]
+    "This isn't just a plan - it's a love story in the making 📖",
+  ],
 };
 
 /**
@@ -117,7 +117,6 @@ export function useRandomMessage(category: keyof typeof messages): string {
  */
 export function useAnyRandomMessage(): string {
   const categories = Object.keys(messages) as (keyof typeof messages)[];
-  const randomCategory =
-    categories[Math.floor(Math.random() * categories.length)];
+  const randomCategory = categories[Math.floor(Math.random() * categories.length)];
   return useRandomMessage(randomCategory);
 }

@@ -13,7 +13,16 @@ export function AnimatedBackground({
 }: {
   className?: string;
   style?: React.CSSProperties;
-  variant?: "default" | "love" | "movie" | "date" | "success" | "summary" | "begging" | "confirmation" | "time";
+  variant?:
+    | "default"
+    | "love"
+    | "movie"
+    | "date"
+    | "success"
+    | "summary"
+    | "begging"
+    | "confirmation"
+    | "time";
 } = {}) {
   // Add the keyframes for the gradient animation if not already added
   useEffect(() => {
@@ -85,22 +94,19 @@ export function AnimatedBackground({
         };
       case "movie":
         return {
-          background:
-            "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 50%, #a1c4fd 100%)",
+          background: "linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 50%, #a1c4fd 100%)",
           backgroundSize: "300% 300%",
           animation: "gradientShiftMovie 18s ease infinite",
         };
       case "date":
         return {
-          background:
-            "linear-gradient(120deg, #f6d365 0%, #fda085 50%, #f6d365 100%)",
+          background: "linear-gradient(120deg, #f6d365 0%, #fda085 50%, #f6d365 100%)",
           backgroundSize: "300% 300%",
           animation: "gradientShiftDate 12s ease infinite",
         };
       case "success":
         return {
-          background:
-            "linear-gradient(120deg, #84fab0 0%, #8fd3f4 50%, #84fab0 100%)",
+          background: "linear-gradient(120deg, #84fab0 0%, #8fd3f4 50%, #84fab0 100%)",
           backgroundSize: "300% 300%",
           animation: "gradientShiftSuccess 20s ease infinite",
         };
@@ -113,8 +119,7 @@ export function AnimatedBackground({
         };
       case "confirmation":
         return {
-          background:
-            "linear-gradient(120deg, #a8edea 0%, #fed6e3 50%, #a8edea 100%)",
+          background: "linear-gradient(120deg, #a8edea 0%, #fed6e3 50%, #a8edea 100%)",
           backgroundSize: "300% 300%",
           animation: "gradientShiftConfirmation 14s ease infinite",
         };
@@ -127,8 +132,7 @@ export function AnimatedBackground({
         };
       case "summary":
         return {
-          background:
-            "linear-gradient(120deg, #d4fc79 0%, #96e6a1 50%, #d4fc79 100%)",
+          background: "linear-gradient(120deg, #d4fc79 0%, #96e6a1 50%, #d4fc79 100%)",
           backgroundSize: "300% 300%",
           animation: "gradientShiftSummary 19s ease infinite",
         };

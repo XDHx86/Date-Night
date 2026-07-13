@@ -7,11 +7,13 @@ is small enough to read top-to-bottom — start from here when onboarding.
 
 ```
 datenight/
+├── index.html                    # Static SPA shell (full <head>, mount point, script)
 ├── src/
-│   ├── assets/                  # Static images (landing, begging, celebration, final)
-│   ├── audio/                   # Optional background music (love.mp3) — public path
-│   ├── components/              # Presentational + persistent UI
-│   │   ├── ui/                  # Radix-based shadcn-style primitives
+│   ├── main.tsx                  # SPA bootstrap — creates root, mounts <RouterProvider/>
+│   ├── assets/                   # Static images (landing, begging, celebration, final)
+│   ├── audio/                    # Optional background music (love.mp3) — public path
+│   ├── components/               # Presentational + persistent UI
+│   │   ├── ui/                   # Radix-based shadcn-style primitives
 │   │   ├── AnimatedBackground.tsx
 │   │   ├── AnimatedButton.tsx
 │   │   ├── BackgroundContext.tsx
@@ -33,28 +35,27 @@ datenight/
 │   │   ├── SparkleTrail.tsx
 │   │   ├── SpotifyEmbed.tsx
 │   │   └── TopProgressBar.tsx
-│   ├── data/                    # Static data: curatedMovies, loveLetters
-│   ├── hooks/                   # Custom React hooks
+│   ├── data/                     # Static data: curatedMovies, loveLetters
+│   ├── hooks/                    # Custom React hooks
 │   │   ├── use-mobile.tsx
 │   │   ├── useBackgroundAudio.ts
 │   │   ├── useRandomMessage.ts
 │   │   ├── useRouteStep.ts
 │   │   ├── useShakeEffect.ts
 │   │   └── useUrlSync.ts
-│   ├── lib/                     # Core application logic
+│   ├── lib/                      # Core application logic
 │   │   ├── env.ts
 │   │   ├── error-capture.ts
-│   │   ├── error-page.tsx (utility, used by root error boundary)
+│   │   ├── error-page.ts
 │   │   ├── loveLetterConfig.ts
 │   │   ├── lovable-error-reporting.ts
 │   │   ├── messages.ts
 │   │   ├── movies.ts
 │   │   ├── sound.ts
-│   │   ├── storage.ts           # Legacy sync helpers (now deprecated)
-│   │   ├── store.ts             # Zustand store (persisted)
+│   │   ├── store.ts              # Zustand store (persisted)
 │   │   ├── tmdbImages.ts
 │   │   └── utils.ts
-│   ├── routes/                  # File-based routes (auto router)
+│   ├── routes/                   # File-based routes (auto router)
 │   │   ├── __root.tsx
 │   │   ├── index.tsx
 │   │   ├── begging.tsx
@@ -64,26 +65,19 @@ datenight/
 │   │   ├── movie.tsx
 │   │   ├── love-letter.tsx
 │   │   ├── summary.tsx
-│   │   ├── success.tsx
-│   │   └── sitemap[.]xml.ts
-│   ├── router.tsx               # router configuration
-│   ├── server.ts                # server-side entry (Vinxi/Nitro)
-│   ├── start.ts                 # TanStack Start instance
-│   ├── routeTree.gen.ts         # ⚙ auto-generated. Don't edit.
-│   └── styles.css               # Tailwind v4 + CSS variables
+│   │   └── success.tsx
+│   ├── router.tsx                # router configuration
+│   ├── routeTree.gen.ts          # ⚙ auto-generated. Don't edit.
+│   └── styles.css                # Tailwind v4 + CSS variables
+├── public/                       # Copied verbatim into dist/
+│   ├── favicon.ico
+│   ├── robots.txt
+│   └── sitemap.xml               # Static sitemap served at /sitemap.xml
+├── scripts/
+│   └── copy-404.cjs              # Post-build: dist/index.html → dist/404.html (SPA fallback)
 ├── tests/
-│   ├── __mocks__/               # MSW handlers + server
-│   ├── api/                     # API integration tests
-│   ├── e2e/                     # Playwright tests + fixtures
-│   ├── factories/               # Data factories
-│   ├── fixtures/                # Test fixtures
-│   ├── integration/             # Component / store tests
-│   ├── smoke/                   # Smoke tests
-│   ├── unit/                    # Vitest unit tests
-│   ├── utils/                   # Test utilities
-│   └── vitest.config.ts
-├── docs/                        # This folder
-├── .github/                     # Workflows + Dependabot
+├── docs/                         # This folder
+├── .github/                      # Workflows + Dependabot
 └── playwright.config.ts
 ```
 
@@ -93,18 +87,18 @@ datenight/
 
 - `AnimatedButton` — framer-motion button with five variants
   (`yes`, `no`, `gold`, `soft`, `ghost`).
-- `PageShell` — shared layout with fade/slide entrance; **no longer
-  owns backgrounds or particles** (those live at the root).
+- `PageShell` — shared layout with fade/slide entrance; backgrounds and
+  particles live at the root.
 - `AnimatedBackground` — gradient-shift panel with per-variant
   gradients; retained for back-compat.
 - `BackgroundContext`, `BackgroundLayer`, `BackgroundVariantSync` —
   persistent, URL-aware gradient background.
 - `ConfettiCelebration` — physics-based confetti using framer-motion
-  springs; hydration-safe.
+  springs; deterministic on first render.
 - `HeartBurst`, `HeartExplosion` — celebratory particle bursts.
 - `SparkleTrail` — pointer / touch sparkle trail.
-- `FloatingBackground`, `FloatingDecorations` — gentle floating
-  hearts + sparkles that stay mounted across route changes.
+- `FloatingBackground`, `FloatingDecorations` — gentle floating hearts +
+  sparkles that stay mounted across route changes.
 
 ### Persistent Layout
 
@@ -129,19 +123,17 @@ datenight/
 `src/components/ui/` ships the Radix-based shadcn-style primitives —
 accordion, alert, button, card, dialog, dropdown-menu, input, sheet,
 sidebar, sonner, switch, table, tabs, textarea, toggle, tooltip, etc.
-These are largely imported by the future-feature surfaces and the
-sidebar.
 
 ## Hooks
 
-| Hook                                  | Purpose                                                              |
-| ------------------------------------- | -------------------------------------------------------------------- |
-| `use-mobile.tsx`                      | Responsive breakpoint helper used by the shadcn sidebar              |
-| `useBackgroundAudio(options?)`        | Autoplay + first-interaction fallback audio engine                   |
-| `useRandomMessage(category)`          | Hydration-safe random copy                                           |
-| `useRouteStep(totalSteps?)`           | URL → step / progress data                                           |
-| `useShakeEffect(callback, options?)`  | Device-motion shake → callback (threshold `25`)                      |
-| `useUrlSync()`                        | Bidirectional URL ⇄ Zustand sync plus share/hydrate helpers         |
+| Hook                                 | Purpose                                                     |
+| ------------------------------------ | ----------------------------------------------------------- |
+| `use-mobile.tsx`                     | Responsive breakpoint helper used by the shadcn sidebar     |
+| `useBackgroundAudio(options?)`       | Autoplay + first-interaction fallback audio engine          |
+| `useRandomMessage(category)`         | Deterministic-on-first-render, random-after-mount copy      |
+| `useRouteStep(totalSteps?)`          | URL → step / progress data                                  |
+| `useShakeEffect(callback, options?)` | Device-motion shake → callback (threshold `25`)             |
+| `useUrlSync()`                       | Bidirectional URL ⇄ Zustand sync plus share/hydrate helpers |
 
 ## Lib
 
@@ -153,11 +145,10 @@ sidebar.
   `FALLBACK_POSTER`.
 - `loveLetterConfig.ts` — picks the active love-letter category.
 - `sound.ts` — Web Audio SFX.
-- `storage.ts` — legacy URL sync helpers (now deprecated).
 - `messages.ts` — playful copy collections.
 - `utils.ts` — `cn()` helper (clsx + tailwind-merge).
-- `error-capture.ts`, `lovable-error-reporting.ts` — error pipeline.
-- `error-page.tsx` — error UI used by the root boundary.
+- `error-capture.ts`, `lovable-error-reporting.ts`, `error-page.ts` —
+  client error pipeline wired to the root error component.
 
 ## Data
 
@@ -169,8 +160,7 @@ sidebar.
 ## Routes
 
 Each route is a thin page that wires the store, `useUrlSync`, and a
-small custom component. See [routing.md](routing.md) for the full
-table.
+small custom component. See [routing.md](routing.md) for the full table.
 
 ## Tests
 
@@ -182,9 +172,9 @@ See [testing.md](testing.md) for layout, conventions and tool links.
    folder and export it.
 2. **New page** — create a file under `src/routes/`, export
    `Route = createFileRoute('/your-path')({ component: YourPage })`,
-   then `bun run dev` to regenerate the route tree.
-3. **New state slice** — add the field to `store.ts`, register it
-   with `partialize`, and update `useUrlSync`.
+   then `npm run dev` to regenerate the route tree.
+3. **New state slice** — add the field to `store.ts`, register it with
+   `partialize`, and update `useUrlSync`.
 4. **New persistent decoration** — mount it once in
    `src/routes/__root.tsx`; never re-create on navigation.
 5. **New background variant** — extend the `BackgroundVariant` type
@@ -193,12 +183,15 @@ See [testing.md](testing.md) for layout, conventions and tool links.
 
 ## Finding Things Quickly
 
-| What are you looking for? | Look in                                                |
-| ------------------------- | ------------------------------------------------------ |
-| The state shape           | `src/lib/store.ts`                                     |
-| TMDb integration          | `src/lib/movies.ts` + `src/lib/tmdbImages.ts`          |
-| Love-letter content       | `src/data/loveLetters.ts`                              |
-| Routing table             | `src/router.tsx`, `src/routeTree.gen.ts`               |
-| Cross-cutting decoration  | `src/routes/__root.tsx`                                |
-| Per-step behaviour        | `src/routes/`                                          |
-| Test helpers              | `tests/utils/`, `tests/factories/`, `tests/fixtures/`  |
+| What are you looking for? | Look in                                               |
+| ------------------------- | ----------------------------------------------------- |
+| The state shape           | `src/lib/store.ts`                                    |
+| TMDb integration          | `src/lib/movies.ts` + `src/lib/tmdbImages.ts`         |
+| Love-letter content       | `src/data/loveLetters.ts`                             |
+| Routing table             | `src/router.tsx`, `src/routeTree.gen.ts`              |
+| Cross-cutting decoration  | `src/routes/__root.tsx`                               |
+| Per-step behaviour        | `src/routes/`                                         |
+| Test helpers              | `tests/utils/`, `tests/factories/`, `tests/fixtures/` |
+| Build configuration       | `vite.config.ts`                                      |
+| SPA-shell HTML            | `index.html`                                          |
+| SPA fallback              | `scripts/copy-404.cjs`                                |

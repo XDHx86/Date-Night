@@ -8,11 +8,11 @@
 
 export const env = {
   // TMDB API Configuration
-  tmdbApiKey: import.meta.env.VITE_TMDB_API_KEY || '',
-  tmdbReadAccessToken: import.meta.env.VITE_TMDB_READ_ACCESS_TOKEN || '',
+  tmdbApiKey: import.meta.env.VITE_TMDB_API_KEY || "",
+  tmdbReadAccessToken: import.meta.env.VITE_TMDB_READ_ACCESS_TOKEN || "",
 
   // Spotify Configuration
-  spotifyPlaylistId: import.meta.env.VITE_SPOTIFY_PLAYLIST_ID || '',
+  spotifyPlaylistId: import.meta.env.VITE_SPOTIFY_PLAYLIST_ID || "",
 
   // Helper to check if TMDB is configured
   get isTmdbConfigured(): boolean {
@@ -22,7 +22,7 @@ export const env = {
   // Helper to check if Spotify is configured
   get isSpotifyConfigured(): boolean {
     return !!this.spotifyPlaylistId;
-  }
+  },
 };
 
 export default env;

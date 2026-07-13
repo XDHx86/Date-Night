@@ -21,16 +21,16 @@ progress bar shows the user's current step at all times.
 These render **once at the root** so they survive route changes with
 no flicker.
 
-| Component                                                                           | Responsibility                                                     |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [`BackgroundContext`](../src/components/BackgroundContext.tsx)                      | Holds the active background variant in a React context             |
-| [`BackgroundLayer`](../src/components/BackgroundLayer.tsx)                          | Cross-fades between gradients with `AnimatePresence`               |
-| [`BackgroundVariantSync`](../src/components/BackgroundVariantSync.tsx)              | Maps the current URL pathname to the variant                       |
-| [`FloatingDecorations`](../src/components/FloatingDecorations.tsx)                  | Combines `FloatingBackground` + `SparkleTrail`                     |
-| [`TopProgressBar`](../src/components/TopProgressBar.tsx)                            | Persistent step indicator (URL-driven)                             |
-| [`BottomControlBar`](../src/components/BottomControlBar.tsx)                        | Dark mode / audio / love letter shortcuts                          |
-| [`useShakeEffect`](../src/hooks/useShakeEffect.ts)                                  | Detects mobile shake (threshold `25`) and triggers heart explosion |
-| [`HeartExplosion`](../src/components/HeartExplosion.tsx)                            | Full-screen heart particle burst                                   |
+| Component                                                              | Responsibility                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`BackgroundContext`](../src/components/BackgroundContext.tsx)         | Holds the active background variant in a React context             |
+| [`BackgroundLayer`](../src/components/BackgroundLayer.tsx)             | Cross-fades between gradients with `AnimatePresence`               |
+| [`BackgroundVariantSync`](../src/components/BackgroundVariantSync.tsx) | Maps the current URL pathname to the variant                       |
+| [`FloatingDecorations`](../src/components/FloatingDecorations.tsx)     | Combines `FloatingBackground` + `SparkleTrail`                     |
+| [`TopProgressBar`](../src/components/TopProgressBar.tsx)               | Persistent step indicator (URL-driven)                             |
+| [`BottomControlBar`](../src/components/BottomControlBar.tsx)           | Dark mode / audio / love letter shortcuts                          |
+| [`useShakeEffect`](../src/hooks/useShakeEffect.ts)                     | Detects mobile shake (threshold `25`) and triggers heart explosion |
+| [`HeartExplosion`](../src/components/HeartExplosion.tsx)               | Full-screen heart particle burst                                   |
 
 ## 1. Landing Page (`/`)
 
@@ -45,7 +45,7 @@ no flicker.
 - Dodging "NO" button (random `x`/`y` offset on every interaction).
 - Growing `YES` button (scale increases with each dodge).
 - Cycling pleas (`Pleaseee 🥺`, …) under the puppy image.
-- After 3+ dodges, shows: *(The "No" button seems a little... slippery 👀)*.
+- After 3+ dodges, shows: _(The "No" button seems a little... slippery 👀)_.
 
 ## 3. Confirmation Page (`/confirmation`)
 

@@ -20,7 +20,7 @@ function FloatingDecorationsBase({ count = 40 }: Props) {
     <>
       <FloatingBackground count={count} />
       <SparkleTrail />
-   </>
+    </>
   );
 }
 

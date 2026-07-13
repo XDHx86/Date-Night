@@ -194,9 +194,10 @@ export function createBrowserMswSetup(handlers = defaultHandlers) {
   const server = setupBrowserWorker(...handlers);
 
   return {
-    start: () => server.start({
-      onUnhandledRequest: "bypass",
-    }),
+    start: () =>
+      server.start({
+        onUnhandledRequest: "bypass",
+      }),
     stop: () => server.stop(),
     reset: () => server.resetHandlers(),
     use: (...newHandlers: Parameters<typeof setupBrowserWorker>[0]) => {

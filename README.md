@@ -51,49 +51,49 @@ The application boots on port `3000` by default (configurable via `PORT` or
 Optional integrations are enabled through environment variables. Copy
 [`.env.example`](.env.example) to `.env` and fill in the values you need:
 
-| Variable                       | Purpose                                                                                          |
-| ------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `VITE_TMDB_API_KEY`            | TMDb v3 API key (required together with the read token for live movie data)                      |
-| `VITE_TMDB_READ_ACCESS_TOKEN`  | TMDb v4 read token (preferred for TMDB searches — see `src/lib/movies.ts`)                       |
-| `VITE_SPOTIFY_PLAYLIST_ID`     | Shows an embedded Spotify player on summary / success when set                                   |
-| `VITE_RESEND_API_KEY`          | Reserved for future email integration                                                            |
-| `VITE_LOVE_LETTER_CATEGORY`    | Choose which love-letter set is active: `default` \| `birthday` \| `anniversary` \| `valentine`  |
+| Variable                      | Purpose                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`           | TMDb v3 API key (required together with the read token for live movie data)                     |
+| `VITE_TMDB_READ_ACCESS_TOKEN` | TMDb v4 read token (preferred for TMDB searches — see `src/lib/movies.ts`)                      |
+| `VITE_SPOTIFY_PLAYLIST_ID`    | Shows an embedded Spotify player on summary / success when set                                  |
+| `VITE_RESEND_API_KEY`         | Reserved for future email integration                                                           |
+| `VITE_LOVE_LETTER_CATEGORY`   | Choose which love-letter set is active: `default` \| `birthday` \| `anniversary` \| `valentine` |
 
 The detailed feature-gating contract lives in [`src/lib/env.ts`](src/lib/env.ts). The app boots without any
 of these set — each integration only renders when its variable is populated.
 
 ## Scripts
 
-| Command                       | What it does                                                              |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `bun run dev`                 | Start the dev server (Vite)                                               |
-| `bun run build`               | Production build                                                          |
-| `bun run preview`             | Preview the production build                                              |
-| `bun run typecheck`           | `tsc --noEmit`                                                            |
-| `bun run lint`                | ESLint across the project                                                 |
-| `bun run lint:fix`            | ESLint with `--fix`                                                       |
-| `bun run format`              | Prettier write                                                            |
-| `bun run format:check`        | Prettier verify                                                           |
-| `bun run test`                | Vitest run (all projects, no coverage)                                    |
-| `bun run test:watch`          | Vitest in watch mode                                                      |
-| `bun run test:coverage`       | Vitest with V8 coverage for the `unit` project                            |
-| `bun run test:unit`           | Vitest only the `unit` project                                            |
-| `bun run test:integration`    | Vitest only the `integration` project                                     |
-| `bun run test:ssr`            | Vitest only the `ssr` project                                             |
-| `bun run test:api`            | Vitest only the `api` project                                             |
-| `bun run test:smoke`          | Vitest only the `smoke` project                                           |
-| `bun run test:e2e`            | Playwright (all projects)                                                 |
-| `bun run test:e2e:smoke`      | Playwright `smoke` project only                                           |
-| `bun run test:e2e:visual`     | Playwright `visual` project only                                          |
-| `bun run test:e2e:accessibility` | Playwright `accessibility` project only                                |
-| `bun run test:e2e:performance`| Playwright `performance` project only                                     |
-| `bun run test:e2e:regression` | Playwright `regression` project only                                      |
-| `bun run test:e2e:security`   | Playwright `security` project only                                        |
-| `bun run test:e2e:user-journeys` | Playwright `user-journeys-desktop` project only                        |
-| `bun run newman:run`          | Run the bundled Postman collection against the dev server                 |
-| `bun run check`               | typecheck + lint + format:check + unit tests                              |
-| `bun run check:full`          | The full local pipeline mirror of CI                                      |
-| `bun run validate:build`      | Production build with a success marker                                    |
+| Command                          | What it does                                              |
+| -------------------------------- | --------------------------------------------------------- |
+| `bun run dev`                    | Start the dev server (Vite)                               |
+| `bun run build`                  | Production build                                          |
+| `bun run preview`                | Preview the production build                              |
+| `bun run typecheck`              | `tsc --noEmit`                                            |
+| `bun run lint`                   | ESLint across the project                                 |
+| `bun run lint:fix`               | ESLint with `--fix`                                       |
+| `bun run format`                 | Prettier write                                            |
+| `bun run format:check`           | Prettier verify                                           |
+| `bun run test`                   | Vitest run (all projects, no coverage)                    |
+| `bun run test:watch`             | Vitest in watch mode                                      |
+| `bun run test:coverage`          | Vitest with V8 coverage for the `unit` project            |
+| `bun run test:unit`              | Vitest only the `unit` project                            |
+| `bun run test:integration`       | Vitest only the `integration` project                     |
+| `bun run test:ssr`               | Vitest only the `ssr` project                             |
+| `bun run test:api`               | Vitest only the `api` project                             |
+| `bun run test:smoke`             | Vitest only the `smoke` project                           |
+| `bun run test:e2e`               | Playwright (all projects)                                 |
+| `bun run test:e2e:smoke`         | Playwright `smoke` project only                           |
+| `bun run test:e2e:visual`        | Playwright `visual` project only                          |
+| `bun run test:e2e:accessibility` | Playwright `accessibility` project only                   |
+| `bun run test:e2e:performance`   | Playwright `performance` project only                     |
+| `bun run test:e2e:regression`    | Playwright `regression` project only                      |
+| `bun run test:e2e:security`      | Playwright `security` project only                        |
+| `bun run test:e2e:user-journeys` | Playwright `user-journeys-desktop` project only           |
+| `bun run newman:run`             | Run the bundled Postman collection against the dev server |
+| `bun run check`                  | typecheck + lint + format:check + unit tests              |
+| `bun run check:full`             | The full local pipeline mirror of CI                      |
+| `bun run validate:build`         | Production build with a success marker                    |
 
 ## Testing & Quality
 
@@ -164,16 +164,16 @@ See [docs/ci-cd.md](docs/ci-cd.md).
 
 ## Project Health (snapshot)
 
-| Aspect                  | Status                  |
-| ----------------------- | ----------------------- |
-| TypeScript strict       | ✅ clean                |
-| ESLint + Prettier       | ✅ clean                |
-| Vitest unit / coverage  | ✅                      |
-| Playwright (3 browsers) | ✅, with accessibility  |
-| Visual regression       | ✅                      |
-| CI / Coverage / Release | ✅ GitHub Actions       |
-| TMDb integration        | ✅                      |
-| Backgrounds / progress  | ✅                      |
+| Aspect                  | Status                 |
+| ----------------------- | ---------------------- |
+| TypeScript strict       | ✅ clean               |
+| ESLint + Prettier       | ✅ clean               |
+| Vitest unit / coverage  | ✅                     |
+| Playwright (3 browsers) | ✅, with accessibility |
+| Visual regression       | ✅                     |
+| CI / Coverage / Release | ✅ GitHub Actions      |
+| TMDb integration        | ✅                     |
+| Backgrounds / progress  | ✅                     |
 
 ## License
 

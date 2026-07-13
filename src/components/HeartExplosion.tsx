@@ -51,10 +51,7 @@ export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
   }, [active, count, duration]);
 
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden"
-    >
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden">
       <AnimatePresence>
         {bursts.map((h) => (
           <motion.span
@@ -79,9 +76,9 @@ export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
             }}
           >
             ❤️
-         </motion.span>
+          </motion.span>
         ))}
-     </AnimatePresence>
-  </div>
+      </AnimatePresence>
+    </div>
   );
 }

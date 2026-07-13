@@ -148,7 +148,7 @@ describe("useBackgroundAudio", () => {
     it("should handle autoplay failure gracefully", () => {
       // Mock play to reject
       MockHTMLAudioElement.prototype.play = vi.fn(() =>
-        Promise.reject(new Error("Autoplay prevented"))
+        Promise.reject(new Error("Autoplay prevented")),
       );
 
       renderHook(() => useBackgroundAudio());
@@ -161,7 +161,7 @@ describe("useBackgroundAudio", () => {
 
     it("should set up fallback listeners for autoplay unlock", () => {
       MockHTMLAudioElement.prototype.play = vi.fn(() =>
-        Promise.reject(new Error("Autoplay prevented"))
+        Promise.reject(new Error("Autoplay prevented")),
       );
 
       renderHook(() => useBackgroundAudio());
@@ -170,14 +170,12 @@ describe("useBackgroundAudio", () => {
       expect(mockWindow.addEventListener).toHaveBeenCalledWith(
         "pointerdown",
         expect.any(Function),
-        { once: true, passive: true }
+        { once: true, passive: true },
       );
 
-      expect(mockWindow.addEventListener).toHaveBeenCalledWith(
-        "keydown",
-        expect.any(Function),
-        { once: true }
-      );
+      expect(mockWindow.addEventListener).toHaveBeenCalledWith("keydown", expect.any(Function), {
+        once: true,
+      });
     });
   });
 
@@ -224,7 +222,7 @@ describe("useBackgroundAudio", () => {
   describe("Cleanup", () => {
     it("should clean up on unmount", () => {
       MockHTMLAudioElement.prototype.play = vi.fn(() =>
-        Promise.reject(new Error("Autoplay prevented"))
+        Promise.reject(new Error("Autoplay prevented")),
       );
 
       const { unmount } = renderHook(() => useBackgroundAudio());
@@ -318,9 +316,7 @@ describe("useBackgroundAudio", () => {
 
   describe("Edge Cases", () => {
     it("should handle audio play errors", () => {
-      MockHTMLAudioElement.prototype.play = vi.fn(() =>
-        Promise.reject(new Error("Play failed"))
-      );
+      MockHTMLAudioElement.prototype.play = vi.fn(() => Promise.reject(new Error("Play failed")));
 
       renderHook(() => useBackgroundAudio());
 
@@ -418,10 +414,9 @@ describe("useBackgroundAudio", () => {
     it("should not cause memory leaks with many renders", () => {
       const AudioSpy = vi.spyOn(window as any, "Audio");
 
-      const { rerender, unmount } = renderHook(
-        ({ count }) => useBackgroundAudio(),
-        { initialProps: { count: 0 } }
-      );
+      const { rerender, unmount } = renderHook(({ count }) => useBackgroundAudio(), {
+        initialProps: { count: 0 },
+      });
 
       // Re-render many times
       for (let i = 0; i < 100; i++) {

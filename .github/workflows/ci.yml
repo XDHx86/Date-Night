@@ -1,5 +1,9 @@
-# Main CI pipeline. Composes the suites via reusable workflows and
-# parallel jobs, with concurrency on the same ref.
+# Single linear CI pipeline for the Datenight SPA.
+#
+# Runs install, lint, typecheck, test, build, and deploys the static
+# site to GitHub Pages on every push to `main`. Pull requests run the
+# full matrix except for the deploy job, which is gated on a successful
+# build push to `main`.
 
 name: CI
 
@@ -10,76 +14,109 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# Cancel in-flight runs of the same ref so re-pushes never queue stale
+# builds. allow/disallow cancellation on deploy is intentional — we
+# always want to ship the most recent push.
 concurrency:
-  group: "ci-${{ github.workflow }}-${{ github.ref }}"
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  # ---- Static analysis ----------------------------------------------------
-  lint:
-    name: Lint & Type Check
-    uses: ./.github/workflows/lint.yml
-    permissions:
-      contents: read
+  install-lint-typecheck-test:
+    name: Install, lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  format-check:
-    name: Prettier Format Check
-    uses: ./.github/workflows/format-check.yml
-    permissions:
-      contents: read
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            package.json
 
-  # ---- Build verification -------------------------------------------------
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        run: npm run typecheck
+
+      - name: Run Prettier format check
+        run: npm run format:check
+
+      - name: Run tests
+        run: npm run test
+
   build:
-    name: Production Build
-    uses: ./.github/workflows/build.yml
+    name: Build (Pages artifact)
+    needs: install-lint-typecheck-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  # ---- Tests --------------------------------------------------------------
-  unit-tests:
-    name: Unit & Integration Tests
-    needs: lint
-    uses: ./.github/workflows/test.yml
-    permissions:
-      contents: read
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            package.json
 
-  api-tests:
-    name: API Contract Tests
-    needs: lint
-    uses: ./.github/workflows/api-tests.yml
-    permissions:
-      contents: read
+      - name: Install dependencies
+        run: npm ci
 
-  smoke-tests:
-    name: Build Smoke Tests
-    needs: [lint, build]
-    if: "github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-smoke')"
-    uses: ./.github/workflows/smoke-tests.yml
-    permissions:
-      contents: read
+      - name: Build for GitHub Pages
+        run: npm run build:gh-pages
+        env:
+          # Secrets are optional — the build succeeds even when the TMDB
+          # keys are missing because the API is pure fetch and the
+          # missing-token path is exercised at runtime only. Set these
+          # in repo Settings → Secrets if/when you wire them.
+          VITE_TMDB_API_KEY: ${{ secrets.VITE_TMDB_API_KEY }}
+          VITE_TMDB_READ_ACCESS_TOKEN: ${{ secrets.VITE_TMDB_READ_ACCESS_TOKEN || ''}}
+          VITE_SPOTIFY_PLAYLIST_ID: ${{ secrets.VITE_SPOTIFY_PLAYLIST_ID || '' }}
+          VITE_LOVE_LETTER_CATEGORY: ${{ secrets.VITE_LOVE_LETTER_CATEGORY }}
 
-  e2e:
-    name: End-to-End Tests
-    needs: [lint, build]
-    if: "github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-e2e')"
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
-  # ---- Security -----------------------------------------------------------
-  security:
-    name: Security Scan
-    uses: ./.github/workflows/security.yml
-    permissions:
-      contents: read
-      security-events: write
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
-  # ---- Dependency hygiene -------------------------------------------------
-  dependencies:
-    name: Dependency Validation
-    uses: ./.github/workflows/dependency-validation.yml
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
-      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

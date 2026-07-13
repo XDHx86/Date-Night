@@ -7,7 +7,10 @@ import { useEffect } from "react";
  * @param options.threshold - Shake sensitivity (default: 20)
  * @param options.timeout - Time between allowed shakes in ms (default: 100)
  */
-export function useShakeEffect(callback: () => void, options: { threshold?: number; timeout?: number } = {}) {
+export function useShakeEffect(
+  callback: () => void,
+  options: { threshold?: number; timeout?: number } = {},
+) {
   const { threshold = 20, timeout = 100 } = options;
 
   useEffect(() => {
@@ -22,13 +25,13 @@ export function useShakeEffect(callback: () => void, options: { threshold?: numb
       const accelerationIncludingGravity = event.accelerationIncludingGravity;
       if (!accelerationIncludingGravity) return;
 
-      const x = accelerationIncludingGravity.x;
-      const y = accelerationIncludingGravity.y;
-      const z = accelerationIncludingGravity.z;
+      const x = accelerationIncludingGravity.x ?? 0;
+      const y = accelerationIncludingGravity.y ?? 0;
+      const z = accelerationIncludingGravity.z ?? 0;
       const currentTime = Date.now();
-      if ((currentTime - lastTime) < timeout) return; // Limit frequency
+      if (currentTime - lastTime < timeout) return; // Limit frequency
       const diffTime = Math.abs(currentTime - lastTime);
-      const speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
+      const speed = (Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime) * 10000;
 
       if (speed > threshold) {
         callback();

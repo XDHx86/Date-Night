@@ -62,7 +62,7 @@ function buildTmdbUrl(endpoint: string): string {
   }
   // Fallback to API key as query parameter
   if (env.tmdbApiKey) {
-    url.searchParams.set('api_key', env.tmdbApiKey);
+    url.searchParams.set("api_key", env.tmdbApiKey);
     return url.toString();
   }
   throw new Error("TMDB credentials not configured");
@@ -77,12 +77,12 @@ async function getGenreMap(): Promise<Map<number, string>> {
   if (genreMapCache) return genreMapCache;
 
   try {
-    const url = buildTmdbUrl('/genre/movie/list?language=en-US');
+    const url = buildTmdbUrl("/genre/movie/list?language=en-US");
     const response = await fetch(url, {
       headers: {
         ...(env.tmdbReadAccessToken ? { Authorization: `Bearer ${env.tmdbReadAccessToken}` } : {}),
-        "Content-Type": "application/json;charset=utf-8"
-      }
+        "Content-Type": "application/json;charset=utf-8",
+      },
     });
 
     if (!response.ok) {
@@ -109,7 +109,7 @@ async function getGenreMap(): Promise<Map<number, string>> {
 async function mapGenreIdsToNames(genreIds: number[]): Promise<string[]> {
   const genreMap = await getGenreMap();
   return genreIds
-    .map(id => genreMap.get(id))
+    .map((id) => genreMap.get(id))
     .filter((name): name is string => name !== undefined);
 }
 
@@ -133,7 +133,7 @@ function mapTmdbToMovie(tmdbMovie: TmdbMovie): Movie {
     rating: tmdbMovie.vote_average,
     tags: [], // placeholder, will be replaced by caller
     year: year,
-    duration: duration
+    duration: duration,
   };
 }
 
@@ -156,8 +156,8 @@ export async function searchMovies(query: string): Promise<Movie[]> {
     const response = await fetch(url, {
       headers: {
         ...(env.tmdbReadAccessToken ? { Authorization: `Bearer ${env.tmdbReadAccessToken}` } : {}),
-        "Content-Type": "application/json;charset=utf-8"
-      }
+        "Content-Type": "application/json;charset=utf-8",
+      },
     });
 
     if (!response.ok) {
@@ -180,9 +180,9 @@ export async function searchMovies(query: string): Promise<Movie[]> {
           // Override genres with the fetched tags
           return {
             ...movie,
-            tags: tags
+            tags: tags,
           };
-        })
+        }),
     );
 
     return moviesWithGenres;
@@ -210,8 +210,8 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
     const response = await fetch(url, {
       headers: {
         ...(env.tmdbReadAccessToken ? { Authorization: `Bearer ${env.tmdbReadAccessToken}` } : {}),
-        "Content-Type": "application/json;charset=utf-8"
-      }
+        "Content-Type": "application/json;charset=utf-8",
+      },
     });
 
     if (!response.ok) {
@@ -224,14 +224,14 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
     const tmdbMovie: TmdbMovie = await response.json();
 
     // Get genre names from the genres array (available in details)
-    const tags = tmdbMovie.genres.map(g => g.name);
+    const tags = tmdbMovie.genres.map((g) => g.name);
 
     // Map to our Movie format
     const movie = mapTmdbToMovie(tmdbMovie);
 
     return {
       ...movie,
-      tags: tags
+      tags: tags,
     };
   } catch (error) {
     console.warn(`Failed to fetch movie ${id} from TMDB:`, error);
@@ -244,7 +244,7 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
  * @returns Promise of Movie[] (6 movies with full details)
  */
 export async function fetchOriginalRecommendations(): Promise<Movie[]> {
-  const CACHE_KEY = 'curatedRecommendations';
+  const CACHE_KEY = "curatedRecommendations";
   const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   try {
@@ -258,7 +258,9 @@ export async function fetchOriginalRecommendations(): Promise<Movie[]> {
     }
 
     // Cache miss or expired: fetch details for each curated movie ID
-    const movieDetailsPromises: Promise<Movie | null>[] = CURATED_MOVIE_IDS.map((id: number) => getMovieById(id.toString()));
+    const movieDetailsPromises: Promise<Movie | null>[] = CURATED_MOVIE_IDS.map((id: number) =>
+      getMovieById(id.toString()),
+    );
     const movieDetailsArray: (Movie | null)[] = await Promise.all(movieDetailsPromises);
 
     // Filter out any null results (failed fetches)
@@ -268,10 +270,13 @@ export async function fetchOriginalRecommendations(): Promise<Movie[]> {
     const limitedMovies: Movie[] = movies.slice(0, 6);
 
     // Cache the result
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      timestamp: Date.now(),
-      data: limitedMovies
-    }));
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({
+        timestamp: Date.now(),
+        data: limitedMovies,
+      }),
+    );
 
     return limitedMovies;
   } catch (error) {

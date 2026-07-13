@@ -37,22 +37,16 @@ describe("useRandomMessage", () => {
       Object.keys(messages).forEach((category) => {
         Math.random = () => 0.5;
 
-        const { result } = renderHook(() =>
-          useRandomMessage(category as keyof typeof messages)
-        );
+        const { result } = renderHook(() => useRandomMessage(category as keyof typeof messages));
 
-        expect(result.current).toBe(
-          messages[category as keyof typeof messages][0]
-        );
+        expect(result.current).toBe(messages[category as keyof typeof messages][0]);
       });
     });
 
     it("should return empty string for unknown category during SSR", () => {
       Math.random = () => 0.5;
 
-      const { result } = renderHook(() =>
-        useRandomMessage("unknown" as keyof typeof messages)
-      );
+      const { result } = renderHook(() => useRandomMessage("unknown" as keyof typeof messages));
 
       expect(result.current).toBe("");
     });
@@ -91,7 +85,7 @@ describe("useRandomMessage", () => {
 
       const { result, rerender } = renderHook(
         ({ category }) => useRandomMessage(category as keyof typeof messages),
-        { initialProps: { category: "encouragement" } }
+        { initialProps: { category: "encouragement" } },
       );
 
       const firstMessage = result.current;
@@ -110,7 +104,7 @@ describe("useRandomMessage", () => {
 
       const { result, rerender } = renderHook(
         ({ category }) => useRandomMessage(category as keyof typeof messages),
-        { initialProps: { category: "encouragement" } }
+        { initialProps: { category: "encouragement" } },
       );
 
       expect(result.current).toBe(messages.encouragement[0]);
@@ -127,7 +121,7 @@ describe("useRandomMessage", () => {
       // We can't actually pass an empty category without modifying the messages object
       // but we can test the behavior with a category that doesn't exist
       const { result } = renderHook(() =>
-        useRandomMessage("non_existent" as keyof typeof messages)
+        useRandomMessage("non_existent" as keyof typeof messages),
       );
 
       expect(result.current).toBe("");

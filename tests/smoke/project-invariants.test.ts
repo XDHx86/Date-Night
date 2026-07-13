@@ -37,8 +37,7 @@ describe("Smoke — Project invariants", () => {
     expect(pkg.scripts?.build).toBeTruthy();
   });
 
-  it("ships with both Bun and npm lockfiles", () => {
-    expect(existsSync(resolve(root, "bun.lock"))).toBe(true);
+  it("ships with an npm lockfile (Bun optional)", () => {
     expect(existsSync(resolve(root, "package-lock.json"))).toBe(true);
   });
 
@@ -73,9 +72,9 @@ describe("Smoke — Project invariants", () => {
 
 describe("Smoke — Source tree integrity", () => {
   const expectedFiles = [
+    "index.html",
+    "src/main.tsx",
     "src/router.tsx",
-    "src/server.ts",
-    "src/start.ts",
     "src/routeTree.gen.ts",
     "src/styles.css",
     "src/lib/store.ts",

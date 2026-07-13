@@ -261,7 +261,7 @@ function LoveLetter() {
    */
 
   return (
-    <PageShell particles={8}>
+    <PageShell>
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-gradient mb-2">💌 Your Love Letter 💌</h1>
@@ -351,7 +351,7 @@ function LoveLetter() {
           >
             {editMode ? "Exit Edit" : "Edit Message"}
           </AnimatedButton>
-          <AnimatedButton variant="gold" size="md" onClick={() => navigate({ to: -1 })}>
+          <AnimatedButton variant="gold" size="md" onClick={() => navigate({ to: "/summary" })}>
             Back to Date Plan <ArrowRight className="h-4 w-4" />
           </AnimatedButton>
         </div>

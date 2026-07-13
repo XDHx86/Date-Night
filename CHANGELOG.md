@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Documentation refresh aligning every guide with the current codebase (route set,
   state management, TMDb integration, persistent background system, love-letter
   categories, Playwright config, CI workflows).
 
 ### Changed
+
 - `README.md` rewritten with verified environment variables, scripts, project
   structure and recent highlights.
 - `docs/overview.md`, `docs/routing.md`, `docs/state-management.md`,
@@ -26,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.5.0] - 2026-07-12
 
 ### Added
+
 - Centralised background system:
   - `src/components/BackgroundContext.tsx` — variant context
   - `src/components/BackgroundLayer.tsx` — single rendered layer with cross-fade
@@ -60,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/components/MovieCard.tsx` — `Recommended` / `Classic` category badges.
 
 ### Changed
+
 - `src/components/PageShell.tsx` — drops the per-route background / particle
   responsibilities in favour of the global BackgroundLayer + BottomControlBar.
 - `src/components/AnimatedBackground.tsx` — variant props retained but the
@@ -85,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.0] - 2026-07-11 — Navigation & URL Sync Fixes
 
 ### Fixed
+
 - `window.history` calls bypassed TanStack Router's internal state — replaced
   by `navigate()` everywhere (`src/routes/date.tsx`, `time.tsx`, `movie.tsx`,
   `love-letter.tsx`).
@@ -92,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Page refresh no longer loses state — URL search params hydrate the store.
 
 ### Added
+
 - `src/hooks/useUrlSync.ts` — single source of truth for URL ⇄ store sync.
 - `syncUrl` / `syncState` utilities used by every form-style step.
 - `createShareableUrl` / `getMovieIdFromUrl` helpers for share buttons.
@@ -99,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2026-07-11 — TMDb Integration
 
 ### Added
+
 - Live TMDb API integration (`src/lib/movies.ts`) for search and detail fetches.
 - Real poster / backdrop images via `src/components/MovieCard.tsx` and
   `src/components/MovieBackdropBackground.tsx`.
@@ -107,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-07-10 — Love Letter, Shareable Links, Tests
 
 ### Added
+
 - `/love-letter` route with template + custom edit + share-as-image.
 - Shareable URL with date / time / movie / love-message / theme.
 - Audio toggle (WebAudio synthesised blips + optional `love.mp3` background).
@@ -116,12 +124,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial Playwright E2E suite in `tests/e2e`.
 
 ### Fixed
+
 - `bg-muted` selector in `tests/e2e/setup.ts` for axe.
 - `curl-style` TMDB request failures surface as friendly toasts, not crashes.
 
 ## [1.1.0] - 2026-07-09 — Polished UI, Random Messages, Confetti
 
 ### Added
+
 - `src/lib/messages.ts` with eight categories of playful copy.
 - `src/hooks/useRandomMessage.ts` for per-screen copy.
 - `src/components/ConfettiCelebration.tsx` (framer-motion springs).
@@ -133,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-07-01
 
 ### Added
+
 - Initial TanStack Start project.
 - Routing via TanStack Router with file-based routes.
 - Zustand store with `sessionStorage` persistence.
@@ -156,4 +167,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0]: https://github.com/your-username/datenight/releases/tag/v0.1.0
 
 ---
-*Changelog started: July 1, 2026.*
+
+_Changelog started: July 1, 2026._

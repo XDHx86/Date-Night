@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TimeRouteImport } from './routes/time'
 import { Route as SummaryRouteImport } from './routes/summary'
 import { Route as SuccessRouteImport } from './routes/success'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as MovieRouteImport } from './routes/movie'
 import { Route as LoveLetterRouteImport } from './routes/love-letter'
 import { Route as DateRouteImport } from './routes/date'
@@ -33,11 +32,6 @@ const SummaryRoute = SummaryRouteImport.update({
 const SuccessRoute = SuccessRouteImport.update({
   id: '/success',
   path: '/success',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MovieRoute = MovieRouteImport.update({
@@ -78,7 +72,6 @@ export interface FileRoutesByFullPath {
   '/date': typeof DateRoute
   '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/summary': typeof SummaryRoute
   '/time': typeof TimeRoute
@@ -90,7 +83,6 @@ export interface FileRoutesByTo {
   '/date': typeof DateRoute
   '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/summary': typeof SummaryRoute
   '/time': typeof TimeRoute
@@ -103,7 +95,6 @@ export interface FileRoutesById {
   '/date': typeof DateRoute
   '/love-letter': typeof LoveLetterRoute
   '/movie': typeof MovieRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/success': typeof SuccessRoute
   '/summary': typeof SummaryRoute
   '/time': typeof TimeRoute
@@ -117,7 +108,6 @@ export interface FileRouteTypes {
     | '/date'
     | '/love-letter'
     | '/movie'
-    | '/sitemap.xml'
     | '/success'
     | '/summary'
     | '/time'
@@ -129,7 +119,6 @@ export interface FileRouteTypes {
     | '/date'
     | '/love-letter'
     | '/movie'
-    | '/sitemap.xml'
     | '/success'
     | '/summary'
     | '/time'
@@ -141,7 +130,6 @@ export interface FileRouteTypes {
     | '/date'
     | '/love-letter'
     | '/movie'
-    | '/sitemap.xml'
     | '/success'
     | '/summary'
     | '/time'
@@ -154,7 +142,6 @@ export interface RootRouteChildren {
   DateRoute: typeof DateRoute
   LoveLetterRoute: typeof LoveLetterRoute
   MovieRoute: typeof MovieRoute
-  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuccessRoute: typeof SuccessRoute
   SummaryRoute: typeof SummaryRoute
   TimeRoute: typeof TimeRoute
@@ -181,13 +168,6 @@ declare module '@tanstack/react-router' {
       path: '/success'
       fullPath: '/success'
       preLoaderRoute: typeof SuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/movie': {
@@ -242,7 +222,6 @@ const rootRouteChildren: RootRouteChildren = {
   DateRoute: DateRoute,
   LoveLetterRoute: LoveLetterRoute,
   MovieRoute: MovieRoute,
-  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuccessRoute: SuccessRoute,
   SummaryRoute: SummaryRoute,
   TimeRoute: TimeRoute,
@@ -250,13 +229,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

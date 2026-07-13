@@ -23,12 +23,12 @@ interface StepDef {
 }
 
 const STEP_DEFS: StepDef[] = [
-  { label: "Start",     Icon: Heart,         hint: "Invite" },
-  { label: "Date",      Icon: CalendarHeart, hint: "Pick a day" },
-  { label: "Time",      Icon: Clock,         hint: "Pick a time" },
-  { label: "Movie",     Icon: Film,          hint: "Choose a movie" },
-  { label: "Summary",   Icon: Sparkles,      hint: "Review the plan" },
-  { label: "Celebrate", Icon: PartyPopper,   hint: "All set!" },
+  { label: "Start", Icon: Heart, hint: "Invite" },
+  { label: "Date", Icon: CalendarHeart, hint: "Pick a day" },
+  { label: "Time", Icon: Clock, hint: "Pick a time" },
+  { label: "Movie", Icon: Film, hint: "Choose a movie" },
+  { label: "Summary", Icon: Sparkles, hint: "Review the plan" },
+  { label: "Celebrate", Icon: PartyPopper, hint: "All set!" },
 ];
 
 /**
@@ -58,9 +58,7 @@ export function TopProgressBar() {
       aria-label="Date night progress"
       className="pointer-events-none fixed inset-x-0 top-3 z-30 flex justify-center px-3"
     >
-      <ol
-        className="pointer-events-auto flex max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/80 px-3 py-2 shadow-[var(--shadow-card)] backdrop-blur-md sm:gap-3 sm:px-4"
-      >
+      <ol className="pointer-events-auto flex max-w-full items-center gap-1.5 rounded-full border border-border/40 bg-card/80 px-3 py-2 shadow-[var(--shadow-card)] backdrop-blur-md sm:gap-3 sm:px-4">
         {STEP_DEFS.slice(0, totalSteps).map((step, idx) => {
           const num = idx + 1;
           const isDone = num < active;
@@ -111,20 +109,16 @@ export function TopProgressBar() {
                 } `}
               >
                 <step.Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-             </button>
+              </button>
 
               {/* Label: visible on >= sm */}
               <span
                 className={`hidden text-xs font-medium uppercase tracking-wide sm:inline ${
-                  isCurrent
-                    ? "text-foreground"
-                    : isDone
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                  isCurrent ? "text-foreground" : isDone ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {step.label}
-             </span>
+              </span>
 
               {/* Connector bar */}
               {idx < totalSteps - 1 && (
@@ -135,10 +129,10 @@ export function TopProgressBar() {
                   }`}
                 />
               )}
-           </li>
+            </li>
           );
         })}
-     </ol>
-   </nav>
+      </ol>
+    </nav>
   );
 }

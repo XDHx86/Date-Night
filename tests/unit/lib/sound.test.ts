@@ -44,12 +44,7 @@ const localStorageMock = {
 };
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 
-import {
-  isMuted,
-  setMuted,
-  initMutedFromStorage,
-  sounds,
-} from "../../../src/lib/sound";
+import { isMuted, setMuted, initMutedFromStorage, sounds } from "../../../src/lib/sound";
 
 describe("sound.ts", () => {
   beforeEach(() => {

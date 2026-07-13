@@ -4,7 +4,7 @@
 
 export const CURATED_MOVIE_IDS = [
   1273221, // Scary movie 6 (Recommended)
-  614945,  // Voicemails for isabelle (Recommended)
+  614945, // Voicemails for isabelle (Recommended)
   76696, // Sidewalls
   1198994, // Send help
   157350, // Divergent

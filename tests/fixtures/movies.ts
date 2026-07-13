@@ -173,7 +173,7 @@ export function createManyMovies(count: number = 50): Movie[] {
       poster_path: i % 5 === 0 ? null : `/movie-${i + 1}.jpg`,
       backdrop_path: i % 5 === 0 ? null : `/movie-${i + 1}-backdrop.jpg`,
       rating: 5 + (i % 5),
-      tags: [`Tag ${i % 3 + 1}`],
+      tags: [`Tag ${(i % 3) + 1}`],
       year: 2020 + (i % 5),
       duration: 90 + (i % 60),
     });
@@ -243,7 +243,7 @@ export function createMovie(options: CreateMovieOptions = {}): Movie {
  */
 export function createMovies(
   count: number,
-  optionsFactory?: (index: number) => Partial<CreateMovieOptions>
+  optionsFactory?: (index: number) => Partial<CreateMovieOptions>,
 ): Movie[] {
   const movies: Movie[] = [];
 

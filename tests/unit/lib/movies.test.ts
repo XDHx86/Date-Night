@@ -52,7 +52,7 @@ const mockFetch = vi.fn(async (url: string, options?: RequestInit) => {
           { id: 10749, name: "Romance" },
         ],
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
 
@@ -65,7 +65,7 @@ const mockFetch = vi.fn(async (url: string, options?: RequestInit) => {
         total_pages: 0,
         total_results: 0,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
 
@@ -244,8 +244,11 @@ describe("movies.ts", () => {
 
       // The actual implementation uses getGenreMap which we need to mock
       // For now, we'll test the logic with a known genre map
-      expect([28, 12, 999].map((id) => mockGenreMap.get(id) || undefined))
-        .toEqual(["Action", "Adventure", undefined]);
+      expect([28, 12, 999].map((id) => mockGenreMap.get(id) || undefined)).toEqual([
+        "Action",
+        "Adventure",
+        undefined,
+      ]);
     });
   });
 

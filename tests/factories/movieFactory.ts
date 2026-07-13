@@ -41,9 +41,7 @@ export class MovieBuilder {
       rating: faker.number.float({ min: 1, max: 10, precision: 0.1 }),
       year: faker.number.int({ min: 2000, max: 2030 }),
       duration: faker.number.int({ min: 60, max: 200 }),
-      tags: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () =>
-        faker.lorem.word()
-      ),
+      tags: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => faker.lorem.word()),
     });
   }
 
@@ -95,9 +93,7 @@ export class MovieBuilder {
    * Set a random movie description.
    */
   withRandomDescription(length?: number): this {
-    this.data.description = length
-      ? faker.lorem.paragraph(length)
-      : faker.lorem.paragraph();
+    this.data.description = length ? faker.lorem.paragraph(length) : faker.lorem.paragraph();
     return this;
   }
 
@@ -271,7 +267,8 @@ export class MovieBuilder {
     this.data.description ??= this.defaults.description ?? faker.lorem.paragraph();
     this.data.poster_path ??= this.defaults.poster_path ?? `/${faker.string.uuid()}.jpg`;
     this.data.backdrop_path ??= this.defaults.backdrop_path ?? null;
-    this.data.rating ??= this.defaults.rating ?? faker.number.float({ min: 1, max: 10, precision: 0.1 });
+    this.data.rating ??=
+      this.defaults.rating ?? faker.number.float({ min: 1, max: 10, precision: 0.1 });
     this.data.tags ??= this.defaults.tags ?? [faker.lorem.word()];
     this.data.year ??= this.defaults.year ?? faker.number.int({ min: 2000, max: 2030 });
     this.data.duration ??= this.defaults.duration ?? faker.number.int({ min: 60, max: 200 });
@@ -371,29 +368,18 @@ export const MovieTemplates = {
   /**
    * A movie without a poster.
    */
-  noPoster: () =>
-    MovieBuilder.create()
-      .withTitle("Movie Without Poster")
-      .withoutPoster()
-      .build(),
+  noPoster: () => MovieBuilder.create().withTitle("Movie Without Poster").withoutPoster().build(),
 
   /**
    * A movie with no backdrop.
    */
   noBackdrop: () =>
-    MovieBuilder.create()
-      .withTitle("Movie Without Backdrop")
-      .withoutBackdrop()
-      .build(),
+    MovieBuilder.create().withTitle("Movie Without Backdrop").withoutBackdrop().build(),
 
   /**
    * A movie with no tags.
    */
-  noTags: () =>
-    MovieBuilder.create()
-      .withTitle("Movie Without Tags")
-      .withoutTags()
-      .build(),
+  noTags: () => MovieBuilder.create().withTitle("Movie Without Tags").withoutTags().build(),
 
   /**
    * A movie with a very long description.
@@ -403,62 +389,38 @@ export const MovieTemplates = {
       .withTitle("Movie with Long Description")
       .withDescription(
         "This movie has an extremely long description that goes on and on. " +
-        "It tells the story of a hero's journey through various trials and tribulations. " +
-        "This is all just to test how the component handles long text."
+          "It tells the story of a hero's journey through various trials and tribulations. " +
+          "This is all just to test how the component handles long text.",
       )
       .build(),
 
   /**
    * A movie with a very high rating.
    */
-  highRating: () =>
-    MovieBuilder.create()
-      .withTitle("Amazing Movie")
-      .withRating(9.9)
-      .build(),
+  highRating: () => MovieBuilder.create().withTitle("Amazing Movie").withRating(9.9).build(),
 
   /**
    * A movie with a very low rating.
    */
-  lowRating: () =>
-    MovieBuilder.create()
-      .withTitle("Terrible Movie")
-      .withRating(1.0)
-      .build(),
+  lowRating: () => MovieBuilder.create().withTitle("Terrible Movie").withRating(1.0).build(),
 
   /**
    * A very short movie.
    */
-  short: () =>
-    MovieBuilder.create()
-      .withTitle("Short Film")
-      .withDuration(15)
-      .build(),
+  short: () => MovieBuilder.create().withTitle("Short Film").withDuration(15).build(),
 
   /**
    * A very long movie.
    */
-  long: () =>
-    MovieBuilder.create()
-      .withTitle("Epic Movie")
-      .withDuration(240)
-      .build(),
+  long: () => MovieBuilder.create().withTitle("Epic Movie").withDuration(240).build(),
 
   /**
    * A movie from a long time ago.
    */
-  old: () =>
-    MovieBuilder.create()
-      .withTitle("Classic Film")
-      .withYear(1920)
-      .build(),
+  old: () => MovieBuilder.create().withTitle("Classic Film").withYear(1920).build(),
 
   /**
    * A movie from the future (for testing date validation).
    */
-  future: () =>
-    MovieBuilder.create()
-      .withTitle("Future Movie")
-      .withYear(2050)
-      .build(),
+  future: () => MovieBuilder.create().withTitle("Future Movie").withYear(2050).build(),
 };

@@ -1,6 +1,6 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -82,7 +82,12 @@
   --ring: oklch(0.63 0.22 8);
 
   /* Gradients & shadows */
-  --gradient-romance: linear-gradient(135deg, oklch(0.96 0.03 350), oklch(0.9 0.06 320), oklch(0.93 0.05 280));
+  --gradient-romance: linear-gradient(
+    135deg,
+    oklch(0.96 0.03 350),
+    oklch(0.9 0.06 320),
+    oklch(0.93 0.05 280)
+  );
   --gradient-primary: linear-gradient(135deg, oklch(0.68 0.21 15), oklch(0.62 0.24 355));
   --gradient-gold: linear-gradient(135deg, oklch(0.88 0.12 90), oklch(0.8 0.15 70));
   --shadow-soft: 0 10px 30px -12px oklch(0.63 0.22 8 / 0.35);
@@ -164,7 +169,12 @@
   --sidebar-border: oklch(0.4 0.05 330);
   --sidebar-ring: oklch(0.7 0.2 8);
   /* Dark mode gradients */
-  --gradient-romance: linear-gradient(135deg, oklch(0.2 0.02 350), oklch(0.15 0.04 320), oklch(0.18 0.03 280));
+  --gradient-romance: linear-gradient(
+    135deg,
+    oklch(0.2 0.02 350),
+    oklch(0.15 0.04 320),
+    oklch(0.18 0.03 280)
+  );
   --gradient-primary: linear-gradient(135deg, oklch(0.4 0.2 15), oklch(0.35 0.22 355));
   --gradient-gold: linear-gradient(135deg, oklch(0.6 0.12 90), oklch(0.5 0.15 70));
   transition:

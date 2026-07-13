@@ -32,10 +32,13 @@ test.describe("Visual Regression", () => {
 
   test("time picker matches snapshot", async ({ page, goto, setLocalStorage }) => {
     // Pre-populate date for time picker access
-    await setLocalStorage("date-plan", JSON.stringify({
-      state: { date: "2026-07-15", time: null, movie: null },
-      version: 0,
-    }));
+    await setLocalStorage(
+      "date-plan",
+      JSON.stringify({
+        state: { date: "2026-07-15", time: null, movie: null },
+        version: 0,
+      }),
+    );
 
     await goto("/time");
     await page.waitForTimeout(1500);
@@ -47,10 +50,13 @@ test.describe("Visual Regression", () => {
   });
 
   test("movie picker matches snapshot", async ({ page, goto, setLocalStorage }) => {
-    await setLocalStorage("date-plan", JSON.stringify({
-      state: { date: "2026-07-15", time: "19:00", movie: null },
-      version: 0,
-    }));
+    await setLocalStorage(
+      "date-plan",
+      JSON.stringify({
+        state: { date: "2026-07-15", time: "19:00", movie: null },
+        version: 0,
+      }),
+    );
 
     await goto("/movie");
     await page.waitForTimeout(2500);

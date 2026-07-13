@@ -4,7 +4,12 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { ROUTE_STEP, STEP_ROUTE, LOCKED_NAV_ROUTES, useRouteStep } from "../../../src/hooks/useRouteStep";
+import {
+  ROUTE_STEP,
+  STEP_ROUTE,
+  LOCKED_NAV_ROUTES,
+  useRouteStep,
+} from "../../../src/hooks/useRouteStep";
 
 describe("useRouteStep", () => {
   describe("ROUTE_STEP constant", () => {
@@ -172,7 +177,7 @@ describe("useRouteStep", () => {
     });
 
     it("should handle route with trailing slash", () => {
-      const pathname = "/success/"";
+      const pathname = "/success/";
       const navLocked = LOCKED_NAV_ROUTES.has(pathname);
       // Depending on how routes are normalized, this might or might not match
       // The hook uses location.pathname which typically doesn't have trailing slash

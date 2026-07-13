@@ -30,7 +30,9 @@ function Poster({ movie }: { movie: Movie }) {
           />
         )}
         <div className="absolute inset-x-0 bottom-0 bg-black/25 p-2 text-center backdrop-blur-sm">
-          <p className="line-clamp-2 font-display text-sm font-semibold text-white">{movie.title}</p>
+          <p className="line-clamp-2 font-display text-sm font-semibold text-white">
+            {movie.title}
+          </p>
         </div>
       </div>
     );
@@ -78,7 +80,7 @@ export function MovieCard({
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "relative flex flex-col overflow-hidden rounded-3xl border bg-card p-3 text-left shadow-[var(--shadow-card)] transition-colors",
-        selected ? "border-primary ring-2 ring-primary" : categoryStyles
+        selected ? "border-primary ring-2 ring-primary" : categoryStyles,
       )}
     >
       {/* Category badge overlay */}
@@ -88,7 +90,7 @@ export function MovieCard({
             "absolute z-10 left-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide shadow",
             category === "recommended"
               ? "bg-amber-400 text-amber-950"
-              : "bg-slate-400 text-slate-950"
+              : "bg-slate-400 text-slate-950",
           )}
         >
           {category === "recommended" ? (
@@ -100,7 +102,7 @@ export function MovieCard({
               <Film className="h-3 w-3" /> Classic
             </>
           )}
-       </div>
+        </div>
       )}
 
       <Poster movie={movie} />

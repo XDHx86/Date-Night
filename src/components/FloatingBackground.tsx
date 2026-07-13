@@ -1,9 +1,30 @@
 import { useEffect, useState } from "react";
 
 const EMOJIS = [
-  "💕", "💖", "✨", "🌸", "⭐", "💫", "🌷", "💗",
-  "💓", "💞", "💘", "💝", "🎀", "🌺", "🍀", "🌼",
-  "🪄", "🪐", "🌙", "☀️", "⚡", "🎪", "🎈", "🎉"
+  "💕",
+  "💖",
+  "✨",
+  "🌸",
+  "⭐",
+  "💫",
+  "🌷",
+  "💗",
+  "💓",
+  "💞",
+  "💘",
+  "💝",
+  "🎀",
+  "🌺",
+  "🍀",
+  "🌼",
+  "🪄",
+  "🪐",
+  "🌙",
+  "☀️",
+  "⚡",
+  "🎪",
+  "🎈",
+  "🎉",
 ];
 
 interface Particle {
@@ -47,10 +68,7 @@ export function FloatingBackground({ count = 35 }: { count?: number }) {
   }, [count]);
 
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-    >
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {/* subtle gradient blobs */}
       <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-accent/40 blur-3xl" />
       <div className="absolute -right-20 top-1/3 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
@@ -64,10 +82,14 @@ export function FloatingBackground({ count = 35 }: { count?: number }) {
             left: `${p.left}%`,
             fontSize: `${p.size}px`,
             opacity: p.opacity,
-            // Custom properties used by the float-up keyframes
-            "--o": p.opacity,
-            "--s": p.scale,
-            animation: `float-up ${p.duration}s linear ${p.delay}s infinite`,
+            // Custom properties used by the float-up keyframes. The public
+            // CSS Properties type does not know about these dashed custom
+            // properties, so we cast the whole style object through `unknown`.
+            ...({
+              "--o": p.opacity,
+              "--s": p.scale,
+              animation: `float-up ${p.duration}s linear ${p.delay}s infinite`,
+            } as Record<string, string | number>),
           }}
         >
           {p.emoji}

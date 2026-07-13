@@ -15,9 +15,7 @@ interface Props {
  */
 export function MoviePoster({ movie, className = "" }: Props) {
   const src = posterUrl(movie) ?? FALLBACK_POSTER;
-  const alt = movie
-    ? `${movie.title} poster`
-    : "A cute couple watching a movie under the stars";
+  const alt = movie ? `${movie.title} poster` : "A cute couple watching a movie under the stars";
 
   return (
     <motion.img

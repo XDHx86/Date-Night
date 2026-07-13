@@ -70,7 +70,14 @@ class MockURLSearchParams {
 }
 
 Object.defineProperty(mockWindow, "URLSearchParams", { value: MockURLSearchParams });
-Object.defineProperty(mockWindow, "URL", { value: class { constructor(url: string) { this.href = url; } href: string } });
+Object.defineProperty(mockWindow, "URL", {
+  value: class {
+    constructor(url: string) {
+      this.href = url;
+    }
+    href: string;
+  },
+});
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -88,7 +95,7 @@ const localStorageMock = (() => {
 })();
 
 Object.defineProperty(mockWindow, "localStorage", { value: localStorageMock });
-Object.defineProperty(mockWindow, "sessionStorage", { value: {...localStorageMock} });
+Object.defineProperty(mockWindow, "sessionStorage", { value: { ...localStorageMock } });
 
 // Mock React
 const mockUseState = vi.fn();
@@ -233,8 +240,8 @@ describe("useUrlSync", () => {
       mockWindow.location.search = "?date=2026-07-12&movie=12345&time=19:00";
 
       // Set up mock for URLSearchParams
-      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(() =>
-        new MockURLSearchParams(mockWindow.location.search)
+      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(
+        () => new MockURLSearchParams(mockWindow.location.search),
       );
 
       expect(true).toBe(true);
@@ -243,8 +250,8 @@ describe("useUrlSync", () => {
     it("should return null when movie parameter is missing", () => {
       mockWindow.location.search = "?date=2026-07-12&time=19:00";
 
-      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(() =>
-        new MockURLSearchParams(mockWindow.location.search)
+      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(
+        () => new MockURLSearchParams(mockWindow.location.search),
       );
 
       expect(true).toBe(true);
@@ -253,8 +260,8 @@ describe("useUrlSync", () => {
     it("should return null for invalid movie ID", () => {
       mockWindow.location.search = "?movie=invalid";
 
-      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(() =>
-        new MockURLSearchParams(mockWindow.location.search)
+      vi.spyOn(mockWindow, "URLSearchParams").mockImplementation(
+        () => new MockURLSearchParams(mockWindow.location.search),
       );
 
       expect(true).toBe(true);

@@ -26,14 +26,14 @@ with the broader UI refresh in v1.5.
 ```ts
 interface DateState {
   // Core plan data
-  date: string | null;         // ISO yyyy-MM-dd
-  time: string | null;         // HH:mm (24-hour)
-  movie: Movie | null;         // Full TMDb object
+  date: string | null; // ISO yyyy-MM-dd
+  time: string | null; // HH:mm (24-hour)
+  movie: Movie | null; // Full TMDb object
 
   // UI preferences
-  isDarkMode: boolean;         // Persistent dark mode toggle
-  isAudioEnabled: boolean;     // Background audio toggle (UI + audio)
-  loveMessage: string;         // Custom love-letter text
+  isDarkMode: boolean; // Persistent dark mode toggle
+  isAudioEnabled: boolean; // Background audio toggle (UI + audio)
+  loveMessage: string; // Custom love-letter text
 
   // Actions
   setDate: (date: string) => void;
@@ -51,42 +51,37 @@ interface DateState {
 
 ### Action Reference
 
-| Action                       | Effect                                                |
-| ---------------------------- | ----------------------------------------------------- |
-| `setDate(date)`              | Updates the selected date                             |
-| `setTime(time)`              | Updates the selected time                             |
-| `setMovie(movie)`            | Updates the selected movie                            |
-| `reset()`                    | Clears date / time / movie / love message; **keeps** the audio preference |
-| `toggleDarkMode()`           | Flips `isDarkMode`                                    |
-| `setDarkMode(isDark)`        | Sets `isDarkMode` to a specific value                 |
-| `toggleAudio()`              | Flips `isAudioEnabled`                                |
-| `setAudioEnabled(enabled)`   | Forces a specific audio state                         |
-| `setLoveMessage(message)`    | Updates the love-letter copy                          |
+| Action                     | Effect                                                                    |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `setDate(date)`            | Updates the selected date                                                 |
+| `setTime(time)`            | Updates the selected time                                                 |
+| `setMovie(movie)`          | Updates the selected movie                                                |
+| `reset()`                  | Clears date / time / movie / love message; **keeps** the audio preference |
+| `toggleDarkMode()`         | Flips `isDarkMode`                                                        |
+| `setDarkMode(isDark)`      | Sets `isDarkMode` to a specific value                                     |
+| `toggleAudio()`            | Flips `isAudioEnabled`                                                    |
+| `setAudioEnabled(enabled)` | Forces a specific audio state                                             |
+| `setLoveMessage(message)`  | Updates the love-letter copy                                              |
 
 ## Persistence
 
 The store uses `zustand/middleware/persist`:
 
 ```ts
-persist(
-  (set, get) => ({ /* state + actions */ }),
-  {
-    name: "date-plan",
-    storage: createJSONStorage(() =>
-      typeof window !== "undefined"
-        ? window.localStorage
-        : (undefined as unknown as Storage) // SSR fallback
-    ),
-    partialize: (state) => ({
-      date: state.date,
-      time: state.time,
-      movie: state.movie,
-      isDarkMode: state.isDarkMode,
-      isAudioEnabled: state.isAudioEnabled,
-      loveMessage: state.loveMessage,
-    }),
-  }
-);
+persist((set, get) => ({/* state + actions */}), {
+  name: "date-plan",
+  storage: createJSONStorage(
+    () => (typeof window !== "undefined" ? window.localStorage : (undefined as unknown as Storage)), // SSR fallback
+  ),
+  partialize: (state) => ({
+    date: state.date,
+    time: state.time,
+    movie: state.movie,
+    isDarkMode: state.isDarkMode,
+    isAudioEnabled: state.isAudioEnabled,
+    loveMessage: state.loveMessage,
+  }),
+});
 ```
 
 - All persisted fields are partialize'd; transient UI state stays out
@@ -109,24 +104,24 @@ import { useUrlSync } from "@/hooks/useUrlSync";
 const { syncUrl, syncState, sync, getSearchParams } = useUrlSync();
 ```
 
-| Method                | Direction             | Notes                              |
-| --------------------- | --------------------- | ---------------------------------- |
-| `syncState()`         | URL → store           | Hydrate from search params         |
-| `syncUrl()`           | Store → URL           | Replace, do not push                |
-| `sync()`              | Both directions       | Reads URL, then writes URL         |
-| `getSearchParams()`   | Store → params        | For ad-hoc read                    |
-| `createShareableUrl()`| Store → public URL    | Used by the share button           |
-| `getMovieIdFromUrl()` | URL → number          | Used by `/movie` to re-hydrate     |
+| Method                 | Direction          | Notes                          |
+| ---------------------- | ------------------ | ------------------------------ |
+| `syncState()`          | URL → store        | Hydrate from search params     |
+| `syncUrl()`            | Store → URL        | Replace, do not push           |
+| `sync()`               | Both directions    | Reads URL, then writes URL     |
+| `getSearchParams()`    | Store → params     | For ad-hoc read                |
+| `createShareableUrl()` | Store → public URL | Used by the share button       |
+| `getMovieIdFromUrl()`  | URL → number       | Used by `/movie` to re-hydrate |
 
 ### URL Parameter Mapping
 
-| Store value    | URL parameter | Format                  |
-| -------------- | ------------- | ----------------------- |
-| `date`         | `date`        | `yyyy-MM-dd`            |
-| `time`         | `time`        | `HH:mm`                 |
-| `movie.id`     | `movie`       | Numeric TMDb ID         |
-| `loveMessage`  | `love`        | URL-encoded             |
-| `isDarkMode`   | `theme`       | `dark` if on            |
+| Store value   | URL parameter | Format          |
+| ------------- | ------------- | --------------- |
+| `date`        | `date`        | `yyyy-MM-dd`    |
+| `time`        | `time`        | `HH:mm`         |
+| `movie.id`    | `movie`       | Numeric TMDb ID |
+| `loveMessage` | `love`        | URL-encoded     |
+| `isDarkMode`  | `theme`       | `dark` if on    |
 
 ### Why a Custom Hook?
 
@@ -146,15 +141,15 @@ The `Movie` interface is defined in
 
 ```ts
 interface Movie {
-  id: string;                // TMDb movie ID (stringified for URL)
+  id: string; // TMDb movie ID (stringified for URL)
   title: string;
-  description: string;       // Movie overview / plot summary
-  poster_path: string | null;  // TMDB CDN path
+  description: string; // Movie overview / plot summary
+  poster_path: string | null; // TMDB CDN path
   backdrop_path: string | null;
-  rating: number;            // vote_average (0-10)
-  tags: string[];            // Genre names
-  year: number;              // Release year
-  duration: number;          // Runtime in minutes
+  rating: number; // vote_average (0-10)
+  tags: string[]; // Genre names
+  year: number; // Release year
+  duration: number; // Runtime in minutes
 }
 ```
 
@@ -180,13 +175,13 @@ const url = createShareableUrl();
 
 ## Data Flow Example
 
-| Screen       | Action                                                  |
-| ------------ | ------------------------------------------------------- |
-| `/date`      | User picks a date → `setDate()` → `syncUrl()` updates the URL |
-| `/time`      | `syncState()` hydrates → user picks → `setTime()` → `syncUrl()` |
-| `/movie`     | `syncState()` hydrates → user picks → `setMovie()` → `syncUrl()` |
-| `/summary`   | Reads everything from the store; if anything is missing → guard navigates to `/date` |
-| `/success`   | "Plan another date" → `reset()` → `navigate('/')`        |
+| Screen     | Action                                                                               |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `/date`    | User picks a date → `setDate()` → `syncUrl()` updates the URL                        |
+| `/time`    | `syncState()` hydrates → user picks → `setTime()` → `syncUrl()`                      |
+| `/movie`   | `syncState()` hydrates → user picks → `setMovie()` → `syncUrl()`                     |
+| `/summary` | Reads everything from the store; if anything is missing → guard navigates to `/date` |
+| `/success` | "Plan another date" → `reset()` → `navigate('/')`                                    |
 
 ## Movie Recommendations Caching
 

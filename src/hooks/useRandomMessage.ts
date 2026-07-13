@@ -13,7 +13,7 @@ const EMPTY = "";
  */
 export function useRandomMessage(category: Category): string {
   const pool = useMemo(() => messages[category] ?? [], [category]);
-  const [msg, setMsg] = useState<string>(() => (pool[0] ?? EMPTY));
+  const [msg, setMsg] = useState<string>(() => pool[0] ?? EMPTY);
 
   useEffect(() => {
     if (pool.length === 0) {
@@ -32,10 +32,7 @@ export function useRandomMessage(category: Category): string {
  * Hook – random message from any category.  Same hydration‑safe design.
  */
 export function useAnyRandomMessage(): string {
-  const allCategories = useMemo(
-    () => Object.keys(messages) as Category[],
-    [],
-  );
+  const allCategories = useMemo(() => Object.keys(messages) as Category[], []);
   const [msg, setMsg] = useState<string>(EMPTY);
 
   useEffect(() => {

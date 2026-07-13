@@ -1,9 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  useCurrentBackgroundVariant,
-  type BackgroundVariant,
-} from "./BackgroundContext";
+import { useCurrentBackgroundVariant, type BackgroundVariant } from "./BackgroundContext";
 
 /* ----------------------------------------------------------------------------
  *  Per‑variant gradient strings. Edit these to tweak the look of any page.
@@ -69,10 +66,7 @@ export function BackgroundLayer() {
   }, []);
 
   return (
-    <div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-[-10] overflow-hidden"
-    >
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-[-10] overflow-hidden">
       <AnimatePresence initial={false}>
         <motion.div
           key={variant}
@@ -88,10 +82,10 @@ export function BackgroundLayer() {
             animation: `${KEYFRAMES[variant]} ${DURATIONS[variant]}s ease infinite`,
           }}
         />
-     </AnimatePresence>
+      </AnimatePresence>
 
       {/* Persistent dim layer for legibility */}
       <div className="absolute inset-0 bg-black/5" />
-   </div>
+    </div>
   );
 }

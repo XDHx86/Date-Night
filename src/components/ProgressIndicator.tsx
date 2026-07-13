@@ -1,22 +1,9 @@
 import { clsx } from "clsx";
 import { useRouteStep } from "@/hooks/useRouteStep";
 
-type StepLabel =
-  | "Start"
-  | "Date"
-  | "Time"
-  | "Movie"
-  | "Summary"
-  | "Celebrate";
+type StepLabel = "Start" | "Date" | "Time" | "Movie" | "Summary" | "Celebrate";
 
-const STEP_LABELS: StepLabel[] = [
-  "Start",
-  "Date",
-  "Time",
-  "Movie",
-  "Summary",
-  "Celebrate",
-];
+const STEP_LABELS: StepLabel[] = ["Start", "Date", "Time", "Movie", "Summary", "Celebrate"];
 
 interface ProgressIndicatorProps {
   /** Optional override — defaults to the route‑derived step. */
@@ -29,10 +16,7 @@ export function ProgressIndicator({
   currentStep: currentStepProp,
   totalSteps: totalStepsProp,
 }: ProgressIndicatorProps) {
-  const {
-    currentStep: routeStep,
-    totalSteps: routeTotal,
-  } = useRouteStep(totalStepsProp ?? 6);
+  const { currentStep: routeStep, totalSteps: routeTotal } = useRouteStep(totalStepsProp ?? 6);
 
   // Falls back to the route‑derived step when no override is given.
   const currentStep = currentStepProp ?? routeStep;
@@ -64,26 +48,27 @@ export function ProgressIndicator({
               // Ensure equalSlate
             >
               {/* Dot */}
-              <div className={`relative z-10 w-8 h-8 flex items-center justify-center rounded-full
+              <div
+                className={`relative z-10 w-8 h-8 flex items-center justify-center rounded-full
                 transition-all duration-300
-                ${isActive
-                  ? "border-2 border-primary-foreground bg-primary-foreground"
-                  : "border-2 border-muted-foreground bg-transparent"}
+                ${
+                  isActive
+                    ? "border-2 border-primary-foreground bg-primary-foreground"
+                    : "border-2 border-muted-foreground bg-transparent"
+                }
                 ${isCurrent && "animate-pulse"}
-              `}>
-                {isActive && (
-                  <div className="w-4 h-4 rounded-full bg-primary-foreground" />
-                )}
+              `}
+              >
+                {isActive && <div className="w-4 h-4 rounded-full bg-primary-foreground" />}
               </div>
 
               {/* Label */}
-              <div className={clsx(
-                "mt-1.5 text-xs text-center text-muted-foreground",
-                {
+              <div
+                className={clsx("mt-1.5 text-xs text-center text-muted-foreground", {
                   "font-medium": isCurrent,
                   "font-normal": !isCurrent,
-                }
-              )}>
+                })}
+              >
                 {label}
               </div>
             </div>

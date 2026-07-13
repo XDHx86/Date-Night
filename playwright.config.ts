@@ -66,11 +66,11 @@ const common: Parameters<typeof defineConfig>[0] = {
   metadata: {
     purpose: "datenight-e2e",
   },
-  // Playwright auto-starts the dev server. `bun run dev` is the project's
+  // Playwright auto-starts the dev server. `npm run dev` is the project's
   // primary script (see package.json). The `reuseExistingServer` flag lets
-  // developers run tests against `bun run dev` without re-spawning a process.
+  // developers run tests against `npm run dev` without re-spawning a process.
   webServer: {
-    command: "bun run dev",
+    command: "npm run dev",
     url: `${BASE_URL}/`,
     timeout: 120_000,
     reuseExistingServer: !CI,

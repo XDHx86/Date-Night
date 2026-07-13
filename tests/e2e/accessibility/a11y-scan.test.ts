@@ -39,10 +39,13 @@ test.describe("Accessibility Tests", () => {
 
   test("movie picker is accessible", async ({ page, goto, setLocalStorage }) => {
     // Set date in storage so we can access movie picker
-    await setLocalStorage("date-plan", JSON.stringify({
-      state: { date: "2026-07-15", time: null, movie: null },
-      version: 0,
-    }));
+    await setLocalStorage(
+      "date-plan",
+      JSON.stringify({
+        state: { date: "2026-07-15", time: null, movie: null },
+        version: 0,
+      }),
+    );
 
     await goto("/movie");
 

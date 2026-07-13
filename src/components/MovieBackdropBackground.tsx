@@ -26,8 +26,7 @@ export function MovieBackdropBackground({ movie }: Props) {
       <div
         className="fixed inset-0 z-[-5]"
         style={{
-          background:
-            "linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)",
+          background: "linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)",
         }}
       />
     );

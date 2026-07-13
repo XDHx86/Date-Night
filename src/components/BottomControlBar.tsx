@@ -37,30 +37,21 @@ export function BottomControlBar() {
         ariaLabel={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
       >
         {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-    </ControlButton>
+      </ControlButton>
 
       <ControlButton
         onClick={toggleAudio}
         ariaPressed={isAudioEnabled}
-        ariaLabel={
-          isAudioEnabled ? "Mute background audio" : "Enable background audio"
-        }
+        ariaLabel={isAudioEnabled ? "Mute background audio" : "Enable background audio"}
       >
-        {isAudioEnabled ? (
-          <Volume2 className="h-5 w-5" />
-        ) : (
-          <VolumeX className="h-5 w-5" />
-        )}
-    </ControlButton>
+        {isAudioEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+      </ControlButton>
 
-      <ControlButton
-        onClick={() => navigate({ to: "/love-letter" })}
-        ariaLabel="Open love letter"
-      >
+      <ControlButton onClick={() => navigate({ to: "/love-letter" })} ariaLabel="Open love letter">
         <Heart className="h-5 w-5" />
-    </ControlButton>
-  </nav>
- );
+      </ControlButton>
+    </nav>
+  );
 }
 
 interface ControlButtonProps {
@@ -70,12 +61,7 @@ interface ControlButtonProps {
   children: React.ReactNode;
 }
 
-function ControlButton({
-  onClick,
-  ariaPressed,
-  ariaLabel,
-  children,
-}: ControlButtonProps) {
+function ControlButton({ onClick, ariaPressed, ariaLabel, children }: ControlButtonProps) {
   return (
     <button
       type="button"
@@ -85,6 +71,6 @@ function ControlButton({
       className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
     >
       {children}
-  </button>
+    </button>
   );
 }

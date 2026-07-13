@@ -15,10 +15,9 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
-  const { } = useDateStore();
+  const {} = useDateStore();
   const [burst, setBurst] = useState(false);
   const [yesText, setYesText] = useState<string | null>(null);
-
 
   const handleYes = () => {
     sounds.celebrate();
@@ -32,14 +31,12 @@ function Landing() {
   const openingMessage = useRandomMessage("encouragement");
 
   return (
-    <PageShell particles={8}>
+    <PageShell>
       {/* Confetti celebration */}
       <ConfettiCelebration active={burst} />
 
       {openingMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
-          "{openingMessage}"
-        </p>
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{openingMessage}"</p>
       )}
 
       <motion.img
@@ -76,11 +73,7 @@ function Landing() {
             <AnimatedButton variant="yes" size="lg" onClick={handleYes}>
               YES ❤️
             </AnimatedButton>
-            <AnimatedButton
-              variant="no"
-              size="lg"
-              onClick={() => navigate({ to: "/begging" })}
-            >
+            <AnimatedButton variant="no" size="lg" onClick={() => navigate({ to: "/begging" })}>
               NO 😤
             </AnimatedButton>
           </div>

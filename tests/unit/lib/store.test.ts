@@ -302,15 +302,8 @@ describe("useDateStore", () => {
 
   describe("Reset Actions", () => {
     it("should reset all state to initial values using reset", () => {
-      const {
-        setDate,
-        setTime,
-        setMovie,
-        setDarkMode,
-        setAudioEnabled,
-        setLoveMessage,
-        reset,
-      } = useDateStore.getState();
+      const { setDate, setTime, setMovie, setDarkMode, setAudioEnabled, setLoveMessage, reset } =
+        useDateStore.getState();
 
       // Set all values
       setDate("2026-07-12");

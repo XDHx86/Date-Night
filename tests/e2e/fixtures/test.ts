@@ -4,7 +4,13 @@
  * custom setup, teardown, and utilities for the Datenight application.
  */
 
-import { test as base, expect, type BrowserContext, type Page, type Locator } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type BrowserContext,
+  type Page,
+  type Locator,
+} from "@playwright/test";
 
 // ============================================================================
 // Custom Fixture Types
@@ -55,7 +61,10 @@ export interface DatenightFixtures {
   /**
    * Helper to navigate to a specific route.
    */
-  goto: (path: string, options?: { waitUntil?: "domcontentloaded" | "load" | "networkidle" }) => Promise<void>;
+  goto: (
+    path: string,
+    options?: { waitUntil?: "domcontentloaded" | "load" | "networkidle" },
+  ) => Promise<void>;
 
   /**
    * Helper to wait for navigation to complete.
@@ -110,11 +119,7 @@ export interface DatenightFixtures {
   /**
    * Helper to complete the YES journey (full flow).
    */
-  completeYesJourney: (options?: {
-    date?: string;
-    time?: string;
-    movie?: string;
-  }) => Promise<void>;
+  completeYesJourney: (options?: { date?: string; time?: string; movie?: string }) => Promise<void>;
 
   /**
    * Helper to complete the NO journey (playful flow).
@@ -167,15 +172,8 @@ declare module "@playwright/test" {
  * This factory function allows tests to specify their requirements
  * and get a test context tailored to their needs.
  */
-export function createDatenightTest(
-  options: DatenightTestOptions = {},
-) {
-  const {
-    startAtLanding = true,
-    clearStorage = true,
-    viewport,
-    userAgent,
-  } = options;
+export function createDatenightTest(options: DatenightTestOptions = {}) {
+  const { startAtLanding = true, clearStorage = true, viewport, userAgent } = options;
 
   return base.extend<DatenightFixtures>({
     // Set viewport
@@ -210,7 +208,10 @@ export function createDatenightTest(
 
     // Navigation helper
     goto: async ({ page }, use) => {
-      const goto = async (path: string, options?: { waitUntil?: "domcontentloaded" | "load" | "networkidle" }) => {
+      const goto = async (
+        path: string,
+        options?: { waitUntil?: "domcontentloaded" | "load" | "networkidle" },
+      ) => {
         await page.goto(path, {
           waitUntil: options?.waitUntil ?? "domcontentloaded",
         });
@@ -248,9 +249,13 @@ export function createDatenightTest(
     // LocalStorage helpers
     setLocalStorage: async ({ page }, use) => {
       const setLocalStorage = async (key: string, value: string) => {
-        await page.evaluate((k, v) => {
-          window.localStorage.setItem(k, v);
-        }, key, value);
+        await page.evaluate(
+          (k, v) => {
+            window.localStorage.setItem(k, v);
+          },
+          key,
+          value,
+        );
       };
       await use(setLocalStorage);
     },
@@ -311,9 +316,10 @@ export function createDatenightTest(
     // Search movie helper
     searchMovie: async ({ page }, use) => {
       const searchMovie = async (query: string) => {
-        const searchInput = page.getByPlaceholder(/Search movies/i) ||
-                          page.getByLabel(/Search movies/i) ||
-                          page.locator("input[type='search']");
+        const searchInput =
+          page.getByPlaceholder(/Search movies/i) ||
+          page.getByLabel(/Search movies/i) ||
+          page.locator("input[type='search']");
         await searchInput.fill(query);
         // Wait for results to appear
         await page.waitForSelector("[role='option']", { state: "visible" }).catch(() => {
@@ -333,12 +339,17 @@ export function createDatenightTest(
     },
 
     // Complete YES journey helper
-    completeYesJourney: async ({ page, goto, selectDate, selectTime, searchMovie, selectMovie }, use) => {
-      const completeYesJourney = async (options: {
-        date?: string;
-        time?: string;
-        movie?: string;
-      } = {}) => {
+    completeYesJourney: async (
+      { page, goto, selectDate, selectTime, searchMovie, selectMovie },
+      use,
+    ) => {
+      const completeYesJourney = async (
+        options: {
+          date?: string;
+          time?: string;
+          movie?: string;
+        } = {},
+      ) => {
         const { date = "2026-07-15", time = "19:00", movie = "Scary Movie 6" } = options;
 
         // Start at landing page

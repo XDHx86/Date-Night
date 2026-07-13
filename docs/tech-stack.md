@@ -2,20 +2,30 @@
 
 ## Overview
 
-Datenight is built with a modern, batteries-included web stack —
-TanStack Start on top of Vite, React 19, Tailwind CSS v4, Zustand for
-state, Radix UI primitives for accessibility and Zod for validation.
+Datenight is a fully client-side React SPA — built with **Vite** and bundled into a static `dist/` that is deployed to **GitHub Pages**. There is no SSR, no server functions, and no Node runtime involved in production.
 
 ## Core Framework
 
-| Package                                | Why                                                                                       |
-| -------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@tanstack/react-start` ^1.168.27      | Full-stack framework around Vite: routing, SSR, server functions.                         |
-| `@tanstack/react-router` ^1.170.17     | Type-safe file-based routing.                                                            |
-| `@tanstack/router-plugin` ^1.168.19    | Auto-generates the route tree (`src/routeTree.gen.ts`).                                  |
-| `@tanstack/react-query` ^5.101.2       | Async state cache (available at the root).                                                |
-| `react` / `react-dom` ^19.2.7          | Latest stable React.                                                                      |
-| `typescript` ^5.9.3                    | Strict type safety.                                                                       |
+| Package                             | Why                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| `vite` ^8.1.3                       | The de facto fast build tool for modern web apps.                      |
+| `@vitejs/plugin-react` ^5.2.0       | JSX / React Refresh / Fast Refresh wiring.                             |
+| `@tanstack/react-router` ^1.170.17  | Type-safe client-side router.                                          |
+| `@tanstack/router-plugin` ^1.168.19 | Vite plugin that generates `src/routeTree.gen.ts` from `src/routes/*`. |
+| `@tanstack/react-query` ^5.101.2    | Async state cache (available at the root).                             |
+| `react` / `react-dom` ^19.2.7       | Latest stable React.                                                   |
+| `typescript` ^5.9.3                 | Strict type safety.                                                    |
+
+## Deployment
+
+- **GitHub Pages** — `vite build` emits `dist/`, which is uploaded as the
+  Pages artifact on every push to `main`. The build uses
+  `BASE_PATH=/Date-Night/` so all asset URLs match the GitHub Pages host
+  pattern (`<owner>.github.io/Date-Night/`).
+- A post-build step copies `dist/index.html` → `dist/404.html`. GitHub
+  Pages serves `404.html` for any unknown path, which lets deep links
+  (e.g. shared `…/success`) boot the SPA shell before the React router
+  takes over.
 
 ## State Management
 
@@ -56,13 +66,6 @@ state, Radix UI primitives for accessibility and Zod for validation.
 - **react-day-picker** `^9.14.0` — date picker (available in UI).
 - **react-resizable-panels** `^4.12.1` — layout helpers.
 
-## Build & Server
-
-- **vite** `^8.1.3` powered by `@lovable.dev/vite-tanstack-config`
-  `^2.7.2` (in `vite.config.ts`).
-- **nitro** `3.0.260603-beta` — provides the HTTP server behind TanStack
-  Start.
-
 ## Development Tooling
 
 - **eslint** `^9.39.4` with `@eslint/js`, `typescript-eslint`,
@@ -71,22 +74,23 @@ state, Radix UI primitives for accessibility and Zod for validation.
 - **prettier** `^3.9.4`.
 - **globals** `^15.15.0`, **@types/node** `^22.20.1`,
   `@types/react`, `@types/react-dom`.
+- **cross-env** `^7.0.3` — set `BASE_PATH` on `npm run build:gh-pages`.
 
 ## Testing
 
-| Tool                | Version      | Role                                          |
-| ------------------- | ------------ | --------------------------------------------- |
-| `vitest`            | ^3.2.4       | Unit + integration runner                     |
-| `@vitest/coverage-v8` | ^3.2.4    | Coverage                                      |
-| `@vitest/browser`   | ^3.2.4       | Optional in-browser runner                    |
-| `jsdom`             | ^25.0.1      | DOM emulation for Vitest                      |
-| `@testing-library/react` | ^16.0.1 | Component testing                              |
-| `@testing-library/jest-dom` | ^6.6.2 | Custom matchers                              |
-| `@testing-library/user-event` | ^14.5.2 | Event simulation                              |
-| `@playwright/test`  | ^1.48.0      | E2E browser testing                            |
-| `axe-core`          | ^4.11.0      | Accessibility scans during E2E                 |
-| `msw`               | ^2.7.0       | API mocking in unit / integration tests        |
-| `@faker-js/faker`   | ^9.5.0       | Synthetic test data                            |
+| Tool                          | Version | Role                                    |
+| ----------------------------- | ------- | --------------------------------------- |
+| `vitest`                      | ^3.2.4  | Unit + integration runner               |
+| `@vitest/coverage-v8`         | ^3.2.4  | Coverage                                |
+| `@vitest/browser`             | ^3.2.4  | Optional in-browser runner              |
+| `jsdom`                       | ^25.0.1 | DOM emulation for Vitest                |
+| `@testing-library/react`      | ^16.0.1 | Component testing                       |
+| `@testing-library/jest-dom`   | ^6.6.2  | Custom matchers                         |
+| `@testing-library/user-event` | ^14.5.2 | Event simulation                        |
+| `@playwright/test`            | ^1.48.0 | E2E browser testing                     |
+| `axe-core`                    | ^4.11.0 | Accessibility scans during E2E          |
+| `msw`                         | ^2.7.0  | API mocking in unit / integration tests |
+| `@faker-js/faker`             | ^9.5.0  | Synthetic test data                     |
 
 ## Environment Variables
 
@@ -94,13 +98,14 @@ All variables live in `.env` and are typed in `src/lib/env.ts`.
 See [`.env.example`](../.env.example) for the canonical list. Required
 combinations:
 
-| Variable                       | Notes                                                                                  |
-| ------------------------------ | -------------------------------------------------------------------------------------- |
-| `VITE_TMDB_API_KEY`            | TMDb v3 API key (required together with the read token)                                |
-| `VITE_TMDB_READ_ACCESS_TOKEN`  | Preferred for production TMDb requests (`Authorization: Bearer`)                      |
-| `VITE_SPOTIFY_PLAYLIST_ID`     | Optional — gates the Spotify embed                                                     |
-| `VITE_RESEND_API_KEY`          | Reserved for future email integration                                                  |
-| `VITE_LOVE_LETTER_CATEGORY`    | `default` \| `birthday` \| `anniversary` \| `valentine` (defaults to `default`)        |
+| Variable                      | Notes                                                                                                             |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`           | TMDb v3 API key (required together with the read token)                                                           |
+| `VITE_TMDB_READ_ACCESS_TOKEN` | Preferred for production TMDb requests (`Authorization: Bearer`)                                                  |
+| `VITE_SPOTIFY_PLAYLIST_ID`    | Optional — gates the Spotify embed                                                                                |
+| `VITE_RESEND_API_KEY`         | Reserved for future email integration                                                                             |
+| `VITE_LOVE_LETTER_CATEGORY`   | `default` \| `birthday` \| `anniversary` \| `valentine` (defaults to `default`)                                   |
+| `BASE_PATH`                   | Used at build time only. Sets the Vite `base` for non-default deployments (e.g. `/Date-Night/` for GitHub Pages). |
 
 ## Browser Support
 
@@ -115,33 +120,33 @@ Targets evergreen Chromium, Firefox, Safari and Edge. Features in use:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ Browser                                                  │
+│ Browser (only)                                          │
 │                                                          │
-│  React 19  ←  Zustand store  ←  useUrlSync  ←  URL       │
-│      │            │                  │                   │
-│      ▼            ▼                  ▼                   │
-│   UI components   localStorage      TanStack Router       │
-│   (PageShell,                                         │  │
-│    TopProgressBar,
-//    BackgroundLayer)                                    │
+│  index.html  ←  /404.html (SPA fallback for deep links) │
+│      ↓                                                  │
+│  React 19  ←  Zustand store  ←  useUrlSync  ←  URL     │
+│      │            │                   │                 │
+│      ▼            ▼                   ▼                 │
+│   UI components   localStorage       TanStack Router     │
+│   (PageShell,                                        │  │
+│    TopProgressBar,                                   │  │
+│    BackgroundLayer)                                   │  │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ## Why This Stack?
 
-- **TanStack Start** — a single, batteries-included framework with
-  strong types through every layer.
-- **Zustand + `useUrlSync`** — gives us persistent and shareable
-  state without Redux or context boilerplate.
+- **Vite** — fast development, simple build, no Node server required.
+- **TanStack Router (file-based)** — generated route tree, type-safe
+  navigation, deep-link friendly, works without any server-side render.
+- **Zustand + `useUrlSync`** — persistent and shareable state without
+  Redux or context boilerplate.
 - **Tailwind v4** — fast iteration with first-class support for CSS
   variables, keyframes, and the design-system primitives in `styles.css`.
 - **Vitest + Playwright + axe + MSW** — a comprehensive test pyramid
   without leaving JavaScript.
-- **Vite** — the de facto fast build tool for modern web apps.
 
 ## Further Reading
 
 - [package.json](../package.json) — exact pinned versions.
-- [vite.config.ts](../vite.config.ts) and the
-  [@lovable.dev/vite-tanstack-config](https://www.npmjs.com/package/@lovable.dev/vite-tanstack-config)
-  preset.
+- [vite.config.ts](../vite.config.ts) — the (now very small) Vite config.

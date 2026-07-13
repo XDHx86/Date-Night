@@ -15,9 +15,8 @@ export const Route = createFileRoute("/confirmation")({
 
 function Confirmation() {
   const navigate = useNavigate();
-  const { } = useDateStore();
+  const {} = useDateStore();
   const [burst, setBurst] = useState(false);
-
 
   // Play celebration sound on mount
   useEffect(() => {
@@ -32,8 +31,8 @@ function Confirmation() {
   };
 
   return (
-    <PageShell particles={8}>
-{celebrationMessage && (
+    <PageShell>
+      {celebrationMessage && (
         <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
           "{celebrationMessage}"
         </p>
@@ -70,12 +69,7 @@ function Confirmation() {
       </motion.h2>
       <p className="mt-4 text-xl text-muted-foreground">Best decision ever. Now let's plan it 💕</p>
 
-      <AnimatedButton
-        variant="gold"
-        size="lg"
-        className="mt-10"
-        onClick={handleContinue}
-      >
+      <AnimatedButton variant="gold" size="lg" className="mt-10" onClick={handleContinue}>
         Continue →
       </AnimatedButton>
     </PageShell>

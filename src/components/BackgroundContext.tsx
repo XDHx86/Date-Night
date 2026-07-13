@@ -7,14 +7,7 @@ import type { ReactNode } from "react";
  * ------------------------------------------------------------------------- */
 
 export type BackgroundVariant =
-  | "love"
-  | "movie"
-  | "date"
-  | "time"
-  | "begging"
-  | "confirmation"
-  | "summary"
-  | "success";
+  "love" | "movie" | "date" | "time" | "begging" | "confirmation" | "summary" | "success";
 
 interface BackgroundContextValue {
   variant: BackgroundVariant;

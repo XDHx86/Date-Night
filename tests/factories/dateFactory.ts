@@ -195,7 +195,7 @@ export class TimeBuilder {
   static random(): TimeBuilder {
     return new TimeBuilder(
       faker.number.int({ min: 0, max: 23 }),
-      faker.number.int({ min: 0, max: 59 })
+      faker.number.int({ min: 0, max: 59 }),
     );
   }
 
@@ -574,7 +574,7 @@ export const DateTimeTemplates = {
   /**
    * Tomorrow at 8:00 PM (typical date night).
    */
-  tomorrow Night: (): { date: string; time: string } => ({
+  tomorrowNight: (): { date: string; time: string } => ({
     date: DateTemplates.tomorrow(),
     time: TimeTemplates.night(),
   }),

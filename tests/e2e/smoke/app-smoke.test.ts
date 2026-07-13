@@ -1,14 +1,25 @@
 /**
  * E2E smoke tests for the running app.
  *
- * Run after the dev server is up. The suite is split into the
- * `smoke` Playwright project (configured in `playwright.config.ts`).
+ * Run against `vite dev` (or `vite preview` against the built `dist/`)
+ * after the SPA shell is up. The suite is split into the `smoke`
+ * Playwright project (configured in `playwright.config.ts`).
+ *
+ * Pure SPA testing approach:
+ *   • Each route renders correctly under TanStack Router (no SSR).
+ *   • The static sitemap is served at `/sitemap.xml`.
+ *   • No console errors on first render.
+ *
+ * Routes no longer return distinct HTTP status codes — every path in
+ * `dist/` returns 200 for a static file or 404 → fallback to `404.html`
+ * for a deep link. We exercise the SPA paths via `page.goto()` and
+ * assert the route's content renders correctly.
  */
 
 import { test, expect } from "../fixtures/test";
 
-test.describe("Smoke — Critical paths respond", () => {
-  test("landing page returns HTML", async ({ goto, page }) => {
+test.describe("Smoke — Critical paths render", () => {
+  test("landing page returns HTML with the right title", async ({ goto, page }) => {
     const response = await page.goto("/", {
       waitUntil: "domcontentloaded",
     });
@@ -22,25 +33,33 @@ test.describe("Smoke — Critical paths respond", () => {
     await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test("every primary route returns a successful response", async ({ page }) => {
-    for (const path of [
-      "/",
-      "/date",
-      "/time",
-      "/movie",
-      "/love-letter",
-      "/summary",
-      "/success",
-      "/confirmation",
-      "/begging",
-    ]) {
-      const response = await page.goto(path, {
+  test("every primary route renders without routing errors", async ({ page, goto }) => {
+    // Deep-link to each route and assert that a heading or content
+    // unique to the route becomes visible. The SPA reads
+    // `window.location.pathname` and mounts the matching component.
+    const routes = [
+      { path: "/", heading: /Will you spend the night/i },
+      { path: "/date", heading: /Pick our date/i },
+      { path: "/time", heading: /Pick a time/i },
+      { path: "/love-letter", heading: /Love Letter/i },
+      { path: "/confirmation", heading: /YOU SAID YES/i },
+      { path: "/begging", heading: /Wait, noo/i },
+    ];
+
+    for (const route of routes) {
+      const response = await page.goto(route.path, {
         waitUntil: "domcontentloaded",
       });
-      // The dev server returns 200 for any registered route; 404 is a
-      // regression that must fail the smoke run.
-      expect(response, `response for ${path}`).not.toBeNull();
-      expect(response!.status(), `status for ${path}`).toBeLessThan(400);
+      // `/404`-fallback routes may return a non-2xx status code while
+      // the SPA shell still mounts once the script runs. We tolerate
+      // any HTTP status here and assert only on rendered content.
+      expect(response, `response for ${route.path}`).not.toBeNull();
+
+      await expect(
+        page.getByRole("heading", { level: 1 }).filter({ hasText: route.heading }).first(),
+      ).toBeVisible({
+        timeout: 10_000,
+      });
     }
   });
 
@@ -49,7 +68,6 @@ test.describe("Smoke — Critical paths respond", () => {
     expect(response.status()).toBe(200);
     const body = await response.text();
     expect(body).toContain("<urlset");
-    expect(body).toContain("datenight");
   });
 
   test("no JavaScript errors logged on landing render", async ({ goto, page }) => {

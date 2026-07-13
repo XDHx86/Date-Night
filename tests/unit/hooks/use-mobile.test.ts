@@ -221,7 +221,7 @@ describe("use-mobile.tsx", () => {
 
         expect(mockDesktopMatchMedia.mql.addEventListener).toHaveBeenCalledWith(
           "change",
-          expect.any(Function)
+          expect.any(Function),
         );
       });
 
@@ -232,7 +232,7 @@ describe("use-mobile.tsx", () => {
 
         expect(mockDesktopMatchMedia.mql.removeEventListener).toHaveBeenCalledWith(
           "change",
-          expect.any(Function)
+          expect.any(Function),
         );
       });
 
@@ -256,16 +256,14 @@ describe("use-mobile.tsx", () => {
         renderHook(() => useIsMobile());
 
         expect(window.matchMedia).toHaveBeenCalledWith(
-          expect.stringContaining((MOBILE_BREAKPOINT - 1).toString())
+          expect.stringContaining((MOBILE_BREAKPOINT - 1).toString()),
         );
       });
 
       it("should use max-width media query", () => {
         renderHook(() => useIsMobile());
 
-        expect(window.matchMedia).toHaveBeenCalledWith(
-          expect.stringContaining("max-width")
-        );
+        expect(window.matchMedia).toHaveBeenCalledWith(expect.stringContaining("max-width"));
       });
     });
 

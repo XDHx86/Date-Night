@@ -73,7 +73,9 @@ describe("messages.ts", () => {
       messages.encouragement.forEach((msg) => {
         const lowerMsg = msg.toLowerCase();
         // Encouragement messages should contain positive words
-        const hasPositiveWord = /great|amazing|wonderful|good|keep going|fine|best|love/i.test(lowerMsg);
+        const hasPositiveWord = /great|amazing|wonderful|good|keep going|fine|best|love/i.test(
+          lowerMsg,
+        );
         expect(hasPositiveWord || msg.length > 0).toBe(true);
       });
     });

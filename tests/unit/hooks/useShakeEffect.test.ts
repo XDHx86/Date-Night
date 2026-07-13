@@ -81,11 +81,9 @@ describe("useShakeEffect", () => {
     it("should add event listener for devicemotion on mount", () => {
       renderHook(() => useShakeEffect(vi.fn()));
 
-      expect(mockAddListener).toHaveBeenCalledWith(
-        "devicemotion",
-        expect.any(Function),
-        { capture: true }
-      );
+      expect(mockAddListener).toHaveBeenCalledWith("devicemotion", expect.any(Function), {
+        capture: true,
+      });
     });
 
     it("should remove event listener on unmount", () => {
@@ -99,11 +97,9 @@ describe("useShakeEffect", () => {
     it("should use capture phase for event listener", () => {
       renderHook(() => useShakeEffect(vi.fn()));
 
-      expect(mockAddListener).toHaveBeenCalledWith(
-        "devicemotion",
-        expect.any(Function),
-        { capture: true }
-      );
+      expect(mockAddListener).toHaveBeenCalledWith("devicemotion", expect.any(Function), {
+        capture: true,
+      });
     });
   });
 
@@ -284,10 +280,9 @@ describe("useShakeEffect", () => {
   describe("Multiple Renders", () => {
     it("should clean up previous event listener on re-render", () => {
       const callback1 = vi.fn();
-      const { rerender } = renderHook(
-        ({ cb }) => useShakeEffect(cb),
-        { initialProps: { cb: callback1 } }
-      );
+      const { rerender } = renderHook(({ cb }) => useShakeEffect(cb), {
+        initialProps: { cb: callback1 },
+      });
 
       const callback2 = vi.fn();
       rerender({ cb: callback2 });
@@ -297,10 +292,9 @@ describe("useShakeEffect", () => {
     });
 
     it("should add new event listener with updated options", () => {
-      const { rerender } = renderHook(
-        ({ threshold }) => useShakeEffect(vi.fn(), { threshold }),
-        { initialProps: { threshold: 20 } }
-      );
+      const { rerender } = renderHook(({ threshold }) => useShakeEffect(vi.fn(), { threshold }), {
+        initialProps: { threshold: 20 },
+      });
 
       mockRemoveListener.mockClear();
       mockAddListener.mockClear();
@@ -408,10 +402,9 @@ describe("useShakeEffect", () => {
 
   describe("Performance", () => {
     it("should not cause memory leaks with many renders", () => {
-      const { rerender, unmount } = renderHook(
-        ({ count }) => useShakeEffect(vi.fn()),
-        { initialProps: { count: 0 } }
-      );
+      const { rerender, unmount } = renderHook(({ count }) => useShakeEffect(vi.fn()), {
+        initialProps: { count: 0 },
+      });
 
       // Rerender many times
       for (let i = 0; i < 100; i++) {

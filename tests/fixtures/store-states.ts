@@ -193,7 +193,7 @@ export function createStoreState(options: CreateStoreStateOptions = {}): DateSta
   const base: DateState = {
     date: options.date ?? null,
     time: options.time ?? null,
-    movie: options.movie as any ?? null,
+    movie: (options.movie as any) ?? null,
     isDarkMode: options.isDarkMode ?? false,
     isAudioEnabled: options.isAudioEnabled ?? true,
     loveMessage: options.loveMessage ?? "You are my sunshine on a cloudy day. ☀️",
@@ -217,7 +217,7 @@ export function createStoreState(options: CreateStoreStateOptions = {}): DateSta
  * Create a store state with all selections complete.
  */
 export function createCompleteStoreState(
-  overrides: Partial<CreateStoreStateOptions> = {}
+  overrides: Partial<CreateStoreStateOptions> = {},
 ): DateState {
   return createStoreState({
     date: "2026-07-12",

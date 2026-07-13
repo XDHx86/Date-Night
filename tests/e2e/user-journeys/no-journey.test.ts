@@ -19,7 +19,9 @@ test.describe("NO User Journey - Playful Flow", () => {
     await page.waitForURL(/begging/, { timeout: 10000 });
 
     // Verify begging page elements
-    await expect(page.getByText(/please|won't you|come on/i).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/please|won't you|come on/i).first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test("NO button dodges cursor on hovering", async ({ goto }) => {

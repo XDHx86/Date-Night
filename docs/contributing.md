@@ -22,6 +22,7 @@ https://www.contributor-covenant.org/).
 ## How to Contribute
 
 ### Reporting Bugs
+
 1. Search existing issues to avoid duplicates.
 2. Open a new issue with:
    - Clear, descriptive title
@@ -30,15 +31,18 @@ https://www.contributor-covenant.org/).
    - Screenshots / screen recordings when relevant
 
 ### Suggesting Features
+
 - Title that captures the proposal
 - Detailed motivation and target user
 - Mock-ups or sketches (optional)
 - Potential drawbacks
 
 ### Your First Code Contribution
+
 Issues labelled `good first issue` are scoped to be approachable.
 
 ### Improving Documentation
+
 - Fixes to typos / grammar
 - Clarifications, examples, additional diagrams
 - New translations
@@ -46,6 +50,7 @@ Issues labelled `good first issue` are scoped to be approachable.
 ## Development Setup
 
 1. Fork & clone
+
    ```bash
    git clone https://github.com/your-username/datenight.git
    cd datenight
@@ -53,15 +58,18 @@ Issues labelled `good first issue` are scoped to be approachable.
    ```
 
 2. Install dependencies (Bun is the canonical PM)
+
    ```bash
    bun install
    # or: npm install
    ```
 
 3. Copy the env file and edit values
+
    ```bash
    cp .env.example .env
    ```
+
    The app boots without any env vars; TMDb, Spotify and the
    love-letter category are optional gating values.
 
@@ -74,6 +82,7 @@ Issues labelled `good first issue` are scoped to be approachable.
 ## Making Changes
 
 1. Branch off `main`
+
    ```bash
    git checkout -b feature/your-feature
    # or
@@ -83,6 +92,7 @@ Issues labelled `good first issue` are scoped to be approachable.
 2. Keep commits focused — one logical change per commit.
 
 3. Synchronise with upstream
+
    ```bash
    git fetch upstream
    git rebase upstream/main
@@ -99,7 +109,7 @@ Issues labelled `good first issue` are scoped to be approachable.
 
 1. Open a PR against `main`.
 2. Use a Conventional Commit title (e.g. `feat(movie): add PM time
-   filter`).
+filter`).
 3. In the PR description describe:
    - **What** changed and **why**
    - **Screenshots** for UI deltas
@@ -114,12 +124,14 @@ Issues labelled `good first issue` are scoped to be approachable.
 ## Coding Standards
 
 ### Language & Formatting
+
 - **TypeScript** (`.tsx`, `.ts`)
 - **Prettier** (configured via `.prettierrc`)
 - **ESLint** (with React, hooks, refresh and Prettier plugins)
 - `bun run format` and `bun run lint:fix` keep things tidy
 
 ### File Layout
+
 - Components go under `src/components/`
 - Hooks under `src/hooks/`
 - Cross-cutting logic under `src/lib/`
@@ -130,6 +142,7 @@ Issues labelled `good first issue` are scoped to be approachable.
   - `tests/e2e/user-journeys/...`
 
 ### Components
+
 - Use `export function ComponentName({ ...props })` or
   `export const ComponentName = (...)`
 - Destructure props in the function signature
@@ -138,12 +151,14 @@ Issues labelled `good first issue` are scoped to be approachable.
 - Use Radix primitives wrapped in `src/components/ui/...` when possible
 
 ### Tailwind
+
 - The project uses Tailwind v4 utilities (`text-gradient`,
   `border`, `bg-card`, etc., all defined in `src/styles.css`).
 - Dark mode is driven by the `.dark` class on `<html>` (mirrored from
   the store's `isDarkMode` in `src/routes/__root.tsx`).
 
 ### TypeScript Guidelines
+
 - **Strict** mode is enabled
 - Use `interface` for object shapes; `type` for unions / computed types
 - Avoid `any` — prefer `unknown`
@@ -151,6 +166,7 @@ Issues labelled `good first issue` are scoped to be approachable.
 - Prefer exhaustive `Map` / `Record` types for static lookups
 
 ### Naming Conventions
+
 - **Components**: PascalCase (`AnimatedButton`, `MovieCard`)
 - **Functions & variables**: camelCase (`handleSubmit`, `isLoading`)
 - **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`)
@@ -160,11 +176,13 @@ Issues labelled `good first issue` are scoped to be approachable.
 - **Tests**: `*.test.{ts,tsx}` matching the file under test
 
 ### Comments & Documentation
+
 - Use JSDoc for non-trivial exports
 - Mark TODOs with `// TODO(<area>): ...` and a tracking issue
-- Don't comment the trivial; explain *why* over *what*
+- Don't comment the trivial; explain _why_ over _what_
 
 ### Git Practices
+
 - One logical change per commit
 - Imperative mood: "Add search filter", not "Added"
 - Conventional Commits: `feat`, `fix`, `docs`, `style`, `refactor`,
@@ -177,14 +195,14 @@ Issues labelled `good first issue` are scoped to be approachable.
 The project ships a full test pyramid. New features should land with
 appropriate coverage:
 
-| Concern          | Test with                                  |
-| ---------------- | ------------------------------------------ |
-| Pure helper / lib | Vitest (`tests/unit/lib/...`)              |
-| Hook             | Vitest + Testing Library (`tests/unit/hooks/...`) |
-| Component        | Vitest + Testing Library (`tests/integration/...`) |
-| Page / route     | Playwright (`tests/e2e/user-journeys/...`) |
-| Visual change    | Update baseline + run `tests/e2e/visual/...` |
-| Accessibility    | Add / extend an axe scan (`tests/e2e/accessibility/a11y-scan.test.ts`) |
+| Concern           | Test with                                                              |
+| ----------------- | ---------------------------------------------------------------------- |
+| Pure helper / lib | Vitest (`tests/unit/lib/...`)                                          |
+| Hook              | Vitest + Testing Library (`tests/unit/hooks/...`)                      |
+| Component         | Vitest + Testing Library (`tests/integration/...`)                     |
+| Page / route      | Playwright (`tests/e2e/user-journeys/...`)                             |
+| Visual change     | Update baseline + run `tests/e2e/visual/...`                           |
+| Accessibility     | Add / extend an axe scan (`tests/e2e/accessibility/a11y-scan.test.ts`) |
 
 Mock external services via MSW (`tests/__mocks__/`)
 and reset the Zustand store in `beforeEach`.
@@ -196,4 +214,4 @@ project's MIT license.
 
 ---
 
-*Happy coding, thanks for helping! 💖*
+_Happy coding, thanks for helping! 💖_

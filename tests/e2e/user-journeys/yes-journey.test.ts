@@ -12,10 +12,7 @@ test.describe("YES User Journey - Complete Flow", () => {
     await context.clearCookies();
   });
 
-  test("user can complete the full YES journey", async ({
-    page,
-    goto,
-  }) => {
+  test("user can complete the full YES journey", async ({ page, goto }) => {
     // Step 1: Landing page
     await goto("/");
     await expect(page).toHaveTitle(/Can i book you for a night/i);
@@ -36,12 +33,16 @@ test.describe("YES User Journey - Complete Flow", () => {
     await expect(page.getByRole("heading").first()).toBeVisible();
 
     // Continue to date picker
-    const continueButton = page.getByRole("button", { name: /Continue|Book.*night|Plan.*Date/i }).first();
+    const continueButton = page
+      .getByRole("button", { name: /Continue|Book.*night|Plan.*Date/i })
+      .first();
     await continueButton.click();
 
     // Step 4: Date picker
     await page.waitForURL(/\/date/, { timeout: 10000 });
-    await expect(page.getByRole("heading", { level: 1 }).or(page.getByText(/date|when/i).first())).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1 }).or(page.getByText(/date|when/i).first()),
+    ).toBeVisible();
 
     // Select a date
     const dateCell = page.getByRole("button").filter({ hasText: /^\d+$/ }).first();
@@ -55,7 +56,10 @@ test.describe("YES User Journey - Complete Flow", () => {
     await page.waitForURL(/\/time/, { timeout: 10000 });
 
     // Select a time
-    const timeButton = page.getByRole("button").filter({ hasText: /\d{1,2}:\d{2}/ }).first();
+    const timeButton = page
+      .getByRole("button")
+      .filter({ hasText: /\d{1,2}:\d{2}/ })
+      .first();
     await timeButton.click();
 
     // Continue
@@ -97,29 +101,28 @@ test.describe("YES User Journey - Complete Flow", () => {
     await expect(page.getByText(/Success|Perfect|Woo|Go/i).first()).toBeVisible();
   });
 
-  test("user journey with URL state restoration", async ({
-    page,
-    goto,
-    setLocalStorage,
-  }) => {
+  test("user journey with URL state restoration", async ({ page, goto, setLocalStorage }) => {
     // Pre-populate store with a date selection
-    await setLocalStorage("date-plan", JSON.stringify({
-      state: {
-        date: "2026-07-15",
-        time: "19:00",
-        movie: {
-          id: "614945",
-          title: "Voicemails for Isabelle",
-          description: "Test description",
-          poster_path: "/test.jpg",
-          rating: 8.2,
-          tags: ["Romance"],
-          year: 2026,
-          duration: 98,
+    await setLocalStorage(
+      "date-plan",
+      JSON.stringify({
+        state: {
+          date: "2026-07-15",
+          time: "19:00",
+          movie: {
+            id: "614945",
+            title: "Voicemails for Isabelle",
+            description: "Test description",
+            poster_path: "/test.jpg",
+            rating: 8.2,
+            tags: ["Romance"],
+            year: 2026,
+            duration: 98,
+          },
         },
-      },
-      version: 0,
-    }));
+        version: 0,
+      }),
+    );
 
     // Navigate directly to summary
     await goto("/summary");
@@ -128,13 +131,12 @@ test.describe("YES User Journey - Complete Flow", () => {
     await expect(page).toHaveURL(/date=2026-07-15/);
 
     // Summary should display the restored state
-    await expect(page.getByText(/Voicemails for Isabelle/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Voicemails for Isabelle/i).first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 
-  test("user journey handles back navigation", async ({
-    page,
-    goto,
-  }) => {
+  test("user journey handles back navigation", async ({ page, goto }) => {
     // Start at landing
     await goto("/");
 

@@ -31,15 +31,15 @@ Copy the example env file and edit values:
 cp .env.example .env
 ```
 
-| Variable                       | Required? | Purpose                                              |
-| ------------------------------ | --------- | ---------------------------------------------------- |
-| `VITE_TMDB_API_KEY`            | optional  | TMDb v3 API key (use together with read token)       |
-| `VITE_TMDB_READ_ACCESS_TOKEN`  | optional  | TMDb v4 bearer token (preferred)                     |
-| `VITE_SPOTIFY_PLAYLIST_ID`     | optional  | Embeds a Spotify playlist on `/success` & `/summary` |
-| `VITE_RESEND_API_KEY`          | reserved  | Planned email integration                            |
-| `VITE_LOVE_LETTER_CATEGORY`    | optional  | `default` \| `birthday` \| `anniversary` \| `valentine` |
+| Variable                      | Required? | Purpose                                                 |
+| ----------------------------- | --------- | ------------------------------------------------------- |
+| `VITE_TMDB_API_KEY`           | optional  | TMDb v3 API key (use together with read token)          |
+| `VITE_TMDB_READ_ACCESS_TOKEN` | optional  | TMDb v4 bearer token (preferred)                        |
+| `VITE_SPOTIFY_PLAYLIST_ID`    | optional  | Embeds a Spotify playlist on `/success` & `/summary`    |
+| `VITE_RESEND_API_KEY`         | reserved  | Planned email integration                               |
+| `VITE_LOVE_LETTER_CATEGORY`   | optional  | `default` \| `birthday` \| `anniversary` \| `valentine` |
 
-If TMDb credentials are *not* provided, `/movie` still works — it falls
+If TMDb credentials are _not_ provided, `/movie` still works — it falls
 back to the bundled curated recommendations.
 
 ## Development Server
@@ -109,22 +109,27 @@ datenight/
 ## Troubleshooting
 
 ### Port already in use
+
 Set `PORT=4000 bun run dev` (or `VITE_PORT=4000`).
 
 ### Module not found
+
 Delete `node_modules` (or `bun install`'s equivalent) and the lockfile,
 then reinstall.
 
 ### Env vars not loading
+
 - Restart the dev server after changing `.env`.
 - Variables must start with `VITE_` to be exposed to the client.
 
 ### TMDb returns nothing
+
 Check that both `VITE_TMDB_API_KEY` and
 `VITE_TMDB_READ_ACCESS_TOKEN` are set, or that none are set (the
 fallback to curated picks is intentional).
 
 ### Browser quirks
+
 - The shake Easter egg requires `DeviceMotionEvent` — Safari iOS may
   prompt for permission.
 - Sound is muted by default; toggle it from the bottom control bar.

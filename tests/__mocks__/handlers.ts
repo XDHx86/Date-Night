@@ -116,7 +116,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 27, name: "Horror" },
     ],
     genre_ids: [],
-    overview: "A comedic take on modern horror cliches. Two unlikely heroes must survive a night in a haunted mansion filled with hilarious scares.",
+    overview:
+      "A comedic take on modern horror cliches. Two unlikely heroes must survive a night in a haunted mansion filled with hilarious scares.",
     poster_path: "/scary-movie-6.jpg",
     backdrop_path: "/scary-movie-6-backdrop.jpg",
     popularity: 100.5,
@@ -132,7 +133,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 18, name: "Drama" },
     ],
     genre_ids: [],
-    overview: "A heartfelt romantic drama about love in the digital age. Two strangers connect through a series of voicemails left on an old phone.",
+    overview:
+      "A heartfelt romantic drama about love in the digital age. Two strangers connect through a series of voicemails left on an old phone.",
     poster_path: "/voicemails-isabelle.jpg",
     backdrop_path: "/voicemails-isabelle-backdrop.jpg",
     popularity: 150.2,
@@ -148,7 +150,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 10749, name: "Romance" },
     ],
     genre_ids: [],
-    overview: "A romantic comedy about neighbors falling in love. When a wall between their apartments comes down, so do their defenses.",
+    overview:
+      "A romantic comedy about neighbors falling in love. When a wall between their apartments comes down, so do their defenses.",
     poster_path: "/sidewalls.jpg",
     backdrop_path: "/sidewalls-backdrop.jpg",
     popularity: 75.8,
@@ -164,7 +167,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 53, name: "Thriller" },
     ],
     genre_ids: [],
-    overview: "A thrilling action movie about a rescue mission. A team of specialists must infiltrate a high-security facility to save a captured agent.",
+    overview:
+      "A thrilling action movie about a rescue mission. A team of specialists must infiltrate a high-security facility to save a captured agent.",
     poster_path: "/send-help.jpg",
     backdrop_path: "/send-help-backdrop.jpg",
     popularity: 90.3,
@@ -181,7 +185,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 10749, name: "Romance" },
     ],
     genre_ids: [],
-    overview: "Amélie is an eccentric girl in Paris with a very active imagination. She decides to change the lives of those around her for the better.",
+    overview:
+      "Amélie is an eccentric girl in Paris with a very active imagination. She decides to change the lives of those around her for the better.",
     poster_path: "/amelie.jpg",
     backdrop_path: "/amelie-backdrop.jpg",
     popularity: 200.5,
@@ -197,7 +202,8 @@ export const mockMovieDetails: Record<number, TmdbMovie> = {
       { id: 10749, name: "Romance" },
     ],
     genre_ids: [],
-    overview: "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
+    overview:
+      "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
     poster_path: "/titanic.jpg",
     backdrop_path: "/titanic-backdrop.jpg",
     popularity: 300.0,
@@ -217,8 +223,10 @@ export function mapGenreIdsToNames(genreIds: number[]): string[] {
  * Create a Movie object from TMDB movie data.
  */
 export function createMovieFromTmdb(tmdbMovie: TmdbMovie | TmdbSearchMovie): Movie {
-  const genreIds = "genre_ids" in tmdbMovie ? tmdbMovie.genre_ids : tmdbMovie.genres.map((g) => g.id);
-  const allGenres = "genres" in tmdbMovie ? tmdbMovie.genres.map((g) => g.name) : mapGenreIdsToNames(genreIds);
+  const genreIds =
+    "genre_ids" in tmdbMovie ? tmdbMovie.genre_ids : tmdbMovie.genres.map((g) => g.id);
+  const allGenres =
+    "genres" in tmdbMovie ? tmdbMovie.genres.map((g) => g.name) : mapGenreIdsToNames(genreIds);
 
   const releaseDate = new Date(tmdbMovie.release_date);
   const year = isNaN(releaseDate.getTime()) ? 0 : releaseDate.getFullYear();
@@ -307,9 +315,10 @@ export const searchMoviesHandler = http.get(
     }
 
     // Filter movies by query (case-insensitive)
-    const filteredMovies = mockSearchMovies.filter((movie) =>
-      movie.title.toLowerCase().includes(query.toLowerCase()) ||
-      movie.overview.toLowerCase().includes(query.toLowerCase())
+    const filteredMovies = mockSearchMovies.filter(
+      (movie) =>
+        movie.title.toLowerCase().includes(query.toLowerCase()) ||
+        movie.overview.toLowerCase().includes(query.toLowerCase()),
     );
 
     // Handle no results

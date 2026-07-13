@@ -24,12 +24,11 @@ const PLEAS = [
 
 function Begging() {
   const navigate = useNavigate();
-  const { } = useDateStore();
+  const {} = useDateStore();
   const [burst, setBurst] = useState(false);
   const [dodges, setDodges] = useState(0);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [flip, setFlip] = useState(1);
-
 
   const pleaIndex = Math.min(dodges, PLEAS.length - 1);
   const yesScale = 1 + Math.min(dodges, 6) * 0.12;
@@ -56,10 +55,8 @@ function Begging() {
 
   return (
     <PageShell>
-{playfulMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
-          "{playfulMessage}"
-        </p>
+      {playfulMessage && (
+        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{playfulMessage}"</p>
       )}
 
       <ConfettiCelebration active={burst} />

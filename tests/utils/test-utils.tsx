@@ -7,10 +7,8 @@
 import React, { ReactElement, ReactNode } from "react";
 import { render, RenderOptions, RenderResult } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, RouterProvider, createMemoryRouter } from "@tanstack/react-router";
+import { RouterProvider, createMemoryRouter } from "@tanstack/react-router";
 import { routeTree } from "../../src/routeTree.gen";
-import { StartClient } from "@tanstack/react-start";
-import type { StartClientProviderProps } from "@tanstack/react-start";
 
 // ============================================================================
 // QueryClient Provider
@@ -20,7 +18,7 @@ import type { StartClientProviderProps } from "@tanstack/react-start";
  * QueryClient instance for testing.
  * Each test should use its own QueryClient to ensure isolation.
  */
-export function createTestQueryClient() {
+export function createTestQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -51,37 +49,9 @@ function QueryClientTestProvider({
 }
 
 // ============================================================================
-// Zustand Store Provider Mock
+// Router Provider
 // ============================================================================
 
-// We'll use a simple mock for Zustand that allows tests to customize state
-// The actual store is imported dynamically in tests that need it
-
-// ============================================================================
-// Router Providers
-// ============================================================================
-
-/**
- * Simple MemoryRouter wrapper for testing individual routes.
- * Use this when you need to test routing behavior.
- */
-function TestMemoryRouter({
-  children,
-  initialEntries = ["/"],
-}: {
-  children: ReactNode;
-  initialEntries?: string[];
-}) {
-  // Create a simple memory router for testing
-  // Note: TanStack Router v1 uses a different API than v2
-  // This is a simplified version for testing
-  return <>{children}</>;
-}
-
-/**
- * Full router provider with generated route tree.
- * Use this for testing actual route navigation.
- */
 function TestRouterProvider({
   children,
   initialEntries = ["/"],
@@ -119,12 +89,16 @@ export function AllProviders({
   const client = queryClient ?? createTestQueryClient();
 
   // Wrap children with all providers
-  let wrappedChildren = <QueryClientTestProvider client={client}>{children}</QueryClientTestProvider>;
+  let wrappedChildren = (
+    <QueryClientTestProvider client={client}>{children}</QueryClientTestProvider>
+  );
 
   // Add router if requested
   if (router) {
     const initialEntries = typeof router === "boolean" ? [initialRoute] : router;
-    wrappedChildren = <TestRouterProvider initialEntries={initialEntries}>{wrappedChildren}</TestRouterProvider>;
+    wrappedChildren = (
+      <TestRouterProvider initialEntries={initialEntries}>{wrappedChildren}</TestRouterProvider>
+    );
   }
 
   return wrappedChildren;
@@ -166,10 +140,7 @@ export interface TestRenderOptions extends Omit<RenderOptions, "wrapper"> {
  * Custom render function that wraps components with QueryClient.
  * Use this for components that use TanStack Query.
  */
-export function renderWithQueryClient(
-  ui: ReactElement,
-  options?: TestRenderOptions,
-): RenderResult {
+export function renderWithQueryClient(ui: ReactElement, options?: TestRenderOptions): RenderResult {
   const client = options?.queryClient ?? createTestQueryClient();
 
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -186,10 +157,7 @@ export function renderWithQueryClient(
  * Custom render function that wraps components with QueryClient and Router.
  * Use this for full integration tests with routing.
  */
-export function renderWithProviders(
-  ui: ReactElement,
-  options?: TestRenderOptions,
-): RenderResult {
+export function renderWithProviders(ui: ReactElement, options?: TestRenderOptions): RenderResult {
   const client = options?.queryClient ?? createTestQueryClient();
   const withRouter = options?.withRouter ?? false;
   const initialRoute = options?.initialRoute ?? "/";
@@ -215,10 +183,7 @@ export function renderWithProviders(
  * Simple render function without providers.
  * Use this for simple components that don't need QueryClient or Router.
  */
-export function renderSimple(
-  ui: ReactElement,
-  options?: RenderOptions,
-): RenderResult {
+export function renderSimple(ui: ReactElement, options?: RenderOptions): RenderResult {
   return render(ui, options);
 }
 
@@ -296,7 +261,7 @@ export async function expectToThrow(
             `Expected error message to include "${errorMessage}", got: ${(error as Error).message}`,
           );
         }
-      } else if (!(errorMessage.test((error as Error).message))) {
+      } else if (!errorMessage.test((error as Error).message)) {
         throw new Error(
           `Expected error message to match ${errorMessage}, got: ${(error as Error).message}`,
         );

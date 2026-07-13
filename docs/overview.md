@@ -76,25 +76,25 @@ from The Movie Database.
 
 ## Technology Highlights
 
-| Area              | Technology                                  |
-| ----------------- | ------------------------------------------- |
-| Framework         | TanStack Start (React 19 + Vite 8)          |
-| Routing           | TanStack Router (file-based)                |
-| State Management  | Zustand + `localStorage` persist middleware |
-| URL Sync          | Custom `useUrlSync` hook                    |
-| Styling           | Tailwind CSS v4 (Vite plugin) + CSS vars    |
-| UI Primitives     | Radix UI + shadcn-style wrappers under `src/components/ui` |
-| Animations        | Framer Motion (springs, `AnimatePresence`)  |
-| Icons             | Lucide React                                |
-| Movie Data        | TMDb v3 API                                 |
-| Dates             | date-fns                                    |
-| Audio             | Web Audio API + optional `love.mp3`         |
-| Toasts            | Sonner                                      |
-| Linting / Format  | ESLint 9 + Prettier 3 + typescript-eslint   |
-| Unit / Integration| Vitest 3 + Testing Library + jsdom          |
-| E2E               | Playwright 1.48 (Chromium / Firefox / WebKit) |
-| API Mocking       | MSW                                         |
-| Accessibility     | axe-core                                    |
+| Area               | Technology                                                 |
+| ------------------ | ---------------------------------------------------------- |
+| Framework          | TanStack Start (React 19 + Vite 8)                         |
+| Routing            | TanStack Router (file-based)                               |
+| State Management   | Zustand + `localStorage` persist middleware                |
+| URL Sync           | Custom `useUrlSync` hook                                   |
+| Styling            | Tailwind CSS v4 (Vite plugin) + CSS vars                   |
+| UI Primitives      | Radix UI + shadcn-style wrappers under `src/components/ui` |
+| Animations         | Framer Motion (springs, `AnimatePresence`)                 |
+| Icons              | Lucide React                                               |
+| Movie Data         | TMDb v3 API                                                |
+| Dates              | date-fns                                                   |
+| Audio              | Web Audio API + optional `love.mp3`                        |
+| Toasts             | Sonner                                                     |
+| Linting / Format   | ESLint 9 + Prettier 3 + typescript-eslint                  |
+| Unit / Integration | Vitest 3 + Testing Library + jsdom                         |
+| E2E                | Playwright 1.48 (Chromium / Firefox / WebKit)              |
+| API Mocking        | MSW                                                        |
+| Accessibility      | axe-core                                                   |
 
 ## Boot Configuration
 

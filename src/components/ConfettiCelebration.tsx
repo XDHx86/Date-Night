@@ -53,37 +53,34 @@ export function ConfettiCelebration({
 
   // ── Generate random particles only after the component has mounted ───────
   useEffect(() => {
-    const generated: ConfettiPiece[] = Array.from(
-      { length: particleCount },
-      (_, i) => {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 20 + Math.random() * 30;
-        const x = Math.cos(angle) * speed * 10;
-        const y = Math.sin(angle) * speed * 10;
-        const rotate = Math.random() * 360;
+    const generated: ConfettiPiece[] = Array.from({ length: particleCount }, (_, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 20 + Math.random() * 30;
+      const x = Math.cos(angle) * speed * 10;
+      const y = Math.sin(angle) * speed * 10;
+      const rotate = Math.random() * 360;
 
-        // Deterministic, pre‑computed exit values keep the animation stable
-        // across re‑renders and avoid `Math.random()` being called on the
-        // server. They look just as random to the eye.
-        const exitX = x + (Math.random() * 100 - 50);
-        const exitY = y + 100 + Math.random() * 100;
-        const exitRotate = rotate + Math.random() * 360;
+      // Deterministic, pre‑computed exit values keep the animation stable
+      // across re‑renders and avoid `Math.random()` being called on the
+      // server. They look just as random to the eye.
+      const exitX = x + (Math.random() * 100 - 50);
+      const exitY = y + 100 + Math.random() * 100;
+      const exitRotate = rotate + Math.random() * 360;
 
-        return {
-          id: i,
-          x,
-          y,
-          rotate,
-          width: 5 + Math.random() * 10,
-          height: 2 + Math.random() * 3,
-          background: COLORS[Math.floor(Math.random() * COLORS.length)],
-          delay: Math.random() * 0.5,
-          exitX,
-          exitY,
-          exitRotate,
-        };
-      },
-    );
+      return {
+        id: i,
+        x,
+        y,
+        rotate,
+        width: 5 + Math.random() * 10,
+        height: 2 + Math.random() * 3,
+        background: COLORS[Math.floor(Math.random() * COLORS.length)],
+        delay: Math.random() * 0.5,
+        exitX,
+        exitY,
+        exitRotate,
+      };
+    });
     setParticles(generated);
   }, [particleCount]);
 
@@ -109,7 +106,10 @@ export function ConfettiCelebration({
     },
   };
 
-  const itemVariants: Variants = {
+  // Index-keyed variants are a runtime-supported framer-motion feature;
+  // the public `Variants` type isn't yet expressive enough to declare
+  // them, so we cast through `unknown` rather than `any`.
+  const itemVariants = {
     hidden: {
       x: 0,
       y: 0,
@@ -141,14 +141,12 @@ export function ConfettiCelebration({
         damping: 20,
       },
     },
-  };
+  } as unknown as Variants;
 
   return (
     <div
       aria-hidden
-      className={`pointer-events-none fixed inset-0 z-50 overflow-hidden ${
-        !show ? "hidden" : ""
-      }`}
+      className={`pointer-events-none fixed inset-0 z-50 overflow-hidden ${!show ? "hidden" : ""}`}
     >
       <motion.div
         variants={containerVariants}
@@ -173,7 +171,7 @@ export function ConfettiCelebration({
             }}
           />
         ))}
-     </motion.div>
-   </div>
+      </motion.div>
+    </div>
   );
 }

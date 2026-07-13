@@ -200,10 +200,10 @@ export function useUrlSync() {
  * This is a standalone utility that doesn't trigger navigation.
  */
 export function createShareableUrl(): string {
-  if (typeof window === "undefined") return window.location.origin;
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
 
   if (date) params.set("date", date);
   if (time) params.set("time", time);
@@ -211,7 +211,7 @@ export function createShareableUrl(): string {
   if (loveMessage) params.set("love", loveMessage);
   if (isDarkMode) params.set("theme", "dark");
 
-  return `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+  return `${origin}${typeof window === "undefined" ? "/" : window.location.pathname}${params.toString() ? `?${params}` : ""}`;
 }
 
 /**

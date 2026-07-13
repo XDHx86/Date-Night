@@ -7,7 +7,6 @@
  *
  *   • unit          – pure modules (hooks, lib helpers), jsdom + MSW
  *   • integration   – React components + state manager, jsdom + MSW
- *   • ssr           – SSR / hydration contract tests (happy-dom)
  *   • api           – fetch-level API contract tests (MSW handlers reused)
  *   • smoke         – fast post-build sanity checks
  *
@@ -53,18 +52,12 @@ const aliasList = [alias, componentAlias, hooksAlias, libAlias, routesAlias, ass
 const coverageExclude = [
   "src/**/*.d.ts",
   "src/routeTree.gen.ts",
-  "src/start.ts",
-  "src/server.ts",
+  "src/main.tsx",
   "src/lib/lovable-error-reporting.ts",
   "src/styles.css",
   "**/*.config.*",
 ];
 
-/**
- * Each project is a complete inline config (Vite-style). Inline projects
- * require their own `resolve.alias` (and `root`) — they don't inherit the
- * parent config's `resolve` block automatically.
- */
 const projectBase = {
   root: repoRoot,
   resolve: { alias: aliasList },
@@ -105,7 +98,7 @@ const projects = [
     ...projectBase,
     test: {
       name: "integration",
-      include: ["tests/integration/**/*.test.{ts,tsx}", "!tests/integration/ssr/**"],
+      include: ["tests/integration/**/*.test.{ts,tsx}"],
       environment: "jsdom",
       setupFiles: ["./tests/__mocks__/server.ts", "./tests/utils/test-setup.ts"],
       css: true,
@@ -128,21 +121,6 @@ const projects = [
           statements: 0,
         },
       },
-    },
-  },
-  {
-    ...projectBase,
-    test: {
-      name: "ssr",
-      include: ["tests/integration/ssr/**/*.test.{ts,tsx}"],
-      environment: "jsdom",
-      setupFiles: ["./tests/utils/test-setup.ts"],
-      css: false,
-      globals: true,
-      isolate: true,
-      testTimeout: 15_000,
-      retries: process.env.CI ? 2 : 0,
-      coverage: { enabled: false },
     },
   },
   {
@@ -204,6 +182,14 @@ export default defineConfig({
       "PORT",
       "NODE_ENV",
       "MSW_ENABLED",
+      "BASE_PATH",
     ],
+    server: {
+      deps: {
+        // Force MSW through Vite's dep optimizer so its `setupWorker`
+        // and `setupServer` entry points can load inside Vitest.
+        include: ["msw", "msw/node"],
+      },
+    },
   },
 });

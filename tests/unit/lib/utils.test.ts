@@ -104,7 +104,7 @@ describe("utils.ts", () => {
           primary: true,
           disabled: false,
         },
-        ["flex", "items-center"]
+        ["flex", "items-center"],
       );
       expect(result).toContain("button");
       expect(result).toContain("primary");

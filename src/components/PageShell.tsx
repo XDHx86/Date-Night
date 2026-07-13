@@ -24,7 +24,7 @@ export function PageShell({
         className={`relative z-10 flex w-full max-w-xl flex-col items-center text-center ${className}`}
       >
         {children}
-     </motion.div>
-   </main>
+      </motion.div>
+    </main>
   );
 }

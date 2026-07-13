@@ -216,7 +216,7 @@ function MoviePickerPage() {
   }, [shareUrl, formattedDate, formattedTime, movie, loveMessage]);
 
   return (
-    <PageShell particles={10} className="max-w-3xl">
+    <PageShell className="max-w-3xl">
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
         <Film className="h-8 w-8" />
       </div>

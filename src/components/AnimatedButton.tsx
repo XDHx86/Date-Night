@@ -26,8 +26,7 @@ const buttonVariants = cva(
 );
 
 export interface AnimatedButtonProps
-  extends Omit<HTMLMotionProps<"button">, "children">,
-    VariantProps<typeof buttonVariants> {
+  extends Omit<HTMLMotionProps<"button">, "children">, VariantProps<typeof buttonVariants> {
   children?: React.ReactNode;
 }
 

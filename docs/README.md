@@ -17,6 +17,7 @@ Welcome to the documentation for the Datenight project. This application is a pl
 ## Project Purpose
 
 Datenight guides users through planning a perfect date night by:
+
 1. Asking a yes/no question to start
 2. Picking a date
 3. Selecting a time
@@ -36,4 +37,4 @@ Please read [Contributing Guidelines](contributing.md) for details on our code o
 
 ---
 
-*Documentation generated as part of project documentation effort.*
+_Documentation generated as part of project documentation effort._
