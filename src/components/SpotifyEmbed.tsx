@@ -9,7 +9,6 @@ export function SpotifyEmbed() {
 
   useEffect(() => {
     if (!spotifyPlaylistId) return;
-
   }, [spotifyPlaylistId]);
 
   if (!spotifyPlaylistId) {
@@ -19,9 +18,7 @@ export function SpotifyEmbed() {
   return (
     <div className="mt-8 rounded-2xl border border-border bg-card p-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-semibold text-card-foreground">
-          🎵 Date Night Playlist
-        </h3>
+        <h3 className="font-semibold text-card-foreground">🎵 Date Night Playlist</h3>
         <p className="text-sm text-muted-foreground">Spotify</p>
       </div>
 
