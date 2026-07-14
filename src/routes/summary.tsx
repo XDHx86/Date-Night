@@ -122,26 +122,28 @@ function SummaryPage() {
       {/* Full‑page blurred backdrop behind AmbientBackdrop's tone. */}
       <MovieBackdropBackground movie={movie} />
 
-      <Eyebrow>Step 5 — Your plan</Eyebrow>
-
-      <motion.h1
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl"
+        className="mt-2 w-full max-w-xl rounded-3xl px-6 py-8 text-center shadow-[var(--shadow-md)] glass-strong sm:px-8 sm:py-10"
       >
-        Here&rsquo;s the plan.
-      </motion.h1>
+        <Eyebrow>Step 5 — Your plan</Eyebrow>
 
-      <p className="mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
-        One look before we make it official.
-      </p>
+        <h1 className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl">
+          Here&rsquo;s the plan.
+        </h1>
 
-      {romanticMessage ? (
-        <p className="mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
-          &ldquo;{romanticMessage}&rdquo;
+        <p className="mx-auto mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+          One look before we make it official.
         </p>
-      ) : null}
+
+        {romanticMessage ? (
+          <p className="mx-auto mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
+            &ldquo;{romanticMessage}&rdquo;
+          </p>
+        ) : null}
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}

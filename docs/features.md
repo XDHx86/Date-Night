@@ -95,6 +95,10 @@ no flicker.
 - "Share Love Card" renders to a Canvas and either uses `navigator.share`
   with files or downloads `love-card.png` as a fallback.
 - Toast notifications via Sonner for every user-visible action.
+- **Feature flag:** set `VITE_LOVE_LETTER_FEATURE=disabled` to remove the page
+  entirely — the route redirects to `/`, and the bottom-bar shortcut, the
+  success-page CTA, and the landing hint all disappear. Unset (or any other
+  value) keeps the feature on, so the default is enabled.
 
 ## 8. Summary Page (`/summary`)
 

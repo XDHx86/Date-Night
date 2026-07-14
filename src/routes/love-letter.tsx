@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { ArrowRight, Shuffle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -14,9 +14,21 @@ import { sounds } from "@/lib/sound";
 import { useUrlSync } from "@/hooks/useUrlSync";
 import { toast } from "sonner";
 import { loveLetters, type Category, type LoveLetter as LoveLetterData } from "@/data/loveLetters";
-import { getActiveLoveLetterCategory } from "@/lib/loveLetterConfig";
+import {
+  getActiveLoveLetterCategory,
+  isLoveLetterFeatureEnabled,
+  LOVE_LETTER_DISABLED_REDIRECT,
+} from "@/lib/loveLetterConfig";
 
 export const Route = createFileRoute("/love-letter")({
+  // Feature flag: when `VITE_LOVE_LETTER_FEATURE=disabled`, the route is
+  // inactive — direct URL access redirects to the configured fallback before
+  // the page (or its category resolution) ever mounts.
+  beforeLoad: () => {
+    if (!isLoveLetterFeatureEnabled()) {
+      throw redirect({ to: LOVE_LETTER_DISABLED_REDIRECT });
+    }
+  },
   component: LoveLetter,
 });
 

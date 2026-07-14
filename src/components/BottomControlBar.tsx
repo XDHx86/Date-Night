@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useDateStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { sounds, setMuted, unlockAudio } from "@/lib/sound";
+import { isLoveLetterFeatureEnabled } from "@/lib/loveLetterConfig";
 
 interface ControlProps {
   label: string;
@@ -78,6 +79,7 @@ export function BottomControlBar() {
   const navigate = useNavigate();
   const isDarkMode = useDateStore((s) => s.isDarkMode);
   const toggleDarkMode = useDateStore((s) => s.toggleDarkMode);
+  const loveLetterEnabled = isLoveLetterFeatureEnabled();
 
   return (
     <nav
@@ -92,11 +94,13 @@ export function BottomControlBar() {
         Icon={isDarkMode ? Sun : Moon}
       />
       <AudioControl />
-      <Control
-        label="Open love letter"
-        onClick={() => navigate({ to: "/love-letter" })}
-        Icon={Heart}
-      />
+      {loveLetterEnabled ? (
+        <Control
+          label="Open love letter"
+          onClick={() => navigate({ to: "/love-letter" })}
+          Icon={Heart}
+        />
+      ) : null}
     </nav>
   );
 }

@@ -58,6 +58,7 @@ Optional integrations are enabled through environment variables. Copy
 | `VITE_SPOTIFY_PLAYLIST_ID`    | Shows an embedded Spotify player on summary / success when set                                  |
 | `VITE_RESEND_API_KEY`         | Reserved for future email integration                                                           |
 | `VITE_LOVE_LETTER_CATEGORY`   | Choose which love-letter set is active: `default` \| `birthday` \| `anniversary` \| `valentine` |
+| `VITE_LOVE_LETTER_FEATURE`    | Toggle the Love Letter page: `disabled` removes its route, nav entry + CTAs; unset leaves it on |
 
 The detailed feature-gating contract lives in [`src/lib/env.ts`](src/lib/env.ts). The app boots without any
 of these set — each integration only renders when its variable is populated.

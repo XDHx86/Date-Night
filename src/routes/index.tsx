@@ -11,6 +11,7 @@ import { useRotatingMessage } from "@/hooks/useRotatingMessage";
 import { messages } from "@/lib/messages";
 import { sounds } from "@/lib/sound";
 import { useDateStore } from "@/lib/store";
+import { isLoveLetterFeatureEnabled } from "@/lib/loveLetterConfig";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/")({
 function Landing() {
   const navigate = useNavigate();
   const reset = useDateStore((s) => s.reset);
+  const loveLetterEnabled = isLoveLetterFeatureEnabled();
   const encouragement = useRotatingMessage(messages.encouragement);
   const [burst, setBurst] = useState(false);
   const [yesLabel, setYesLabel] = useState<string | null>(null);
@@ -188,7 +190,8 @@ function Landing() {
       </motion.div>
 
       <p className="mt-10 text-xs text-muted-foreground/80">
-        Tap the icons at the bottom to toggle audio, switch theme, or jump to the love letter.
+        Tap the icons at the bottom to toggle audio, switch theme
+        {loveLetterEnabled ? ", or jump to the love letter" : ""}.
       </p>
     </PageShell>
   );

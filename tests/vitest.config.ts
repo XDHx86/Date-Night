@@ -177,6 +177,7 @@ export default defineConfig({
       "VITE_TMDB_READ_ACCESS_TOKEN",
       "VITE_SPOTIFY_PLAYLIST_ID",
       "VITE_LOVE_LETTER_CATEGORY",
+      "VITE_LOVE_LETTER_FEATURE",
       "VITE_RESEND_API_KEY",
       "VITE_PORT",
       "PORT",

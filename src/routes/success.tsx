@@ -16,6 +16,7 @@ import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
+import { isLoveLetterFeatureEnabled } from "@/lib/loveLetterConfig";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/success")({
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/success")({
 function SuccessPage() {
   const navigate = useNavigate();
   const { date, time, movie, reset } = useDateStore();
+  const loveLetterEnabled = isLoveLetterFeatureEnabled();
 
   // One celebratory activation on mount — confetti avalanche + heart-rain,
   // then the overlays settle and leave.
@@ -108,32 +110,34 @@ function SuccessPage() {
       <ConfettiCelebration active={celebrate} variant="avalanche" />
       <HeartBurst active={celebrate} variant="heartRain" pieces={60} />
 
-      <Eyebrow>Done</Eyebrow>
-
-      <motion.h1
+      <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="text-display text-balance text-5xl tracking-[-0.03em] sm:text-6xl"
+        className="mt-2 w-full max-w-xl rounded-3xl px-6 py-8 text-center shadow-[var(--shadow-md)] glass-strong sm:px-8 sm:py-10"
       >
-        It&rsquo;s a date.
-      </motion.h1>
+        <Eyebrow>Done</Eyebrow>
 
-      {date && time ? (
-        <p className="mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
-          See you {formattedDate} at {formattedTime}. Can&rsquo;t wait.
-        </p>
-      ) : (
-        <p className="mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
-          See you soon.
-        </p>
-      )}
+        <h1 className="text-display text-balance text-5xl tracking-[-0.03em] sm:text-6xl">
+          It&rsquo;s a date.
+        </h1>
 
-      {celebrationMessage ? (
-        <p className="mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
-          &ldquo;{celebrationMessage}&rdquo;
-        </p>
-      ) : null}
+        {date && time ? (
+          <p className="mx-auto mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+            See you {formattedDate} at {formattedTime}. Can&rsquo;t wait.
+          </p>
+        ) : (
+          <p className="mx-auto mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+            See you soon.
+          </p>
+        )}
+
+        {celebrationMessage ? (
+          <p className="mx-auto mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
+            &ldquo;{celebrationMessage}&rdquo;
+          </p>
+        ) : null}
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -208,14 +212,16 @@ function SuccessPage() {
           <Button variant="outline" onClick={handleShare} className="flex-1">
             <Share2 className="h-4 w-4" aria-hidden /> Share plan
           </Button>
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={() => navigate({ to: "/love-letter" })}
-            className="flex-1"
-          >
-            <Mail className="h-4 w-4" aria-hidden /> Love letter
-          </Button>
+          {loveLetterEnabled ? (
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => navigate({ to: "/love-letter" })}
+              className="flex-1"
+            >
+              <Mail className="h-4 w-4" aria-hidden /> Love letter
+            </Button>
+          ) : null}
         </div>
       </motion.div>
 
