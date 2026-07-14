@@ -10,6 +10,7 @@ import { routeTree } from "./routeTree.gen";
  * to spin up a fresh router should call {@link getRouter} again, which
  * creates a new client + router pair per call.
  */
+const basepath = import.meta.env.BASE_URL.replace(/\/$/, "");
 export function getRouter() {
   const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ export function getRouter() {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    basepath,
   });
 }
 

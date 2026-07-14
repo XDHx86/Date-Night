@@ -20,8 +20,8 @@ import tailwindcss from "@tailwindcss/vite";
 
 // GitHub Pages projects live at /<repo-name>/. Override with BASE_PATH
 // env var when building for a different deployment target.
-const basePath = process.env.NODE_ENV === "production" ? "/Date-Night/" : "/";
-
+const basePath =
+  process.env.BASE_PATH ?? (process.env.NODE_ENV === "production" ? "/Date-Night/" : "/");
 export default defineConfig({
   base: basePath,
 

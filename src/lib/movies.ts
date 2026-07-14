@@ -250,10 +250,20 @@ export async function fetchOriginalRecommendations(): Promise<Movie[]> {
   try {
     // Try to load from cache
     const cached = localStorage.getItem(CACHE_KEY);
+
     if (cached) {
-      const { timestamp, data } = JSON.parse(cached);
-      if (Date.now() - timestamp < CACHE_TTL_MS) {
-        return data as Movie[];
+      try {
+        const { timestamp, data } = JSON.parse(cached);
+
+        // Delete cache if it's incomplete
+        if (!Array.isArray(data) || data.length < 8) {
+          localStorage.removeItem(CACHE_KEY);
+        } else if (Date.now() - timestamp < CACHE_TTL_MS) {
+          return data as Movie[];
+        }
+      } catch {
+        // Corrupted cache
+        localStorage.removeItem(CACHE_KEY);
       }
     }
 
@@ -266,8 +276,8 @@ export async function fetchOriginalRecommendations(): Promise<Movie[]> {
     // Filter out any null results (failed fetches)
     const movies: Movie[] = movieDetailsArray.filter((movie): movie is Movie => movie !== null);
 
-    // Limit to 6 movies (if we have more, take first 6; if fewer, we still return what we have)
-    const limitedMovies: Movie[] = movies.slice(0, 6);
+    // Limit to 8 movies (if we have more, take first 8; if fewer, we still return what we have)
+    const limitedMovies: Movie[] = movies.slice(0, 8);
 
     // Cache the result
     localStorage.setItem(
