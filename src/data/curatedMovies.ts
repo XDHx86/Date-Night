@@ -3,14 +3,14 @@
 // Endpoint request link: https://api.themoviedb.org/3/movie/{movie_id}?api_key=<<api_key>>
 
 export const CURATED_MOVIE_IDS = [
-  1273221, // Scary movie 6 (Recommended)
-  614945, // Voicemails for isabelle (Recommended)
+  568091, // Fractured (Recommended)
+  412656, // Chaos Walking (Recommended)
+  614945, // Voicemails for isabelle
   76696, // Sidewalls
   1198994, // Send help
-  157350, // Divergent
-  70160, // The hunger games
-  568091, // Fractured
   678512, // Sound of Freedom
+  70160, // The hunger games (Classic)
+  157350, // Divergent (Classic)
   // Additional classic date-night movies
   // 199,     // Amélie
   // 597,     // Titanic
