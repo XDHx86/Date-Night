@@ -25,4 +25,10 @@ export const env = {
   },
 };
 
+console.log("[ENV]", {
+  apiKey: env.tmdbApiKey ? "present" : "missing",
+  token: env.tmdbReadAccessToken ? "present" : "missing",
+  raw: import.meta.env,
+});
+
 export default env;

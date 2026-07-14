@@ -47,6 +47,11 @@ jobs:
       # - name: Run tests
       #   run: bun test
 
+      - name: Debug VITE env
+        run: |
+          echo "API key present: ${{ secrets.VITE_TMDB_API_KEY != '' }}"
+          echo "Token present: ${{ secrets.VITE_TMDB_READ_ACCESS_TOKEN != '' }}"
+
   build:
     name: Build (Pages artifact)
     needs: install-lint-typecheck-test
