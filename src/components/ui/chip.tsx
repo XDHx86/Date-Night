@@ -33,6 +33,7 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
           onSelect?.();
           onClick?.(e);
         }}
+        whileHover={{ y: -2 }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 500, damping: 28 }}
         className={cn(
@@ -40,8 +41,8 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
           "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           "disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
           selected
-            ? "bg-primary text-primary-foreground border-primary"
-            : "bg-card text-foreground border-border hover:bg-secondary hover:border-foreground/15",
+            ? "bg-primary text-primary-foreground border-primary shadow-[var(--shadow-sm)]"
+            : "glass text-foreground hover:border-primary/40",
           className,
         )}
         aria-pressed={selected}

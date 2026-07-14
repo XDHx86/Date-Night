@@ -2,7 +2,7 @@ import { Heart, Moon, Sun, Volume2, VolumeX, type LucideIcon } from "lucide-reac
 import { useNavigate } from "@tanstack/react-router";
 import { useDateStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
-import { sounds } from "@/lib/sound";
+import { sounds, setMuted, unlockAudio } from "@/lib/sound";
 
 interface ControlProps {
   label: string;
@@ -38,6 +38,37 @@ function Control({ label, pressed, onClick, Icon }: ControlProps) {
 }
 
 /**
+ * The audio control is the single global sound switch: toggling flips the
+ * store flag (which `useBackgroundAudio` follows), resumes the AudioContext
+ * for the gesture, and plays a satisfying `pop` when enabling so the first
+ * sound you hear is a welcome-back blip rather than a generic click.
+ */
+function AudioControl() {
+  const isAudioEnabled = useDateStore((s) => s.isAudioEnabled);
+  const toggleAudio = useDateStore((s) => s.toggleAudio);
+
+  const handleToggle = () => {
+    // Unlock + flip the sound engine synchronously so the welcome blip is
+    // actually audible this tick (the store→effect sync lands a render later).
+    unlockAudio();
+    const enabling = !isAudioEnabled;
+    setMuted(!enabling);
+    toggleAudio();
+    if (enabling) sounds.pop();
+    else sounds.click();
+  };
+
+  return (
+    <Control
+      label={isAudioEnabled ? "Mute background audio" : "Enable background audio"}
+      pressed={isAudioEnabled}
+      onClick={handleToggle}
+      Icon={isAudioEnabled ? Volume2 : VolumeX}
+    />
+  );
+}
+
+/**
  * Slim, center-fixed bottom control bar. Houses the three app-wide
  * shortcuts: theme, audio, and the love-letter jump. Shared chrome
  * means the bar reads as one composed unit rather than three
@@ -47,8 +78,6 @@ export function BottomControlBar() {
   const navigate = useNavigate();
   const isDarkMode = useDateStore((s) => s.isDarkMode);
   const toggleDarkMode = useDateStore((s) => s.toggleDarkMode);
-  const isAudioEnabled = useDateStore((s) => s.isAudioEnabled);
-  const toggleAudio = useDateStore((s) => s.toggleAudio);
 
   return (
     <nav
@@ -62,12 +91,7 @@ export function BottomControlBar() {
         onClick={toggleDarkMode}
         Icon={isDarkMode ? Sun : Moon}
       />
-      <Control
-        label={isAudioEnabled ? "Mute background audio" : "Enable background audio"}
-        pressed={isAudioEnabled}
-        onClick={toggleAudio}
-        Icon={isAudioEnabled ? Volume2 : VolumeX}
-      />
+      <AudioControl />
       <Control
         label="Open love letter"
         onClick={() => navigate({ to: "/love-letter" })}

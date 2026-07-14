@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { HeartExplosion } from "@/components/HeartExplosion";
+import { FloatingDecorations } from "@/components/FloatingDecorations";
 import { BottomControlBar } from "@/components/BottomControlBar";
 import { AmbientBackdrop } from "@/components/AmbientBackdrop";
 import { TopProgressBar } from "@/components/TopProgressBar";
@@ -83,19 +84,87 @@ function RootComponent() {
   const lastShakeRef = useRef(0);
   const { isDarkMode } = useDateStore();
 
-  // Shake-to-burst easter egg. 3 s debounce — accidental shakes
-  // shouldn't double-trigger.
-  useShakeEffect(
-    () => {
-      const now = Date.now();
-      if (now - lastShakeRef.current > 3000) {
-        lastShakeRef.current = now;
-        setBurst(true);
-        window.setTimeout(() => setBurst(false), 1500);
+  // Shared, debounced love-bomb trigger — used by every easter-egg path
+  // (mobile shake, desktop pointer-shake, typing "love"). 3 s debounce so a
+  // flurry of input doesn't re-trigger before the burst finishes.
+  const triggerBurst = () => {
+    const now = Date.now();
+    if (now - lastShakeRef.current < 3000) return;
+    // Respect reduced-motion: the bomb is celebratory motion, so we hold fire.
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    lastShakeRef.current = now;
+    setBurst(true);
+    window.setTimeout(() => setBurst(false), 1500);
+  };
+
+  // Mobile: shake-to-burst.
+  useShakeEffect(triggerBurst, { threshold: 25 });
+
+  // Desktop hidden triggers — both unannounced (the joy is discovering them):
+  //   - pointer-shake: rapid side-to-side cursor movement (variance over a
+  //     short window),
+  //   - typing "love": consecutively typing the word "love" anywhere that
+  //     isn't a text field (so legit input isn't hijacked).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // --- Pointer-shake detection -------------------------------------------
+    const samples: { t: number; x: number; y: number }[] = [];
+    const window_ = 650; // ms rolling window
+    const onMove = (e: PointerEvent) => {
+      const t = performance.now();
+      samples.push({ t, x: e.clientX, y: e.clientY });
+      // drop stale samples
+      while (samples.length && samples[0].t < t - window_) samples.shift();
+      if (samples.length < 6) return;
+      // direction reversals on x + total path length = a shake
+      let reversals = 0;
+      let path = 0;
+      for (let i = 1; i < samples.length; i++) {
+        const dx = samples[i].x - samples[i - 1].x;
+        const dy = samples[i].y - samples[i - 1].y;
+        path += Math.abs(dx) + Math.abs(dy);
+        if (i >= 2) {
+          const prev = samples[i - 1].x - samples[i - 2].x;
+          if (prev !== 0 && Math.sign(dx) !== Math.sign(prev) && Math.abs(dx) > 4) reversals++;
+        }
       }
-    },
-    { threshold: 25 },
-  );
+      if (reversals >= 4 && path >= 360) {
+        samples.length = 0; // reset so one shake fires once
+        triggerBurst();
+      }
+    };
+
+    // --- Type-"love" detection ---------------------------------------------
+    let typed = "";
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      // Don't fire while the user is genuinely typing in a field/letters.
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      if (e.key.length !== 1) return;
+      const ch = e.key.toLowerCase();
+      if (!/[a-z]/.test(ch)) return;
+      typed = (typed + ch).slice(-4);
+      if (typed === "love") {
+        typed = "";
+        triggerBurst();
+      }
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   // Sync dark mode with the document root – keeps CSS variables in sync.
   useEffect(() => {
@@ -103,20 +172,25 @@ function RootComponent() {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  // Background audio — autoplay, unlock-after-first-interaction fallback,
-  // and stays synchronised with the store-driven UI toggle.
+  // Background audio — the synthesized ambient pad + SFX gate, driven from
+  // the store's audio flag, with an unlock-after-first-interaction fallback.
   useBackgroundAudio();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Static backdrop. No animation, no random particles. */}
+      {/* Living, route-aware gradient mesh — the app's breathing atmosphere. */}
       <AmbientBackdrop />
+
+      {/* Floating hearts, seasonal glyphs, and the cursor sparkle trail -
+          all decoration, all pointer-events-none + aria-hidden. */}
+      <FloatingDecorations />
 
       {/* Persistent, layout-level progress indicator. Renders nothing
           on /success so the celebration page stays uncluttered. */}
       <TopProgressBar />
 
-      {/* Shake-triggered easter egg. Renders nothing while idle. */}
+      {/* Easter-egg love-bomb (shake / pointer-shake / typing "love"). Idle
+          while nothing is triggering it. */}
       <HeartExplosion active={burst} />
 
       <Outlet />

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { ArrowRight, Shuffle } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
@@ -7,6 +7,7 @@ import { Eyebrow } from "@/components/eyebrow";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Surface } from "@/components/ui/card";
+import { HeartBurst } from "@/components/HeartBurst";
 import { TextArea } from "@/components/ui/field";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
@@ -55,6 +56,27 @@ function LoveLetter() {
   const [editMode, setEditMode] = useState(false);
   const [inputValue, setInputValue] = useState(loveMessage);
   const [isSharing, setIsSharing] = useState(false);
+
+  // Hidden peek-sparkle over the letter — a tiny twinkle for hover/long-press.
+  const [peek, setPeek] = useState(false);
+  const [peekKey, setPeekKey] = useState(0);
+  const peekTimer = useRef<number | undefined>(undefined);
+  const firePeek = useCallback(() => {
+    sounds.twinkle();
+    setPeekKey((k) => k + 1);
+    setPeek(true);
+    window.setTimeout(() => setPeek(false), 900);
+  }, []);
+  const onLetterEnter = firePeek;
+  const onLetterDown = () => {
+    peekTimer.current = window.setTimeout(firePeek, 450);
+  };
+  const onLetterUp = () => {
+    if (peekTimer.current !== undefined) {
+      window.clearTimeout(peekTimer.current);
+      peekTimer.current = undefined;
+    }
+  };
 
   // Resolve the active category once on mount (env-driven).
   const [category] = useState<Category>(() => getActiveLoveLetterCategory());
@@ -312,7 +334,7 @@ function LoveLetter() {
         transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
         className="mt-6 w-full max-w-xl"
       >
-        <Surface pad="loose" className="text-left">
+        <Surface pad="loose" glass className="relative text-left">
           {editMode ? (
             <div className="flex flex-col gap-4">
               <TextArea
@@ -338,10 +360,18 @@ function LoveLetter() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="whitespace-pre-line text-center text-lg font-medium leading-relaxed text-card-foreground"
+                className="relative cursor-default whitespace-pre-line text-center text-lg font-medium leading-relaxed text-card-foreground"
                 style={{ fontFamily: currentLetter.font }}
+                onPointerEnter={onLetterEnter}
+                onPointerDown={onLetterDown}
+                onPointerUp={onLetterUp}
+                onPointerLeave={onLetterUp}
               >
                 {currentLetter.content}
+                {/* Hidden peek-sparkle — a single twinkle on hover/long-press. */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <HeartBurst key={peekKey} active={peek} variant="peek" pieces={1} />
+                </div>
               </motion.div>
             )
           )}

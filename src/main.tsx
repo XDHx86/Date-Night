@@ -10,7 +10,12 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 
 import { router } from "./router";
+import { initMutedFromStorage } from "./lib/sound";
 import "./styles.css";
+
+// Restore the persisted sound preference before any UI renders, so the first
+// SFX of the session already respects what the user chose last time.
+initMutedFromStorage();
 
 const container = document.getElementById("root");
 if (!container) {

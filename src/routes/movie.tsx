@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
-import { Search, Loader2, Share2, ArrowRight } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { Search, Loader2, Share2, ArrowRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { Eyebrow } from "@/components/eyebrow";
@@ -11,6 +11,10 @@ import { useDateStore } from "@/lib/store";
 import { useUrlSync, getMovieIdFromUrl, createShareableUrl } from "@/hooks/useUrlSync";
 import { searchMovies, getMovieById, type Movie, fetchOriginalRecommendations } from "@/lib/movies";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { useRotatingMessage } from "@/hooks/useRotatingMessage";
+import { messages } from "@/lib/messages";
+import { pick } from "@/lib/palette";
+import { sounds } from "@/lib/sound";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/movie")({
@@ -22,13 +26,25 @@ export const Route = createFileRoute("/movie")({
  *
  * - A search field at the top doubles as the result query
  *   (when empty, the curated list of recommendations shows instead).
- * - Cards below are equal‑weight by default. The selected card gets
- *   a thin primary ring instead of an attention-grabbing halo.
+ * - Cards below are equal-weight by default. Recommended picks lead with a
+ *   badge; the tail earns "Classic"; the rest are unbadged. The chosen card
+ *   carries a pulsing rose-glow halo instead of a thin ring.
  * - The bottom row appears once a film has been chosen: a primary
- *   "Continue with X" CTA and a secondary "Share" button. The dark
- *   mode toggle is delegated to the persistent bottom control bar —
- *   this screen sticks to one job per action.
+ *   personality-labelled "Continue…" CTA and a secondary "Share" button.
  */
+
+/** Personality flavours for the chosen-movie "Continue" — always keep the
+ *  word "Continue" so the e2e journey (button-name regex) still steps.
+ */
+const CONTINUE_LABELS = [
+  "Continue to the good part",
+  "Continue to our date",
+  "Continue, this is the one",
+  "Continue when you're ready",
+  "Continue with our pick",
+  "Continue onward, lovely",
+];
+
 function MoviePickerPage() {
   const navigate = useNavigate();
   const { movie, setMovie, date } = useDateStore();
@@ -40,6 +56,26 @@ function MoviePickerPage() {
 
   const { syncUrl, syncState } = useUrlSync();
   const randomMessage = useRandomMessage("playful");
+  const loadingMessage = useRotatingMessage(messages.loading);
+  const emptyMessage = useRandomMessage("empty");
+  const continueLabel = useMemo(() => pick(CONTINUE_LABELS), []);
+
+  // Re-fetch the curated grid — the empty / error states and the hidden
+  // emoji tap all route back through here so one reload keeps it consistent.
+  const reload = useCallback(async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const recs = await fetchOriginalRecommendations();
+      setResults(recs);
+    } catch {
+      setError(pick(messages.error));
+      toast.error("Failed to load recommendations");
+    } finally {
+      setLoading(false);
+      setInitialLoad(false);
+    }
+  }, []);
 
   useEffect(() => {
     syncState();
@@ -57,11 +93,11 @@ function MoviePickerPage() {
             setMovie(data);
             syncUrl();
           } else {
-            setError("That movie didn't load — try another.");
+            setError(pick(messages.error));
             toast.error("Movie not found");
           }
         } catch {
-          setError("That movie didn't load — try another.");
+          setError(pick(messages.error));
           toast.error("Failed to load movie");
         }
       })();
@@ -82,7 +118,7 @@ function MoviePickerPage() {
         const recs = await fetchOriginalRecommendations();
         setResults(recs);
       } catch {
-        setError("We couldn't load suggestions.");
+        setError(pick(messages.error));
         toast.error("Failed to load recommendations");
       } finally {
         setLoading(false);
@@ -114,7 +150,7 @@ function MoviePickerPage() {
       } catch {
         if (!cancelled) {
           setResults([]);
-          setError("Search failed. Try again in a moment.");
+          setError(pick(messages.error));
           toast.error("Search failed");
         }
       } finally {
@@ -137,7 +173,7 @@ function MoviePickerPage() {
         syncUrl();
         setTimeout(() => navigate({ to: "/summary" }), 0);
       } else {
-        setError("Couldn't load that movie's details.");
+        setError(pick(messages.error));
         toast.error("Failed to load movie details");
       }
       setLoading(false);
@@ -190,6 +226,8 @@ function MoviePickerPage() {
     }
   }, []);
 
+  const awaitingResults = results.length === 0;
+
   return (
     <PageShell width="wide">
       <Eyebrow>Step 4 — Movie</Eyebrow>
@@ -230,39 +268,81 @@ function MoviePickerPage() {
           ) : null}
         </div>
 
-        {error ? (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="flex items-baseline justify-between">
-          <span className="text-eyebrow">
-            {query.trim() ? "Search results" : "Recommended for tonight"}
-          </span>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {results.length} {results.length === 1 ? "film" : "films"}
-          </span>
-        </div>
-
-        {results.length === 0 && !loading ? (
-          <p className="rounded-lg border border-dashed border-border bg-card/40 px-6 py-12 text-center text-sm text-muted-foreground">
-            {query.trim()
-              ? `No films matched "${query.trim()}". Try a different title.`
-              : "No recommendations are loaded right now."}
-          </p>
-        ) : (
-          <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {results.map((m) => (
-              <MovieCard
-                key={m.id}
-                movie={m}
-                selected={movie?.id === m.id}
-                onChoose={choose}
-                compact
-              />
-            ))}
+        {error && awaitingResults ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
+            role="alert"
+          >
+            <span className="text-4xl" aria-hidden>
+              🎞️
+            </span>
+            <p className="max-w-sm text-sm text-muted-foreground">{error}</p>
+            <Button variant="outline" size="sm" onClick={reload}>
+              <RefreshCw className="h-4 w-4" aria-hidden /> Try again
+            </Button>
+          </motion.div>
+        ) : loading && awaitingResults ? (
+          <div className="flex flex-col items-center gap-5 rounded-2xl glass px-6 py-16 text-center">
+            <Loader2 className="h-7 w-7 animate-spin text-primary" aria-hidden />
+            <span
+              key={loadingMessage}
+              className="animate-fade-in text-play text-base text-foreground"
+            >
+              {loadingMessage}
+            </span>
           </div>
+        ) : awaitingResults ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
+          >
+            {/* Hidden interaction: tapping the reel plays a sparkle and refetches. */}
+            <motion.button
+              type="button"
+              onClick={() => {
+                sounds.sparkle();
+                reload();
+              }}
+              whileTap={{ scale: 0.88, rotate: -12 }}
+              transition={{ type: "spring", stiffness: 500, damping: 18 }}
+              className="cursor-pointer select-none text-5xl"
+              aria-label="Surprise me — reload films"
+            >
+              <span aria-hidden>🎬</span>
+            </motion.button>
+            <p className="max-w-sm text-sm text-muted-foreground">{emptyMessage}</p>
+            <Button variant="outline" size="sm" onClick={reload}>
+              <RefreshCw className="h-4 w-4" aria-hidden /> Try again
+            </Button>
+          </motion.div>
+        ) : (
+          <>
+            <div className="flex items-baseline justify-between">
+              <span className="text-eyebrow">
+                {query.trim() ? "Search results" : "Recommended for tonight"}
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {results.length} {results.length === 1 ? "film" : "films"}
+              </span>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {results.map((m, idx) => (
+                <MovieCard
+                  key={m.id}
+                  movie={m}
+                  selected={movie?.id === m.id}
+                  onChoose={choose}
+                  category={
+                    idx < 2 ? "recommended" : idx >= results.length - 2 ? "classic" : undefined
+                  }
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -288,7 +368,7 @@ function MoviePickerPage() {
                 navigate({ to: "/summary" });
               }}
             >
-              Continue
+              {continueLabel}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </div>

@@ -66,11 +66,11 @@ function DatePickerPage() {
 
   const submit = useCallback(() => {
     if (!value) {
-      setError("Pick a day for our date.");
+      setError("Pick a day — our date needs a night to call its own. 📅");
       return;
     }
     if (today && value < today) {
-      setError("Pick a day that hasn't happened yet.");
+      setError("Let's pick a night that hasn't happened yet.");
       return;
     }
     setDate(value);
@@ -119,17 +119,24 @@ function DatePickerPage() {
 
         <div className="flex flex-col gap-2.5">
           <span className="text-eyebrow">Quick picks</span>
-          <div className="flex flex-wrap gap-2">
-            {quickDates.map(({ label, dateStr }) => (
-              <Chip
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-wrap gap-2"
+          >
+            {quickDates.map(({ label, dateStr }, idx) => (
+              <motion.div
                 key={label}
-                selected={value === dateStr}
-                onSelect={() => handleDateSelect(dateStr)}
+                initial={{ opacity: 0, scale: 0.88, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.18 + idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
               >
-                {label}
-              </Chip>
+                <Chip selected={value === dateStr} onSelect={() => handleDateSelect(dateStr)}>
+                  {label}
+                </Chip>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {value && !error ? (

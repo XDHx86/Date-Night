@@ -9,11 +9,12 @@ import { sounds } from "@/lib/sound";
 /**
  * Button — application-wide action primitive.
  *
- * Three variants × three sizes. No gradients by default; the
- * `primary` variant uses the accent fill for clear hierarchy. All
- * variants render with the same height scale so layouts stay
- * rhythm-stable. Spring interactions are tuned to feel responsive
- * without being loud.
+ * Variants × sizes share one height scale so layouts stay rhythm-stable.
+ * The `primary` variant carries a soft static rose glow so hero actions get
+ * their halo without per-call-site work; the *pulsing* glow is opt-in via an
+ * `animate-glow` className on the showpiece CTAs (summary/success). Spring
+ * interactions are tuned to feel responsive without being loud — a decisive
+ * squish on tap, a gentle lift on hover.
  */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium tracking-tight select-none cursor-pointer transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
@@ -21,7 +22,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-[var(--shadow-sm)]",
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-[var(--shadow-glow)]",
         outline:
           "border border-border bg-transparent text-foreground hover:bg-secondary hover:border-foreground/15",
         ghost: "bg-transparent text-foreground hover:bg-secondary",
@@ -30,10 +31,10 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },
       size: {
-        sm: "h-9 px-4 text-sm rounded-md",
-        md: "h-11 px-5 text-[0.95rem] rounded-md",
-        lg: "h-14 px-7 text-base rounded-lg",
-        icon: "h-10 w-10 rounded-md",
+        sm: "h-9 px-4 text-sm rounded-xl",
+        md: "h-11 px-5 text-[0.95rem] rounded-xl",
+        lg: "h-16 px-8 text-base rounded-2xl",
+        icon: "h-10 w-10 rounded-full",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },
@@ -43,6 +44,8 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends Omit<HTMLMotionProps<"button">, "ref">, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Play a soft twinkle on hover (opt-in — heroes only, to avoid chatter). */
+  hoverSound?: boolean;
 }
 
 /**
@@ -50,7 +53,7 @@ export interface ButtonProps
  * responsive without triggering the "rubbery toy" effect of heavier
  * springs.
  */
-const SPRING = { type: "spring" as const, stiffness: 480, damping: 32 };
+const SPRING = { type: "spring" as const, stiffness: 480, damping: 30 };
 
 /**
  * Click handler wrapper that fires the synthesized UI sound, then
@@ -68,17 +71,35 @@ function withClickSound<E extends React.MouseEvent>(
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild, onClick, type, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild,
+      hoverSound,
+      onClick,
+      onMouseEnter,
+      type,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     if (asChild) {
-      // Use Slot for cases like wrapping a Link so children inherit
-      // styles but we don't get a <button> here. Slot doesn't accept
-      // motion props, so we call sounds.click() on the consumer's
-      // onClick (it must include the sound or be wrapped).
       return (
         <Slot
           ref={ref as React.Ref<HTMLElement>}
           className={cn(buttonVariants({ variant, size }), className)}
           onClick={withClickSound(onClick)}
+          onMouseEnter={
+            hoverSound
+              ? (e) => {
+                  sounds.twinkle();
+                  (onMouseEnter as unknown as ((e: React.MouseEvent) => void) | undefined)?.(e);
+                }
+              : onMouseEnter
+          }
           {...(props as Record<string, unknown>)}
         />
       );
@@ -91,8 +112,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size }), className)}
         onClick={withClickSound(onClick, !disabled)}
         whileHover={disabled ? undefined : { y: -1 }}
-        whileTap={disabled ? undefined : { y: 0, scale: 0.985 }}
+        whileTap={disabled ? undefined : { scale: 0.94 }}
         transition={SPRING}
+        onMouseEnter={
+          hoverSound
+            ? (e) => {
+                sounds.twinkle();
+                onMouseEnter?.(e);
+              }
+            : onMouseEnter
+        }
         {...props}
       />
     );

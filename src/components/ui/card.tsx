@@ -48,12 +48,15 @@ export const Surface = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     pad?: "none" | "tight" | "default" | "loose";
     elevate?: boolean;
+    /** Opt into the translucent glass surface; default stays solid to avoid contrast regressions. */
+    glass?: boolean;
   }
->(({ className, pad = "default", elevate = false, ...props }, ref) => (
+>(({ className, pad = "default", elevate = false, glass: useGlass = false, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border border-border bg-card text-card-foreground",
+      "rounded-lg text-card-foreground",
+      useGlass ? "glass" : "border border-border bg-card",
       pad === "tight" && "p-4",
       pad === "default" && "p-6 sm:p-7",
       pad === "loose" && "p-8 sm:p-10",

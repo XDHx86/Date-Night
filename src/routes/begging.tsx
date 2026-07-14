@@ -6,6 +6,7 @@ import { PageShell } from "@/components/PageShell";
 import { Eyebrow } from "@/components/eyebrow";
 import { Button } from "@/components/ui/button";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
+import { HeartBurst } from "@/components/HeartBurst";
 import { sounds } from "@/lib/sound";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 
@@ -35,6 +36,7 @@ function Begging() {
   const navigate = useNavigate();
   const playfulMessage = useRandomMessage("playful");
   const [burst, setBurst] = useState(false);
+  const [heartRain, setHeartRain] = useState(false);
   const [dodges, setDodges] = useState(0);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [flip, setFlip] = useState(1);
@@ -46,7 +48,11 @@ function Begging() {
   const yesScale = 1 + Math.min(dodges, 4) * 0.05;
 
   const handleYes = () => {
-    setBurst(true);
+    sounds.celebrate();
+    // Varied accept — flip a coin between a confetti burst and a heart-rain so
+    // the payoff never reads the same twice.
+    if (Math.random() > 0.5) setHeartRain(true);
+    else setBurst(true);
     setTimeout(() => navigate({ to: "/confirmation" }), 1400);
   };
 
@@ -67,6 +73,7 @@ function Begging() {
   return (
     <PageShell width="narrow">
       <ConfettiCelebration active={burst} />
+      <HeartBurst active={heartRain} variant="heartRain" pieces={36} />
 
       <Eyebrow>A change of heart</Eyebrow>
 

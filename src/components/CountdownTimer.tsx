@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface TimeLeft {
   days: number;
@@ -28,9 +29,10 @@ interface Props {
 }
 
 /**
- * Countdown to a date — four columns of large numerals separated by
- * quiet vertical rules. Reads as a single composed unit; digits
- * tabular so they don't shimmer.
+ * Countdown to a date — four columns of large numerals separated by quiet
+ * vertical rules. Reads as a single composed unit; digits are tabular so they
+ * don't shimmer, and the live seconds cell wears a pulsing rose glow so the
+ * passage of time is felt, not just counted.
  */
 export function CountdownTimer({ dateTimeString }: Props) {
   const [time, setTime] = useState<TimeLeft | null>(null);
@@ -69,19 +71,27 @@ export function CountdownTimer({ dateTimeString }: Props) {
       aria-live="polite"
       aria-label={`Time remaining: ${time.days} days, ${time.hours} hours, ${time.minutes} minutes, ${time.seconds} seconds`}
     >
-      {units.map((u, idx) => (
-        <div key={u.label} className="flex items-stretch gap-2">
-          <div className="flex flex-1 flex-col items-center rounded-md border border-border bg-card px-2 py-3 text-card-foreground shadow-[var(--shadow-sm)]">
-            <span className="text-display text-3xl font-medium leading-none tracking-tight tabular-nums sm:text-4xl">
-              {String(u.value).padStart(2, "0")}
-            </span>
-            <span className="text-eyebrow mt-2">{u.label}</span>
+      {units.map((u, idx) => {
+        const isLive = idx === units.length - 1;
+        return (
+          <div key={u.label} className="flex items-stretch gap-2">
+            <div
+              className={cn(
+                "flex flex-1 flex-col items-center rounded-2xl px-2 py-3 text-card-foreground glass",
+                isLive ? "rose-glow animate-glow" : "shadow-[var(--shadow-sm)]",
+              )}
+            >
+              <span className="text-play text-3xl font-semibold leading-none tracking-tight tabular-nums sm:text-4xl">
+                {String(u.value).padStart(2, "0")}
+              </span>
+              <span className="text-eyebrow mt-2">{u.label}</span>
+            </div>
+            {idx < units.length - 1 ? (
+              <span aria-hidden className="self-stretch w-px bg-border" />
+            ) : null}
           </div>
-          {idx < units.length - 1 ? (
-            <span aria-hidden className="self-stretch w-px bg-border" />
-          ) : null}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

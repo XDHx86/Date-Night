@@ -36,7 +36,7 @@ export function MovieBackdropBackground({ movie, dim = "medium" }: Props) {
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
-            filter: "blur(48px) saturate(0.9) brightness(0.7)",
+            filter: "blur(1px) saturate(0.9) brightness(0.7)",
             transform: "scale(1.2)",
           }}
           initial={{ opacity: 0 }}

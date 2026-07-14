@@ -26,7 +26,7 @@ export function TopProgressBar() {
       aria-label="Date night progress"
       className="pointer-events-none fixed inset-x-0 top-4 z-30 flex justify-center px-3 sm:top-5"
     >
-      <div className="pointer-events-auto inline-flex rounded-full border border-border bg-card/85 px-3 py-2 shadow-[var(--shadow-md)] backdrop-blur-md sm:px-4">
+      <div className="pointer-events-auto inline-flex rounded-full px-3 py-2 shadow-[var(--shadow-md)] glass-strong sm:px-4">
         <Stepper steps={STEPS} />
       </div>
     </nav>

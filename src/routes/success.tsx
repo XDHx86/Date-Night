@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { format, parse, parseISO } from "date-fns";
 import { ArrowRight, Share2, Mail } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,6 +10,7 @@ import { MoviePoster } from "@/components/MoviePoster";
 import { Button } from "@/components/ui/button";
 import { Surface } from "@/components/ui/card";
 import { HeartBurst } from "@/components/HeartBurst";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -21,17 +23,28 @@ export const Route = createFileRoute("/success")({
 });
 
 /**
- * Success — the closing moment (Step 6).
+ * Success — the cinematic payoff (Step 6).
  *
- * The movie's backdrop stays behind as atmosphere; a single card
- * collects the poster, the countdown, and the when/what. This screen
- * owns its own restart (the progress bar hides here), so "Plan another
- * date" is the prominent primary and the share/letter actions sit
- * beside it as quieter equals.
+ * The "level-complete / loot-chest reveal": on mount a celebratory chord fires,
+ * a confetti avalanche + heart-rain pour down, a single light band sweeps the
+ * award card, and a rose bloom blooms over the film backdrop. The poster is
+ * framed as an award card (glass + rose-glow + breathe) crowned by a
+ * gradient-romance ribbon, with the countdown as the "stage time". This screen
+ * owns its own restart (the progress bar hides here), so "Plan another date" is
+ * the prominent primary with share + love-letter beside it as quieter equals.
  */
 function SuccessPage() {
   const navigate = useNavigate();
   const { date, time, movie, reset } = useDateStore();
+
+  // One celebratory activation on mount — confetti avalanche + heart-rain,
+  // then the overlays settle and leave.
+  const [celebrate, setCelebrate] = useState(true);
+  useEffect(() => {
+    sounds.celebrate();
+    const t = window.setTimeout(() => setCelebrate(false), 2600);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const handleReset = () => {
     sounds.celebrate();
@@ -76,12 +89,24 @@ function SuccessPage() {
   return (
     <PageShell width="default">
       {/* Atmosphere only — blurred film wash behind the content. */}
-      <MovieBackdropBackground movie={movie} />
+      <MovieBackdropBackground movie={movie} dim="soft" />
 
-      {/* One composed celebratory burst, then it leaves. */}
-      <div className="mb-2 flex justify-center">
-        <HeartBurst active pieces={18} />
-      </div>
+      {/* Intensifying bloom — a rose spotlight that blooms over the backdrop. */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-[-1]"
+        style={{
+          background:
+            "radial-gradient(52% 42% at 50% 36%, oklch(from var(--primary) l c h / 0.3), transparent 70%)",
+        }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: [0, 0.85, 0.5], scale: [0.8, 1.1, 1] }}
+        transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      {/* The show-stopper — a confetti avalanche and a heart-rain. */}
+      <ConfettiCelebration active={celebrate} variant="avalanche" />
+      <HeartBurst active={celebrate} variant="heartRain" pieces={60} />
 
       <Eyebrow>Done</Eyebrow>
 
@@ -116,21 +141,53 @@ function SuccessPage() {
         transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className="mt-10 w-full"
       >
-        <Surface pad="loose" elevate className="flex flex-col items-center gap-6 text-center">
-          {movie ? <MoviePoster movie={movie} className="h-52 w-36 sm:h-56 sm:w-40" /> : null}
+        <Surface
+          pad="loose"
+          glass
+          elevate
+          className="relative flex flex-col items-center gap-6 overflow-hidden text-center"
+        >
+          {/* One-shot shimmer band — a light sweep across the award card. */}
+          <motion.div aria-hidden className="pointer-events-none absolute inset-0">
+            <motion.div
+              className="absolute inset-y-0 -left-1/3 w-1/2 -skew-x-12"
+              style={{
+                background: "linear-gradient(90deg, transparent, oklch(1 0 0 / 0.32), transparent)",
+              }}
+              initial={{ x: "-160%" }}
+              animate={{ x: "480%" }}
+              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+            />
+          </motion.div>
+
+          {/* Ribbon — the gradient-romance banner crowning the award. */}
+          <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 280, damping: 18, delay: 0.2 }}
+            className="z-10 rounded-b-xl bg-[image:var(--gradient-romance)] px-6 py-1.5 text-play text-sm tracking-wide text-primary-foreground shadow-[var(--shadow-sm)]"
+          >
+            ★ Tonight&rsquo;s Feature ★
+          </motion.div>
 
           {movie ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-eyebrow">Watching</span>
-              <h2 className="text-display text-2xl tracking-tight text-card-foreground">
-                {movie.title}
-              </h2>
+            <div className="flex flex-col items-center gap-3">
+              <MoviePoster movie={movie} className="h-52 w-36 sm:h-56 sm:w-40" />
+              <span className="text-3xl" aria-hidden>
+                🏆
+              </span>
+              <div className="flex flex-col gap-1">
+                <span className="text-eyebrow">Watching</span>
+                <h2 className="text-display text-2xl tracking-tight text-card-foreground">
+                  {movie.title}
+                </h2>
+              </div>
             </div>
           ) : null}
 
           {date && time && movie ? (
             <div className="flex w-full flex-col gap-2.5 border-t border-border pt-6 text-left">
-              <span className="text-eyebrow">Countdown to our date</span>
+              <span className="text-eyebrow">Stage time</span>
               <CountdownTimer dateTimeString={`${date}T${time}:00`} />
             </div>
           ) : null}

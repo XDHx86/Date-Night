@@ -108,13 +108,24 @@ function TimePickerPage() {
 
         <div className="flex flex-col gap-2.5">
           <span className="text-eyebrow">Common windows</span>
-          <div className="flex flex-wrap gap-2">
-            {QUICK.map((t) => (
-              <Chip key={t} selected={value === t} onSelect={() => handleQuickSelect(t)}>
-                {pretty(t)}
-              </Chip>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-wrap gap-2"
+          >
+            {QUICK.map((t, idx) => (
+              <motion.div
+                key={t}
+                initial={{ opacity: 0, scale: 0.88, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.18 + idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Chip selected={value === t} onSelect={() => handleQuickSelect(t)}>
+                  {pretty(t)}
+                </Chip>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {value && !error ? (

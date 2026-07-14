@@ -66,7 +66,7 @@ export function Stepper({ steps, currentStep }: StepperProps) {
                   "inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums",
                   "transition-colors duration-200",
                   isCurrent
-                    ? "bg-foreground text-background"
+                    ? "bg-primary text-primary-foreground rose-glow"
                     : isDone
                       ? "bg-foreground/85 text-background"
                       : "border border-border text-muted-foreground",

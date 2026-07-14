@@ -29,11 +29,11 @@ export const ROUTE_STEP: Record<string, number> = {
  */
 export const STEP_ROUTE: Record<number, string> = {
   1: "/",
-  2: "/begging",
-  3: "/confirmation",
-  4: "/date",
-  5: "/time",
-  6: "/movie",
+  2: "/date",
+  3: "/time",
+  4: "/movie",
+  5: "/summary",
+  6: "/success",
 };
 
 /**

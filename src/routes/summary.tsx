@@ -1,18 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format, parse, parseISO } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, useTransform, useSpring } from "framer-motion";
 import { Share2, ArrowRight, CalendarHeart, Clock, Hourglass } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { Eyebrow } from "@/components/eyebrow";
 import { MovieBackdropBackground } from "@/components/MovieBackdropBackground";
 import { MoviePoster } from "@/components/MoviePoster";
 import { Button } from "@/components/ui/button";
+import { AnimatedButton } from "@/components/AnimatedButton";
 import { Surface } from "@/components/ui/card";
+import { HeartBurst } from "@/components/HeartBurst";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { usePointerParallax } from "@/hooks/usePointerParallax";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
 import { toast } from "sonner";
 
@@ -23,10 +26,14 @@ export const Route = createFileRoute("/summary")({
 /**
  * Summary — the plan review (Step 5).
  *
- * One composed card collects everything chosen so far: the film
- * centerpiece, the countdown, and the clean definition list of the
- * when/what/how-long. The movie's blurred backdrop sits behind as
- * atmosphere only; the card carries all the foreground attention.
+ * One composed glass card collects everything chosen so far: the film
+ * centerpiece — a poster that breathes, glows rose, and tilts toward the
+ * cursor — a small pre-celebration flutter, the countdown, and the clean
+ * definition list of the when/what/how-long. The movie's blurred backdrop
+ * sits behind as atmosphere only; the card carries all the foreground attention.
+ *
+ * The "Confirm our date" CTA pulses (animate-glow) under the romance gradient,
+ * teasing the payoff that waits on `/success`.
  */
 function SummaryPage() {
   const navigate = useNavigate();
@@ -36,6 +43,24 @@ function SummaryPage() {
       navigate({ to: "/date" });
     }
   }, [date, time, movie, navigate]);
+
+  // Pointer parallax for the cinematic poster — eased through springs so it
+  // glides, and frozen under reduced-motion (calm fallback).
+  const { x, y, prefersReduced } = usePointerParallax();
+  const rotY = useTransform(x, [-1, 1], [-8, 8]);
+  const rotX = useTransform(y, [-1, 1], [8, -8]);
+  const sRotY = useSpring(rotY, { stiffness: 150, damping: 20 });
+  const sRotX = useSpring(rotX, { stiffness: 150, damping: 20 });
+  const posterParallax = prefersReduced ? undefined : { rotateX: sRotX, rotateY: sRotY };
+
+  // A small pre-celebration flutter once the card settles — a hint that the big
+  // moment is one tap away.
+  const [preBurst, setPreBurst] = useState(false);
+  useEffect(() => {
+    if (!movie) return;
+    const t = window.setTimeout(() => setPreBurst(true), 600);
+    return () => window.clearTimeout(t);
+  }, [movie]);
 
   const rows = [
     {
@@ -124,10 +149,18 @@ function SummaryPage() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="mt-10 w-full"
       >
-        <Surface pad="loose" elevate className="flex flex-col gap-7 text-left">
+        <Surface pad="loose" glass elevate className="flex flex-col gap-7 text-left">
           {movie ? (
-            <div className="flex flex-col items-center gap-4">
-              <MoviePoster movie={movie} className="h-52 w-36 sm:h-56 sm:w-40" />
+            <div className="relative flex flex-col items-center gap-4">
+              <MoviePoster
+                movie={movie}
+                className="h-52 w-36 sm:h-56 sm:w-40"
+                parallaxStyle={posterParallax}
+              />
+              {/* Pre-celebration flutter — a soft heart burst around the poster. */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <HeartBurst active={preBurst} variant="soft" pieces={12} />
+              </div>
               <div className="text-center">
                 <h2 className="text-display text-2xl tracking-tight text-card-foreground">
                   {movie.title}
@@ -136,7 +169,7 @@ function SummaryPage() {
                   {movie.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                      className="rounded-full border border-border bg-background/40 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
                     >
                       {tag}
                     </span>
@@ -176,10 +209,10 @@ function SummaryPage() {
         transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         className="mt-8 flex w-full max-w-md flex-col gap-3"
       >
-        <Button size="lg" variant="primary" onClick={confirm}>
+        <AnimatedButton size="lg" variant="yes" onClick={confirm} className="w-full animate-glow">
           Confirm our date
           <ArrowRight className="h-4 w-4" aria-hidden />
-        </Button>
+        </AnimatedButton>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={handleShare} className="flex-1">
             <Share2 className="h-4 w-4" aria-hidden /> Share plan
