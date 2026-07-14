@@ -21,9 +21,7 @@ export function SpotifyEmbed() {
   return (
     <section className="mt-8 rounded-lg border border-border bg-card p-4">
       <div className="mb-3 flex items-baseline justify-between">
-        <h3 className="text-display text-base font-medium text-card-foreground">
-          The soundtrack
-        </h3>
+        <h3 className="text-display text-base font-medium text-card-foreground">The soundtrack</h3>
         <p className="text-eyebrow text-muted-foreground">Spotify</p>
       </div>
       <iframe
