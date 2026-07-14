@@ -11,24 +11,19 @@ interface Heart {
 }
 
 interface Props {
-  /** When true the burst animation plays. */
   active: boolean;
-  /** Number of hearts to project (default 50). */
   count?: number;
-  /** Total lifetime of the burst in ms (default 1500). */
   duration?: number;
 }
 
 /**
- * Full‑screen love‑explosion animation, driven by device‑shake.
+ * Full-screen love-explosion animation, driven by device-shake.
  *
- * - Renders nothing while `active` is false – zero cost.
- * - Spawns `count` transparent hearts with randomized vectors when toggled on.
- * - Cleanup on unmount and on the next `active` flip — no stacking, no leak.
- * - Callers should debounce `active` to avoid spamming triggers (the root
- *   component uses a 3 s cooldown).
+ * Now scaled down — the original 50 pieces competed with content.
+ * Twelve well-chosen hearts read as intentional celebration rather
+ * than a starship alert.
  */
-export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
+export function HeartExplosion({ active, count = 12, duration = 1500 }: Props) {
   const [bursts, setBursts] = useState<Heart[]>([]);
 
   useEffect(() => {
@@ -37,11 +32,11 @@ export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
     const now = Date.now();
     const next: Heart[] = Array.from({ length: count }, (_, i) => ({
       id: now + i,
-      x: Math.random() * 100, // horizontal start (% of viewport)
-      y: 60 + Math.random() * 30, // bottom half start (% from top)
-      scale: 0.6 + Math.random() * 0.9,
+      x: 28 + Math.random() * 44,
+      y: 60 + Math.random() * 30,
+      scale: 0.9 + Math.random() * 0.6,
       rotate: Math.random() * 360,
-      dx: (Math.random() - 0.5) * 220, // horizontal drift
+      dx: (Math.random() - 0.5) * 180,
     }));
 
     setBursts(next);
@@ -56,7 +51,7 @@ export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
         {bursts.map((h) => (
           <motion.span
             key={h.id}
-            className="absolute select-none text-4xl drop-shadow-md"
+            className="absolute select-none text-3xl"
             style={{
               left: `${h.x}%`,
               top: `${h.y}%`,
@@ -66,16 +61,16 @@ export function HeartExplosion({ active, count = 50, duration = 1500 }: Props) {
             animate={{
               opacity: [0, 1, 0],
               scale: h.scale,
-              y: -260 - Math.random() * 120,
+              y: -220 - Math.random() * 80,
               x: h.dx,
             }}
             exit={{ opacity: 0 }}
             transition={{
               duration: duration / 1000,
-              ease: [0.22, 1, 0.36, 1],
+              ease: [0.16, 1, 0.3, 1],
             }}
           >
-            ❤️
+            ♥
           </motion.span>
         ))}
       </AnimatePresence>

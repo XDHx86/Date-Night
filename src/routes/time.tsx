@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { format, parse } from "date-fns";
-import { Clock, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedButton } from "@/components/AnimatedButton";
+import { Eyebrow } from "@/components/eyebrow";
+import { Button } from "@/components/ui/button";
+import { Field, TimeInput } from "@/components/ui/field";
+import { Chip } from "@/components/ui/chip";
 import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { useUrlSync } from "@/hooks/useUrlSync";
@@ -13,34 +16,34 @@ export const Route = createFileRoute("/time")({
   component: TimePickerPage,
 });
 
-const QUICK = ["18:00", "19:30", "20:00", "21:00"];
+const QUICK = ["18:00", "19:00", "19:30", "20:00", "21:00"];
 
 function pretty(time: string) {
   return format(parse(time, "HH:mm", new Date()), "h:mm a");
 }
 
+/**
+ * Time picker — quick chips for the common evening slots, and a
+ * precise input if the user wants something exact. Big preview of
+ * the chosen time below so the user can double-check before moving
+ * on.
+ */
 function TimePickerPage() {
   const navigate = useNavigate();
   const { time, setTime, date } = useDateStore();
   const [value, setValue] = useState(time ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  // Use centralized URL sync
   const { syncUrl, syncState } = useUrlSync();
 
-  // Sync state from URL on mount
   useEffect(() => {
     syncState();
   }, [syncState]);
 
-  // Sync local value with store state
   useEffect(() => {
-    if (time && time !== value) {
-      setValue(time);
-    }
+    if (time && time !== value) setValue(time);
   }, [time, value]);
 
-  // Sync URL when local value changes
   useEffect(() => {
     if (value) {
       setTime(value);
@@ -48,31 +51,23 @@ function TimePickerPage() {
     }
   }, [value, setTime, syncUrl]);
 
-  // Guard: if someone deep-links here without a date, send them back.
-  // Use useEffect to avoid render-time side effects
+  // Deep-link guard — if no date was picked, route back.
   useEffect(() => {
-    if (!date) {
-      navigate({ to: "/date" });
-    }
+    if (!date) navigate({ to: "/date" });
   }, [date, navigate]);
 
   const submit = useCallback(() => {
     if (!value) {
-      setError("Pick a time so I know when to be ready 🥹");
+      setError("Pick a time so I know when to be ready.");
       return;
     }
     setTime(value);
     syncUrl();
-    // Use setTimeout to ensure state is updated before navigation
-    setTimeout(() => {
-      navigate({ to: "/movie" });
-    }, 0);
+    setTimeout(() => navigate({ to: "/movie" }), 0);
   }, [value, setTime, syncUrl, navigate]);
 
-  // Get a time-related message
   const timeMessage = useRandomMessage("time");
 
-  // Quick time chip selection
   const handleQuickSelect = useCallback(
     (t: string) => {
       setValue(t);
@@ -84,67 +79,65 @@ function TimePickerPage() {
   );
 
   return (
-    <PageShell>
-      {timeMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{timeMessage}"</p>
-      )}
+    <PageShell width="default">
+      <Eyebrow>Step 3 — Time</Eyebrow>
 
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
-      >
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
-          <Clock className="h-8 w-8" />
-        </div>
-        <h1 className="text-3xl font-bold text-gradient">Pick a time</h1>
-        <p className="mt-2 text-muted-foreground">What time should our date begin? ⏰</p>
+      <h1 className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl">
+        What time should I arrive?
+      </h1>
 
-        <div className="mt-6 text-left">
-          <label htmlFor="time" className="mb-2 block text-sm font-bold text-card-foreground">
-            Time
-          </label>
-          <input
+      <p className="mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+        Common evening windows to start, or pick a precise one.
+      </p>
+
+      {timeMessage ? (
+        <p className="mt-6 max-w-sm text-xs italic text-muted-foreground/80">{timeMessage}</p>
+      ) : null}
+
+      <div className="mt-10 flex w-full max-w-md flex-col gap-6">
+        <Field id="time" label="Time" hint="We'll time everything around this.">
+          <TimeInput
             id="time"
-            type="time"
             value={value}
             onChange={(e) => {
-              const val = e.target.value;
-              setValue(val);
+              setValue(e.target.value);
               setError(null);
             }}
-            className="w-full rounded-2xl border border-input bg-background px-4 py-4 text-lg font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
+        </Field>
 
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <div className="flex flex-col gap-2.5">
+          <span className="text-eyebrow">Common windows</span>
+          <div className="flex flex-wrap gap-2">
             {QUICK.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => handleQuickSelect(t)}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
-                  value === t
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
-                }`}
-              >
+              <Chip key={t} selected={value === t} onSelect={() => handleQuickSelect(t)}>
                 {pretty(t)}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
 
-        {value && !error && (
-          <p className="mt-4 text-center text-lg font-semibold text-primary">
-            See you at {pretty(value)} 💫
-          </p>
-        )}
-        {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
-      </motion.div>
+        {value && !error ? (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-display text-2xl tracking-tight text-foreground"
+          >
+            See you at {pretty(value)}.
+          </motion.p>
+        ) : null}
 
-      <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
-        Next <ArrowRight className="h-5 w-5" />
-      </AnimatedButton>
+        {error ? (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </div>
+
+      <Button size="lg" variant="primary" className="mt-10 w-full max-w-md" onClick={submit}>
+        Continue
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Button>
     </PageShell>
   );
 }

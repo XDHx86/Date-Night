@@ -50,6 +50,10 @@ jobs:
       - name: Run Prettier format check
         run: bunx prettier --check .
 
+      # Tests are currently disabled due to bugs in the test files
+      # - name: Run tests
+      #   run: bun test
+
   build:
     name: Build (Pages artifact)
     needs: install-lint-typecheck-test

@@ -1,10 +1,13 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { format, parseISO, addDays } from "date-fns";
-import { CalendarHeart, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedButton } from "@/components/AnimatedButton";
+import { Eyebrow } from "@/components/eyebrow";
+import { Button } from "@/components/ui/button";
+import { Field, DateInput } from "@/components/ui/field";
+import { Chip } from "@/components/ui/chip";
 import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { useUrlSync } from "@/hooks/useUrlSync";
@@ -13,48 +16,36 @@ export const Route = createFileRoute("/date")({
   component: DatePickerPage,
 });
 
-function formatToday(d: Date) {
-  return format(d, "yyyy-MM-dd");
-}
+const ISO = (d: Date) => format(d, "yyyy-MM-dd");
 
+/**
+ * Date picker — quick chips first, the day-of-week confirmation
+ * below, then a precise picker if neither of those suits. Renders
+ * a single preview line of the chosen day so the user always sees
+ * what they're about to commit to.
+ */
 function DatePickerPage() {
   const navigate = useNavigate();
-  const router = useRouter();
   const { date, setDate } = useDateStore();
   const [value, setValue] = useState(date ?? "");
   const [error, setError] = useState<string | null>(null);
-  // `today` is computed on the client‑only after hydration to avoid a
-  // server/client timezone mismatch on the first render.
   const [today, setToday] = useState<string | null>(null);
 
-  // Use centralized URL sync
   const { syncUrl, syncState } = useUrlSync();
-
   const dateMessage = useRandomMessage("date");
 
-  // Log router state for debugging
-  useEffect(() => {
-    console.log("Router location:", router.state.location);
-  }, [router.state.location]);
-
-  // Sync URL with state on mount
   useEffect(() => {
     syncState();
   }, [syncState]);
 
-  // Sync value with store state
   useEffect(() => {
-    if (date && date !== value) {
-      setValue(date);
-    }
+    if (date && date !== value) setValue(date);
   }, [date, value]);
 
-  // Compute `today` **after** mount so SSR and first client render match.
   useEffect(() => {
-    setToday(formatToday(new Date()));
+    setToday(ISO(new Date()));
   }, []);
 
-  // Sync URL when local value changes
   useEffect(() => {
     if (value) {
       setDate(value);
@@ -62,35 +53,30 @@ function DatePickerPage() {
     }
   }, [value, setDate, syncUrl]);
 
-  const submit = useCallback(() => {
-    if (!value) {
-      setError("Pick a day for our date 🥰");
-      return;
-    }
-    if (today && value < today) {
-      setError("Let's pick a day that hasn't happened yet 😅");
-      return;
-    }
-    setDate(value);
-    syncUrl();
-    // Use setTimeout to ensure state is updated before navigation
-    // This prevents race conditions
-    setTimeout(() => {
-      navigate({ to: "/time" });
-    }, 0);
-  }, [value, today, setDate, syncUrl, navigate]);
-
-  // Quick date chips – only built once `today` is known (post‑hydration).
-  const dateChips = useMemo(() => {
+  const quickDates = useMemo(() => {
     if (!today) return [] as { label: string; dateStr: string }[];
     const base = new Date(today);
     return [
       { label: "Today", dateStr: today },
-      { label: "Tomorrow", dateStr: format(addDays(base, 1), "yyyy-MM-dd") },
-      { label: "Day After", dateStr: format(addDays(base, 2), "yyyy-MM-dd") },
-      { label: "Next Week", dateStr: format(addDays(base, 7), "yyyy-MM-dd") },
+      { label: "Tomorrow", dateStr: ISO(addDays(base, 1)) },
+      { label: "Day after", dateStr: ISO(addDays(base, 2)) },
+      { label: "Next week", dateStr: ISO(addDays(base, 7)) },
     ];
   }, [today]);
+
+  const submit = useCallback(() => {
+    if (!value) {
+      setError("Pick a day for our date.");
+      return;
+    }
+    if (today && value < today) {
+      setError("Pick a day that hasn't happened yet.");
+      return;
+    }
+    setDate(value);
+    syncUrl();
+    setTimeout(() => navigate({ to: "/time" }), 0);
+  }, [value, today, setDate, syncUrl, navigate]);
 
   const handleDateSelect = useCallback(
     (dateStr: string) => {
@@ -103,69 +89,70 @@ function DatePickerPage() {
   );
 
   return (
-    <PageShell>
-      {dateMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">"{dateMessage}"</p>
-      )}
+    <PageShell width="default">
+      <Eyebrow>Step 2 — Date</Eyebrow>
 
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
-      >
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
-          <CalendarHeart className="h-8 w-8" />
-        </div>
-        <h1 className="text-3xl font-bold text-gradient">Pick our date</h1>
-        <p className="mt-2 text-muted-foreground">When can I take you out? ❤️</p>
+      <h1 className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl">
+        Pick a night that works.
+      </h1>
 
-        <div className="mt-6 text-left">
-          <label htmlFor="date" className="mb-2 block text-sm font-bold text-card-foreground">
-            Date
-          </label>
-          <input
+      <p className="mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+        When can I take you out?
+      </p>
+
+      {dateMessage ? (
+        <p className="mt-6 max-w-sm text-xs italic text-muted-foreground/80">{dateMessage}</p>
+      ) : null}
+
+      <div className="mt-10 flex w-full max-w-md flex-col gap-6">
+        <Field id="date" label="Date" hint="Or pick a precise day of your own.">
+          <DateInput
             id="date"
-            type="date"
             min={today ?? undefined}
             value={value}
             onChange={(e) => {
-              const val = e.target.value;
-              setValue(val);
+              setValue(e.target.value);
               setError(null);
             }}
-            className="w-full rounded-2xl border border-input bg-background px-4 py-4 text-lg font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          {dateChips.length > 0 && (
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {dateChips.map(({ label, dateStr }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => handleDateSelect(dateStr)}
-                  className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
-                    value === dateStr
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-accent"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+        </Field>
+
+        <div className="flex flex-col gap-2.5">
+          <span className="text-eyebrow">Quick picks</span>
+          <div className="flex flex-wrap gap-2">
+            {quickDates.map(({ label, dateStr }) => (
+              <Chip
+                key={label}
+                selected={value === dateStr}
+                onSelect={() => handleDateSelect(dateStr)}
+              >
+                {label}
+              </Chip>
+            ))}
+          </div>
         </div>
 
-        {value && !error && (
-          <p className="mt-3 text-center text-lg font-semibold text-primary">
-            {format(parseISO(value), "EEEE, MMMM do yyyy")} 💕
-          </p>
-        )}
-        {error && <p className="mt-3 text-sm font-semibold text-destructive">{error}</p>}
-      </motion.div>
+        {value && !error ? (
+          <motion.p
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-display text-2xl tracking-tight text-foreground"
+          >
+            {format(parseISO(value), "EEEE, MMMM do, yyyy")}
+          </motion.p>
+        ) : null}
 
-      <AnimatedButton variant="yes" size="md" className="mt-7 w-full" onClick={submit}>
-        Next <ArrowRight className="h-5 w-5" />
-      </AnimatedButton>
+        {error ? (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </div>
+
+      <Button size="lg" variant="primary" className="mt-10 w-full max-w-md" onClick={submit}>
+        Continue
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Button>
     </PageShell>
   );
 }

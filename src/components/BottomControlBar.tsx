@@ -1,19 +1,47 @@
-import { Heart, Moon, Sun, Volume2, VolumeX } from "lucide-react";
+import { Heart, Moon, Sun, Volume2, VolumeX, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useDateStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
+import { sounds } from "@/lib/sound";
+
+interface ControlProps {
+  label: string;
+  pressed?: boolean;
+  onClick: () => void;
+  Icon: LucideIcon;
+}
 
 /**
- * Centered bottom control bar that consolidates every floating control:
- *
- * - Dark mode toggle
- * - Background audio toggle
- * - Love letter shortcut
- *
- * Centered horizontally, fixed at the bottom of the viewport, the bar
- * has a translucent card background so it works over both bright and
- * dark backdrops. Buttons are large enough for touch and include
- * proper accessibility attributes (aria‑pressed, aria‑label,
- * focus‑visible ring).
+ * Single icon control inside the bottom bar. Same chrome as the
+ * common Theme/Audio/Love shortcuts so the bar reads as one
+ * composed unit.
+ */
+function Control({ label, pressed, onClick, Icon }: ControlProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        sounds.click();
+        onClick();
+      }}
+      aria-label={label}
+      aria-pressed={pressed}
+      className={cn(
+        "inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors duration-150",
+        "hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "active:scale-95",
+      )}
+    >
+      <Icon className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+    </button>
+  );
+}
+
+/**
+ * Slim, center-fixed bottom control bar. Houses the three app-wide
+ * shortcuts: theme, audio, and the love-letter jump. Shared chrome
+ * means the bar reads as one composed unit rather than three
+ * floating buttons.
  */
 export function BottomControlBar() {
   const navigate = useNavigate();
@@ -24,53 +52,27 @@ export function BottomControlBar() {
 
   return (
     <nav
-      aria-label="Primary actions"
-      // Position lifts the bar above the iOS home-indicator safe area
-      // without changing visual placement on devices that don't have
-      // one. `1rem` is the original `bottom-4` baseline.
-      style={{ bottom: "calc(0.5rem + env(safe-area-inset-bottom))" }}
-      className="pointer-events-auto fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border/40 bg-card/80 px-2 py-2 shadow-[var(--shadow-card)] backdrop-blur-md"
+      aria-label="Quick actions"
+      style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+      className="pointer-events-auto fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-card/90 p-1 shadow-[var(--shadow-md)] backdrop-blur-md"
     >
-      <ControlButton
+      <Control
+        label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+        pressed={isDarkMode}
         onClick={toggleDarkMode}
-        ariaPressed={isDarkMode}
-        ariaLabel={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-      </ControlButton>
-
-      <ControlButton
+        Icon={isDarkMode ? Sun : Moon}
+      />
+      <Control
+        label={isAudioEnabled ? "Mute background audio" : "Enable background audio"}
+        pressed={isAudioEnabled}
         onClick={toggleAudio}
-        ariaPressed={isAudioEnabled}
-        ariaLabel={isAudioEnabled ? "Mute background audio" : "Enable background audio"}
-      >
-        {isAudioEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-      </ControlButton>
-
-      <ControlButton onClick={() => navigate({ to: "/love-letter" })} ariaLabel="Open love letter">
-        <Heart className="h-5 w-5" />
-      </ControlButton>
+        Icon={isAudioEnabled ? Volume2 : VolumeX}
+      />
+      <Control
+        label="Open love letter"
+        onClick={() => navigate({ to: "/love-letter" })}
+        Icon={Heart}
+      />
     </nav>
-  );
-}
-
-interface ControlButtonProps {
-  onClick: () => void;
-  ariaPressed?: boolean;
-  ariaLabel: string;
-  children: React.ReactNode;
-}
-
-function ControlButton({ onClick, ariaPressed, ariaLabel, children }: ControlButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={ariaPressed}
-      aria-label={ariaLabel}
-      className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
-    >
-      {children}
-    </button>
   );
 }

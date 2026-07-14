@@ -16,6 +16,7 @@ import react from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 // GitHub Pages projects live at /<repo-name>/. Override with BASE_PATH
 // env var when building for a different deployment target.
@@ -31,6 +32,10 @@ export default defineConfig({
   },
 
   plugins: [
+    // Tailwind v4 engine — processes `@import "tailwindcss"`, `@theme`,
+    // `@source`, `@utility`, and `@custom-variant` in styles.css. Without
+    // this the CSS-first config is inert (no utilities, no tokens).
+    tailwindcss(),
     TanStackRouterVite({
       target: "react",
       autoCodeSplitting: true,

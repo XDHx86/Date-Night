@@ -3,10 +3,7 @@ import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/r
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { HeartExplosion } from "@/components/HeartExplosion";
 import { BottomControlBar } from "@/components/BottomControlBar";
-import { BackgroundProvider } from "@/components/BackgroundContext";
-import { BackgroundLayer } from "@/components/BackgroundLayer";
-import { BackgroundVariantSync } from "@/components/BackgroundVariantSync";
-import { FloatingDecorations } from "@/components/FloatingDecorations";
+import { AmbientBackdrop } from "@/components/AmbientBackdrop";
 import { TopProgressBar } from "@/components/TopProgressBar";
 import { Toaster } from "@/components/ui/sonner";
 import { useDateStore } from "@/lib/store";
@@ -16,17 +13,17 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-5">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-eyebrow mb-3">Error 404</p>
+        <h1 className="text-display text-5xl tracking-[-0.02em]">Not found</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
         </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-[0.95rem] font-medium text-primary-foreground shadow-[var(--shadow-sm)] transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Go home
           </Link>
@@ -44,27 +41,27 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center px-5">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="text-eyebrow mb-3">Something went sideways</p>
+        <h1 className="text-display text-4xl tracking-[-0.02em]">This page didn't load</h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          You can try refreshing or head back home to start over.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button
+            type="button"
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-[0.95rem] font-medium text-primary-foreground shadow-[var(--shadow-sm)] transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Try again
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-transparent px-5 text-[0.95rem] font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Go home
           </a>
@@ -86,8 +83,8 @@ function RootComponent() {
   const lastShakeRef = useRef(0);
   const { isDarkMode } = useDateStore();
 
-  // Listen for device shakes — fires the heart explosion.
-  // 3 s cooldown prevents accidental double‑triggering.
+  // Shake-to-burst easter egg. 3 s debounce — accidental shakes
+  // shouldn't double-trigger.
   useShakeEffect(
     () => {
       const now = Date.now();
@@ -106,30 +103,28 @@ function RootComponent() {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  // Background audio — autoplay, unlock‑after‑first‑interaction fallback,
-  // and stays synchronised with the store‑driven UI toggle.
+  // Background audio — autoplay, unlock-after-first-interaction fallback,
+  // and stays synchronised with the store-driven UI toggle.
   useBackgroundAudio();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BackgroundProvider>
-        <BackgroundVariantSync />
-        <BackgroundLayer />
+      {/* Static backdrop. No animation, no random particles. */}
+      <AmbientBackdrop />
 
-        {/* Persistent, route‑aware progress bar */}
-        <TopProgressBar />
+      {/* Persistent, layout-level progress indicator. Renders nothing
+          on /success so the celebration page stays uncluttered. */}
+      <TopProgressBar />
 
-        {/* Heart explosion Easter egg */}
-        <HeartExplosion active={burst} />
+      {/* Shake-triggered easter egg. Renders nothing while idle. */}
+      <HeartExplosion active={burst} />
 
-        <Outlet />
+      <Outlet />
 
-        {/* Persistent decorations and bottom control bar */}
-        <FloatingDecorations />
-        <BottomControlBar />
+      {/* Slim, bottom-pinned control bar. */}
+      <BottomControlBar />
 
-        <Toaster />
-      </BackgroundProvider>
+      <Toaster />
     </QueryClientProvider>
   );
 }

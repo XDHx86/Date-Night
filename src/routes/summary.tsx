@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format, parse, parseISO } from "date-fns";
 import { motion } from "framer-motion";
-import { CalendarHeart, Clock, Film, Heart } from "lucide-react";
+import { Share2, ArrowRight, CalendarHeart, Clock, Hourglass } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
+import { Eyebrow } from "@/components/eyebrow";
 import { MovieBackdropBackground } from "@/components/MovieBackdropBackground";
 import { MoviePoster } from "@/components/MoviePoster";
-import { AnimatedButton } from "@/components/AnimatedButton";
+import { Button } from "@/components/ui/button";
+import { Surface } from "@/components/ui/card";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -18,6 +20,14 @@ export const Route = createFileRoute("/summary")({
   component: SummaryPage,
 });
 
+/**
+ * Summary — the plan review (Step 5).
+ *
+ * One composed card collects everything chosen so far: the film
+ * centerpiece, the countdown, and the clean definition list of the
+ * when/what/how-long. The movie's blurred backdrop sits behind as
+ * atmosphere only; the card carries all the foreground attention.
+ */
 function SummaryPage() {
   const navigate = useNavigate();
   const { date, time, movie } = useDateStore();
@@ -38,8 +48,11 @@ function SummaryPage() {
       label: "Time",
       value: time ? format(parse(time, "HH:mm", new Date()), "h:mm a") : "—",
     },
-    { icon: Film, label: "Movie", value: movie?.title ?? "—" },
-    { icon: Clock, label: "Duration", value: movie?.duration ? `${movie.duration} min` : "—" },
+    {
+      icon: Hourglass,
+      label: "Duration",
+      value: movie?.duration ? `${movie.duration} min` : "—",
+    },
   ];
 
   const confirm = () => {
@@ -47,7 +60,6 @@ function SummaryPage() {
     navigate({ to: "/success" });
   };
 
-  // Get a romantic message for this screen
   const romanticMessage = useRandomMessage("romantic");
 
   const handleShare = async () => {
@@ -71,101 +83,121 @@ function SummaryPage() {
         toast.success("Link shared!");
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied to clipboard! resetting...");
+        toast.success("Link copied to clipboard!");
       }
-    } catch (err) {
+    } catch {
       // fallback to clipboard if share failed
       await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard! (fallback)");
+      toast.success("Link copied to clipboard!");
     }
   };
 
   return (
-    <PageShell>
-      {/* Full‑page blurred backdrop from the selected movie's artwork */}
+    <PageShell width="default">
+      {/* Full‑page blurred backdrop behind AmbientBackdrop's tone. */}
       <MovieBackdropBackground movie={movie} />
 
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="w-full rounded-3xl border border-border bg-card p-7 shadow-[var(--shadow-card)] sm:p-9"
+      <Eyebrow>Step 5 — Your plan</Eyebrow>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl"
       >
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Heart className="h-6 w-6 fill-primary text-primary" />
-          <h1 className="text-3xl font-bold text-gradient">Our Date</h1>
-          <Heart className="h-6 w-6 fill-primary text-primary" />
-        </div>
+        Here&rsquo;s the plan.
+      </motion.h1>
 
-        {/* Romantic message */}
-        {romanticMessage && (
-          <p className="mb-4 text-center text-muted-foreground italic">"{romanticMessage}"</p>
-        )}
+      <p className="mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+        One look before we make it official.
+      </p>
 
-        {/* Countdown timer */}
-        {date && (
-          <div className="mb-6">
-            <h2 className="mb-2 text-lg font-medium text-muted-foreground">
-              Countdown to our date
-            </h2>
-            <CountdownTimer dateTimeString={`${date}T${time || "00:00"}:00`} />
-          </div>
-        )}
+      {romanticMessage ? (
+        <p className="mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
+          &ldquo;{romanticMessage}&rdquo;
+        </p>
+      ) : null}
 
-        {movie && (
-          <div className="mt-6 flex justify-center">
-            <MoviePoster movie={movie} className="h-48 w-32 sm:h-56 sm:w-40" />
-          </div>
-        )}
-
-        <div className="mt-6 space-y-3 text-left">
-          {rows.map((r) => (
-            <div
-              key={r.label}
-              className="flex items-center gap-4 rounded-2xl bg-secondary/60 px-4 py-3"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-primary-foreground">
-                <r.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {r.label}
-                </p>
-                <p className="text-lg font-bold text-card-foreground">{r.value}</p>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-10 w-full"
+      >
+        <Surface pad="loose" elevate className="flex flex-col gap-7 text-left">
+          {movie ? (
+            <div className="flex flex-col items-center gap-4">
+              <MoviePoster movie={movie} className="h-52 w-36 sm:h-56 sm:w-40" />
+              <div className="text-center">
+                <h2 className="text-display text-2xl tracking-tight text-card-foreground">
+                  {movie.title}
+                </h2>
+                <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                  {movie.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          ) : null}
 
-        {movie && (
-          <div className="mt-4 flex flex-wrap justify-center gap-1">
-            {movie.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground"
+          {date ? (
+            <div className="flex flex-col gap-2.5 border-t border-border pt-6">
+              <span className="text-eyebrow">Countdown to our date</span>
+              <CountdownTimer dateTimeString={`${date}T${time || "00:00"}:00`} />
+            </div>
+          ) : null}
+
+          <dl className="flex w-full flex-col gap-2.5 border-t border-border pt-6">
+            {rows.map((r) => (
+              <div
+                key={r.label}
+                className="flex items-center justify-between gap-4 rounded-lg border border-border bg-background/40 px-4 py-3"
               >
-                {tag}
-              </span>
+                <dt className="inline-flex items-center gap-2.5 text-muted-foreground">
+                  <r.icon className="h-4 w-4" aria-hidden />
+                  <span className="text-eyebrow">{r.label}</span>
+                </dt>
+                <dd className="text-display text-lg text-right text-foreground">{r.value}</dd>
+              </div>
             ))}
-          </div>
-        )}
-
-        <p className="mt-6 text-xl font-bold text-primary">Let's gooooo 🥹</p>
-
-        <div className="mt-6 flex flex-col gap-3">
-          <AnimatedButton variant="no" size="md" onClick={handleShare}>
-            Share our date plan 📤
-          </AnimatedButton>
-          <AnimatedButton variant="yes" size="md" onClick={confirm}>
-            Confirm our date ❤️
-          </AnimatedButton>
-          <AnimatedButton variant="ghost" size="sm" onClick={() => navigate({ to: "/movie" })}>
-            Change something
-          </AnimatedButton>
-        </div>
-
-        {/* Spotify Embed (if configured) */}
-        <SpotifyEmbed />
+          </dl>
+        </Surface>
       </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-8 flex w-full max-w-md flex-col gap-3"
+      >
+        <Button size="lg" variant="primary" onClick={confirm}>
+          Confirm our date
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={handleShare} className="flex-1">
+            <Share2 className="h-4 w-4" aria-hidden /> Share plan
+          </Button>
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={() => navigate({ to: "/movie" })}
+            className="flex-1"
+          >
+            Change something
+          </Button>
+        </div>
+      </motion.div>
+
+      <div className="mt-8 w-full max-w-xl">
+        <SpotifyEmbed />
+      </div>
     </PageShell>
   );
 }

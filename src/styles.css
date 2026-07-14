@@ -4,14 +4,26 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ----------------------------------------------------------------------------
+ * Design tokens — single source of truth.
+ *
+ * Concept: "dreamy twilight romance" — a premium, magical, cozy world.
+ * Blush rose leads, peach & dreamy violet bring depth, gold adds sparkle.
+ * Layered glass over a living gradient mesh; soft shadows and a warm glow.
+ * Everything is alive, playful, and a little bit cinematic.
+ *
+ * Values are OKLCH for predictable, perceptually-uniform color math.
+ * ------------------------------------------------------------------------- */
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 16px);
+  /* Radii — opened back up for cozy, rounded, hand-crafted surfaces. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
 
+  /* Color tokens — wire Tailwind utilities to semantic CSS variables. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -26,194 +38,177 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-gold: var(--gold);
-  --color-gold-foreground: var(--gold-foreground);
 
-  --font-display: "Fredoka", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  /* Typography: romantic Fraunces for big statements, soft rounded Fredoka
+     for playful accents (eyebrows, numbers), clean Inter for body. */
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-display-play: "Fredoka", ui-rounded, "Hiragino Maru Gothic", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  /* Box shadows — soft, layered, with a romantic glow tier for hero moments. */
+  --shadow-sm: 0 1px 2px 0 oklch(0.3 0.05 340 / 0.08), 0 2px 6px -2px oklch(0.3 0.05 340 / 0.08);
+  --shadow-md: 0 2px 6px -1px oklch(0.35 0.1 340 / 0.10), 0 14px 34px -14px oklch(0.4 0.12 340 / 0.22);
+  --shadow-lg: 0 4px 10px -2px oklch(0.35 0.1 340 / 0.12), 0 30px 60px -18px oklch(0.4 0.13 340 / 0.28);
+  --shadow-glow: 0 0 0 1px oklch(0.66 0.2 12 / 0.18), 0 0 32px -4px oklch(0.66 0.2 12 / 0.4);
+  --shadow-glow-violet: 0 0 0 1px oklch(0.68 0.15 295 / 0.22), 0 0 34px -4px oklch(0.68 0.15 295 / 0.42);
+
+  /* Letter-spacing tokens. */
+  --tracking-tighter: -0.04em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+
+  /* Animation timings shared across the app. */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-slow: 18s;
+  --dur-med: 9s;
 }
 
 :root {
-  --radius: 1.25rem;
+  --radius: 0.75rem;
 
-  --background: oklch(0.97 0.02 350);
-  --foreground: oklch(0.32 0.09 350);
+  /* Light — airy dawn-cream with a blush rose lead. */
+  --background: oklch(0.975 0.018 70);
+  --foreground: oklch(0.27 0.04 350);
 
-  --card: oklch(0.995 0.008 350);
-  --card-foreground: oklch(0.34 0.08 350);
+  --card: oklch(0.99 0.012 70);
+  --card-foreground: oklch(0.25 0.04 350);
 
-  --popover: oklch(0.995 0.008 350);
-  --popover-foreground: oklch(0.34 0.08 350);
+  --popover: oklch(0.995 0.012 70);
+  --popover-foreground: oklch(0.25 0.04 350);
 
-  --primary: oklch(0.63 0.22 8);
-  --primary-foreground: oklch(0.99 0.01 350);
+  --primary: oklch(0.66 0.2 8);
+  --primary-foreground: oklch(0.995 0.012 70);
 
-  --secondary: oklch(0.92 0.05 330);
-  --secondary-foreground: oklch(0.4 0.12 350);
+  --secondary: oklch(0.93 0.05 55);
+  --secondary-foreground: oklch(0.3 0.05 345);
 
-  --muted: oklch(0.94 0.03 340);
-  --muted-foreground: oklch(0.52 0.07 350);
+  --muted: oklch(0.94 0.025 60);
+  --muted-foreground: oklch(0.5 0.035 340);
 
-  --accent: oklch(0.86 0.09 320);
-  --accent-foreground: oklch(0.35 0.12 350);
+  --accent: oklch(0.8 0.13 40);
+  --accent-foreground: oklch(0.28 0.05 345);
 
-  --gold: oklch(0.83 0.14 85);
-  --gold-foreground: oklch(0.35 0.1 60);
+  --accent-2: oklch(0.86 0.09 65);
+  --accent-3: oklch(0.68 0.15 295);
 
-  --destructive: oklch(0.6 0.2 25);
-  --destructive-foreground: oklch(0.99 0.01 350);
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.995 0.012 70);
 
-  --border: oklch(0.88 0.04 340);
-  --input: oklch(0.9 0.03 340);
-  --ring: oklch(0.63 0.22 8);
+  --success: oklch(0.6 0.13 145);
+  --success-foreground: oklch(0.995 0.012 70);
 
-  /* Gradients & shadows */
+  --border: oklch(0.9 0.022 55);
+  --input: oklch(0.88 0.025 55);
+  --ring: oklch(0.66 0.2 8);
+
+  /* The signature romance gradient — rose → peach → gold → violet. */
   --gradient-romance: linear-gradient(
-    135deg,
-    oklch(0.96 0.03 350),
-    oklch(0.9 0.06 320),
-    oklch(0.93 0.05 280)
+    125deg,
+    oklch(0.7 0.19 6) 0%,
+    oklch(0.78 0.16 38) 30%,
+    oklch(0.84 0.12 75) 55%,
+    oklch(0.7 0.15 295) 100%
   );
-  --gradient-primary: linear-gradient(135deg, oklch(0.68 0.21 15), oklch(0.62 0.24 355));
-  --gradient-gold: linear-gradient(135deg, oklch(0.88 0.12 90), oklch(0.8 0.15 70));
-  --shadow-soft: 0 10px 30px -12px oklch(0.63 0.22 8 / 0.35);
-  --shadow-glow: 0 0 40px -8px oklch(0.68 0.2 10 / 0.5);
-  --shadow-card: 0 20px 50px -20px oklch(0.5 0.1 340 / 0.35);
+  --gradient-romance-soft: linear-gradient(
+    140deg,
+    oklch(0.82 0.1 10) 0%,
+    oklch(0.88 0.08 55) 50%,
+    oklch(0.82 0.09 295) 100%
+  );
 
-  --sidebar: oklch(0.985 0.01 350);
-  --sidebar-foreground: oklch(0.34 0.08 350);
-  --sidebar-primary: oklch(0.63 0.22 8);
-  --sidebar-primary-foreground: oklch(0.99 0.01 350);
-  --sidebar-accent: oklch(0.92 0.05 330);
-  --sidebar-accent-foreground: oklch(0.4 0.12 350);
-  --sidebar-border: oklch(0.88 0.04 340);
-  --sidebar-ring: oklch(0.63 0.22 8);
+  /* Glass surfaces — translucent fills used over the living gradient mesh. */
+  --glass-bg: oklch(0.99 0.012 70 / 0.62);
+  --glass-bg-strong: oklch(0.99 0.012 70 / 0.82);
+  --glass-border: oklch(1 0 0 / 0.5);
+  --glass-foreground: oklch(0.27 0.04 350);
 
-  transition:
-    --background 0.3s,
-    --foreground 0.3s,
-    --card 0.3s,
-    --card-foreground 0.3s,
-    --popover 0.3s,
-    --popover-foreground 0.3s,
-    --primary 0.3s,
-    --primary-foreground 0.3s,
-    --secondary 0.3s,
-    --secondary-foreground 0.3s,
-    --muted 0.3s,
-    --muted-foreground 0.3s,
-    --accent 0.3s,
-    --accent-foreground 0.3s,
-    --gold 0.3s,
-    --gold-foreground 0.3s,
-    --destructive 0.3s,
-    --destructive-foreground 0.3s,
-    --border 0.3s,
-    --input 0.3s,
-    --ring 0.3s,
-    --sidebar 0.3s,
-    --sidebar-foreground 0.3s,
-    --sidebar-primary 0.3s,
-    --sidebar-primary-foreground 0.3s,
-    --sidebar-accent 0.3s,
-    --sidebar-accent-foreground 0.3s,
-    --sidebar-border 0.3s,
-    --sidebar-ring 0.3s,
-    --gradient-romance 0.3s,
-    --gradient-primary 0.3s,
-    --gradient-gold 0.3s;
+  /* A warm rose glow used for hero CTAs and the chosen-movie halo. */
+  --glow-rose: oklch(0.66 0.2 12 / 0.45);
 }
 
 .dark {
-  --background: oklch(0.22 0.05 330);
-  --foreground: oklch(0.95 0.02 340);
-  --card: oklch(0.27 0.05 330);
-  --card-foreground: oklch(0.95 0.02 340);
-  --popover: oklch(0.27 0.05 330);
-  --popover-foreground: oklch(0.95 0.02 340);
-  --primary: oklch(0.7 0.2 8);
-  --primary-foreground: oklch(0.15 0.03 350);
-  --secondary: oklch(0.35 0.06 330);
-  --secondary-foreground: oklch(0.95 0.02 340);
-  --muted: oklch(0.32 0.05 330);
-  --muted-foreground: oklch(0.72 0.04 340);
-  --accent: oklch(0.4 0.08 320);
-  --accent-foreground: oklch(0.95 0.02 340);
-  --gold: oklch(0.82 0.14 85);
-  --gold-foreground: oklch(0.2 0.05 60);
-  --destructive: oklch(0.62 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 350);
-  --border: oklch(0.4 0.05 330);
-  --input: oklch(0.4 0.05 330);
-  --ring: oklch(0.7 0.2 8);
-  --sidebar: oklch(0.27 0.05 330);
-  --sidebar-foreground: oklch(0.95 0.02 340);
-  --sidebar-primary: oklch(0.7 0.2 8);
-  --sidebar-primary-foreground: oklch(0.15 0.03 350);
-  --sidebar-accent: oklch(0.35 0.06 330);
-  --sidebar-accent-foreground: oklch(0.95 0.02 340);
-  --sidebar-border: oklch(0.4 0.05 330);
-  --sidebar-ring: oklch(0.7 0.2 8);
-  /* Dark mode gradients */
+  --radius: 0.75rem;
+
+  /* Dark — cozy midnight-plum, like a warm candlelit evening. */
+  --background: oklch(0.17 0.026 320);
+  --foreground: oklch(0.94 0.02 70);
+
+  --card: oklch(0.2 0.03 320);
+  --card-foreground: oklch(0.94 0.02 70);
+
+  --popover: oklch(0.2 0.03 320);
+  --popover-foreground: oklch(0.94 0.02 70);
+
+  --primary: oklch(0.72 0.19 10);
+  --primary-foreground: oklch(0.18 0.03 320);
+
+  --secondary: oklch(0.27 0.04 320);
+  --secondary-foreground: oklch(0.94 0.02 70);
+
+  --muted: oklch(0.24 0.03 320);
+  --muted-foreground: oklch(0.72 0.03 320);
+
+  --accent: oklch(0.74 0.15 45);
+  --accent-foreground: oklch(0.18 0.03 320);
+
+  --accent-2: oklch(0.78 0.12 70);
+  --accent-3: oklch(0.7 0.16 295);
+
+  --destructive: oklch(0.66 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 70);
+
+  --success: oklch(0.7 0.14 145);
+  --success-foreground: oklch(0.17 0.03 320);
+
+  --border: oklch(0.32 0.03 320);
+  --input: oklch(0.3 0.03 320);
+  --ring: oklch(0.72 0.19 10);
+
+  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.4);
+  --shadow-md: 0 1px 2px 0 oklch(0 0 0 / 0.3), 0 16px 38px -14px oklch(0 0 0 / 0.6);
+  --shadow-lg: 0 4px 10px -2px oklch(0 0 0 / 0.35), 0 32px 64px -16px oklch(0 0 0 / 0.6);
+  --shadow-glow: 0 0 0 1px oklch(0.72 0.19 10 / 0.28), 0 0 36px -4px oklch(0.72 0.19 10 / 0.5);
+  --shadow-glow-violet: 0 0 0 1px oklch(0.7 0.16 295 / 0.3), 0 0 36px -4px oklch(0.7 0.16 295 / 0.5);
+
   --gradient-romance: linear-gradient(
-    135deg,
-    oklch(0.2 0.02 350),
-    oklch(0.15 0.04 320),
-    oklch(0.18 0.03 280)
+    125deg,
+    oklch(0.74 0.18 8) 0%,
+    oklch(0.78 0.14 40) 30%,
+    oklch(0.8 0.1 75) 55%,
+    oklch(0.72 0.15 295) 100%
   );
-  --gradient-primary: linear-gradient(135deg, oklch(0.4 0.2 15), oklch(0.35 0.22 355));
-  --gradient-gold: linear-gradient(135deg, oklch(0.6 0.12 90), oklch(0.5 0.15 70));
-  transition:
-    --background 0.3s,
-    --foreground 0.3s,
-    --card 0.3s,
-    --card-foreground 0.3s,
-    --popover 0.3s,
-    --popover-foreground 0.3s,
-    --primary 0.3s,
-    --primary-foreground 0.3s,
-    --secondary 0.3s,
-    --secondary-foreground 0.3s,
-    --muted 0.3s,
-    --muted-foreground 0.3s,
-    --accent 0.3s,
-    --accent-foreground 0.3s,
-    --gold 0.3s,
-    --gold-foreground 0.3s,
-    --destructive 0.3s,
-    --destructive-foreground 0.3s,
-    --border 0.3s,
-    --input 0.3s,
-    --ring 0.3s,
-    --sidebar 0.3s,
-    --sidebar-foreground 0.3s,
-    --sidebar-primary 0.3s,
-    --sidebar-primary-foreground 0.3s,
-    --sidebar-accent 0.3s,
-    --sidebar-accent-foreground 0.3s,
-    --sidebar-border 0.3s,
-    --sidebar-ring 0.3s,
-    --gradient-romance 0.3s,
-    --gradient-primary 0.3s,
-    --gradient-gold 0.3s;
+  --gradient-romance-soft: linear-gradient(
+    140deg,
+    oklch(0.4 0.08 10) 0%,
+    oklch(0.42 0.06 55) 50%,
+    oklch(0.4 0.07 295) 100%
+  );
+
+  --glass-bg: oklch(0.2 0.03 320 / 0.6);
+  --glass-bg-strong: oklch(0.22 0.03 320 / 0.82);
+  --glass-border: oklch(1 0 0 / 0.16);
+  --glass-foreground: oklch(0.94 0.02 70);
+
+  --glow-rose: oklch(0.72 0.19 10 / 0.5);
 }
 
 @layer base {
-  * {
+  *,
+  ::before,
+  ::after {
     border-color: var(--color-border);
   }
 
@@ -222,74 +217,273 @@
     overflow-x: hidden;
   }
 
+  html {
+    color-scheme: light dark;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    background: var(--gradient-romance);
-    background-attachment: fixed;
+    background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100dvh;
   }
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-foreground);
+  }
+
+  /* Default focus: a clear rose ring that still feels magical. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: oklch(from var(--primary) l c h / 0.22);
+    color: var(--color-foreground);
+  }
+
+  /* Give the document a gentle rounding and crisp 3D context for tilt. */
+  .preserve-3d {
+    transform-style: preserve-3d;
+    perspective: 1000px;
   }
 }
 
+/* ----------------------------------------------------------------------------
+ * Utilities
+ * ------------------------------------------------------------------------- */
+@utility text-display {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-tight);
+  font-weight: 500;
+}
+
+/* Playful accent type — soft rounded, used for eyebrows + numbers + fun headlines. */
+@utility text-play {
+  font-family: var(--font-display-play);
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+@utility text-eyebrow {
+  font-family: var(--font-display-play);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-muted-foreground);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility text-pretty {
+  text-wrap: pretty;
+}
+
+/* Gradient-filled text — romantic headline moments. */
 @utility text-gradient {
-  background: var(--gradient-primary);
+  background: var(--gradient-romance);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
+/* Glass surface — translucent, blurred, over the living gradient mesh. */
+@utility glass {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+}
+
+@utility glass-strong {
+  background-color: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(26px) saturate(1.6);
+  backdrop-filter: blur(26px) saturate(1.6);
+}
+
+/* Legacy solid surface kept for any non-glass containers. */
+@utility surface {
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Soft glow halo (for hero CTAs + selected movie). */
+@utility rose-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* ----------------------------------------------------------------------------
+ * Motion — handcrafted keyframes. Transform/opacity only, ~60 FPS.
+ * ------------------------------------------------------------------------- */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Floating decorations drift gently upward, swaying as they rise. */
 @keyframes float-up {
   0% {
-    transform: translateY(110vh) scale(var(--s, 1));
+    transform: translateY(10vh) translateX(0) rotate(0deg) scale(var(--s, 1));
     opacity: 0;
   }
   10% {
-    opacity: var(--o, 0.8);
+    opacity: var(--o, 0.7);
+  }
+  50% {
+    transform: translateY(-45vh) translateX(var(--dx, 0)) rotate(180deg) scale(var(--s, 1));
   }
   90% {
-    opacity: var(--o, 0.8);
+    opacity: var(--o, 0.7);
   }
   100% {
-    transform: translateY(-15vh) scale(var(--s, 1));
+    transform: translateY(-95vh) translateX(calc(var(--dx, 0) * -0.5)) rotate(360deg) scale(var(--s, 1));
     opacity: 0;
   }
 }
 
-@keyframes gentle-bob {
-  0%,
-  100% {
-    transform: translateY(0);
+/* Sparkle trail gylph pops + fades. */
+@keyframes sparkle-pop {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(-12px);
+  30% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.3) translateY(-22px) rotate(40deg);
+    opacity: 0;
   }
 }
 
-@keyframes wiggle {
+/* A breathing scale — hero figures, posters, hearts. */
+@keyframes breathe {
   0%,
   100% {
-    transform: rotate(-3deg);
+    transform: scale(1);
   }
   50% {
-    transform: rotate(3deg);
+    transform: scale(1.04);
   }
 }
 
-@utility animate-bob {
-  animation: gentle-bob 4s ease-in-out infinite;
+/* Glow halo pulses on hero CTAs + selected cards. */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px oklch(from var(--primary) l c h / 0.16), 0 0 24px -6px oklch(from var(--primary) l c h / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 1px oklch(from var(--primary) l c h / 0.28), 0 0 38px -2px oklch(from var(--primary) l c h / 0.55);
+  }
+}
+
+/* Slow mesh drift for the living background gradient. */
+@keyframes mesh-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* An affectionate wiggle — hidden CTA interaction. */
+@keyframes wiggle-soft {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-2.5deg);
+  }
+  75% {
+    transform: rotate(2.5deg);
+  }
+}
+
+/* Rare shooting star streaks across a dark sky. */
+@keyframes shoot-star {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(22deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-90vw, 60vh, 0) rotate(22deg);
+    opacity: 0;
+  }
+}
+
+/* Slow shimmer band across a reveal moment (success payoff). */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 320ms var(--ease) both;
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 420ms var(--ease) both;
+}
+
+@utility animate-breathe {
+  animation: breathe 4.5s ease-in-out infinite;
+}
+
+@utility animate-glow {
+  animation: glow-pulse 2.8s ease-in-out infinite;
 }
 
 @utility animate-wiggle {
-  animation: wiggle 2.5s ease-in-out infinite;
+  animation: wiggle-soft 0.6s ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -299,5 +493,62 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ * Form input chrome (used by Field/TextInput).
+ * One definition, reused everywhere — no per-page overrides.
+ * ------------------------------------------------------------------------- */
+@layer components {
+  .input-base {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    color: var(--color-foreground);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: var(--shadow-sm);
+    transition:
+      border-color 200ms var(--ease),
+      box-shadow 200ms var(--ease),
+      background-color 200ms var(--ease);
+    outline: none;
+  }
+
+  .input-base::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 0.75;
+  }
+
+  .input-base:hover:not(:disabled):not(:focus-visible) {
+    border-color: oklch(from var(--color-primary) l c h / 0.3);
+  }
+
+  .input-base:focus-visible {
+    border-color: var(--color-ring);
+    box-shadow:
+      0 0 0 3px oklch(from var(--color-ring) l c h / 0.25),
+      var(--shadow-glow);
+  }
+
+  .input-base:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  /* Native pickers — strip the default chrome that clashes with the theme. */
+  .input-base::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 150ms var(--ease);
+  }
+
+  .input-base:hover::-webkit-calendar-picker-indicator,
+  .input-base:focus-visible::-webkit-calendar-picker-indicator {
+    opacity: 1;
   }
 }

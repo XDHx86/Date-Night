@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { posterUrl, FALLBACK_POSTER } from "@/lib/tmdbImages";
 import type { Movie } from "@/lib/movies";
 
@@ -8,25 +7,24 @@ interface Props {
 }
 
 /**
- * Movie poster / “logo” displayed inside the content box.
+ * Poster image used on `/summary` and `/success` — acts as the
+ * centerpiece of the plan card. Highest-resolution TMDB artwork,
+ * falling back to the bundled image only on error.
  *
- * Uses the highest‑resolution poster TMDB offers (`/original`),
- * transitioning to the bundled fallback if the network image can’t load.
+ * No decorative shadow by default; callers control the elevation
+ * via the surrounding layout if they want hero treatment.
  */
 export function MoviePoster({ movie, className = "" }: Props) {
   const src = posterUrl(movie) ?? FALLBACK_POSTER;
-  const alt = movie ? `${movie.title} poster` : "A cute couple watching a movie under the stars";
+  const alt = movie ? `${movie.title} poster` : "A couple watching a film under the stars";
 
   return (
-    <motion.img
+    <img
       src={src}
       alt={alt}
       loading="eager"
       decoding="async"
-      className={`object-cover shadow-[var(--shadow-glow)] rounded-3xl ${className}`}
-      initial={{ opacity: 0, scale: 0.94, y: 8 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 180, damping: 14 }}
+      className={`object-cover shadow-[var(--shadow-md)] rounded-md ${className}`}
       onError={(e) => {
         const el = e.currentTarget as HTMLImageElement;
         if (el.src !== FALLBACK_POSTER) el.src = FALLBACK_POSTER;

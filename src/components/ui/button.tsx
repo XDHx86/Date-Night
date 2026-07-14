@@ -1,49 +1,103 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
 import { cn } from "@/lib/utils";
+import { sounds } from "@/lib/sound";
 
+/**
+ * Button — application-wide action primitive.
+ *
+ * Three variants × three sizes. No gradients by default; the
+ * `primary` variant uses the accent fill for clear hierarchy. All
+ * variants render with the same height scale so layouts stay
+ * rhythm-stable. Spring interactions are tuned to feel responsive
+ * without being loud.
+ */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium tracking-tight select-none cursor-pointer transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        primary:
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95 shadow-[var(--shadow-sm)]",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "border border-border bg-transparent text-foreground hover:bg-secondary hover:border-foreground/15",
+        ghost: "bg-transparent text-foreground hover:bg-secondary",
+        subtle: "bg-secondary text-secondary-foreground hover:bg-accent",
         link: "text-primary underline-offset-4 hover:underline",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        sm: "h-9 px-4 text-sm rounded-md",
+        md: "h-11 px-5 text-[0.95rem] rounded-md",
+        lg: "h-14 px-7 text-base rounded-lg",
+        icon: "h-10 w-10 rounded-md",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "primary", size: "md" },
   },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  extends Omit<HTMLMotionProps<"button">, "ref">, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+/**
+ * Spring tuning — light, decisive. Tuned so a 1-frame tap feels
+ * responsive without triggering the "rubbery toy" effect of heavier
+ * springs.
+ */
+const SPRING = { type: "spring" as const, stiffness: 480, damping: 32 };
+
+/**
+ * Click handler wrapper that fires the synthesized UI sound, then
+ * delegates to the provided handler. Centralised so the entire app
+ * stays in sync without re-implementing it per call site.
+ */
+function withClickSound<E extends React.MouseEvent>(
+  handler: ((e: E) => void) | undefined,
+  enabled = true,
+) {
+  return (e: E) => {
+    if (enabled) sounds.click();
+    handler?.(e);
+  };
+}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild, onClick, type, disabled, ...props }, ref) => {
+    if (asChild) {
+      // Use Slot for cases like wrapping a Link so children inherit
+      // styles but we don't get a <button> here. Slot doesn't accept
+      // motion props, so we call sounds.click() on the consumer's
+      // onClick (it must include the sound or be wrapped).
+      return (
+        <Slot
+          ref={ref as React.Ref<HTMLElement>}
+          className={cn(buttonVariants({ variant, size }), className)}
+          onClick={withClickSound(onClick)}
+          {...(props as Record<string, unknown>)}
+        />
+      );
+    }
+
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <motion.button
+        ref={ref}
+        type={type ?? "button"}
+        className={cn(buttonVariants({ variant, size }), className)}
+        onClick={withClickSound(onClick, !disabled)}
+        whileHover={disabled ? undefined : { y: -1 }}
+        whileTap={disabled ? undefined : { y: 0, scale: 0.985 }}
+        transition={SPRING}
+        {...props}
+      />
     );
   },
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { buttonVariants };

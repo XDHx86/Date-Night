@@ -3,75 +3,103 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import celebrationImg from "@/assets/celebration.jpg";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedButton } from "@/components/AnimatedButton";
+import { Eyebrow } from "@/components/eyebrow";
+import { Button } from "@/components/ui/button";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
-import { sounds } from "@/lib/sound";
-// import { useDateStore } from "@/lib/store";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 
 export const Route = createFileRoute("/confirmation")({
   component: Confirmation,
 });
 
+/**
+ * Confirmation — the first quiet breath after "yes".
+ *
+ * Three beats:
+ * 1. Tiny eyebrow label ("Oh")
+ * 2. The headline: "You said yes."
+ * 3. A single reassuring line, then one CTA.
+ *
+ * Typography carries the moment. Confetti ticks briefly, then leaves.
+ */
 function Confirmation() {
   const navigate = useNavigate();
-  // const {movie, date} = useDateStore();
-  const [burst, setBurst] = useState(false);
+  const message = useRandomMessage("celebration");
+  const [burst, setBurst] = useState(true);
 
-  // Play celebration sound on mount
   useEffect(() => {
-    sounds.celebrate();
+    const t = setTimeout(() => setBurst(false), 2000);
+    return () => clearTimeout(t);
   }, []);
 
-  // Get a celebratory or romantic message
-  const celebrationMessage = useRandomMessage("celebration");
-
-  const handleContinue = () => {
-    navigate({ to: "/date" });
-  };
-
   return (
-    <PageShell>
-      {celebrationMessage && (
-        <p className="mb-4 text-center text-muted-foreground italic max-w-xl">
-          "{celebrationMessage}"
-        </p>
-      )}
-
+    <PageShell width="narrow">
       <ConfettiCelebration active={burst} />
 
-      <motion.img
-        src={celebrationImg}
-        alt="A joyful character jumping with confetti and hearts"
-        width={1024}
-        height={1024}
-        loading="eager"
-        className="mb-6 h-44 w-44 rounded-full object-cover shadow-[var(--shadow-glow)] sm:h-56 sm:w-56"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 12 }}
-      />
+      <Eyebrow>Oh</Eyebrow>
 
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold text-muted-foreground"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="text-display text-balance text-5xl tracking-[-0.03em] sm:text-6xl"
       >
-        WAIT...
+        You said yes.
       </motion.h1>
-      <motion.h2
-        initial={{ scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 260, damping: 12 }}
-        className="mt-2 text-5xl font-bold text-gradient sm:text-6xl"
-      >
-        YOU SAID YES?! 🥹❤️
-      </motion.h2>
-      <p className="mt-4 text-xl text-muted-foreground">Best decision ever. Now let's plan it 💕</p>
 
-      <AnimatedButton variant="gold" size="lg" className="mt-10" onClick={handleContinue}>
-        Continue →
-      </AnimatedButton>
+      <motion.p
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-5 max-w-md text-pretty text-lg text-muted-foreground sm:text-xl"
+      >
+        Best decision. Now let's figure out the when.
+      </motion.p>
+
+      {message ? (
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-4 max-w-md text-pretty text-base italic text-muted-foreground"
+        >
+          {message}
+        </motion.p>
+      ) : null}
+
+      <motion.figure
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-10 flex w-full flex-col items-center"
+      >
+        <img
+          src={celebrationImg}
+          alt=""
+          aria-hidden
+          width={320}
+          height={320}
+          loading="eager"
+          className="h-32 w-32 rounded-full object-cover shadow-[var(--shadow-md)] sm:h-40 sm:w-40"
+        />
+        <figcaption className="mt-3 text-xs text-muted-foreground">Pumped for you.</figcaption>
+      </motion.figure>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-10 w-full max-w-xs"
+      >
+        <Button
+          size="lg"
+          variant="primary"
+          onClick={() => navigate({ to: "/date" })}
+          className="w-full"
+        >
+          Let's pick a date
+        </Button>
+      </motion.div>
     </PageShell>
   );
 }

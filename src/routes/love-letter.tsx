@@ -1,10 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Heart, Sparkles, ArrowRight, Shuffle } from "lucide-react";
+import { ArrowRight, Shuffle } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedButton } from "@/components/AnimatedButton";
-import { HeartBurst } from "@/components/HeartBurst";
+import { Eyebrow } from "@/components/eyebrow";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { Surface } from "@/components/ui/card";
+import { TextArea } from "@/components/ui/field";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { useUrlSync } from "@/hooks/useUrlSync";
@@ -37,6 +40,15 @@ const CATEGORY_LABELS: Record<Category, string> = {
   valentine: "Valentine's Day",
 };
 
+/**
+ * Love letter — choose, shuffle, or write your own.
+ *
+ * Editorial vocabulary throughout: a Chip row for the curated
+ * letters, a single Surface holds the reading panel (and the inline
+ * editor when writing your own), and a restrained action row below.
+ * The canvas-based love-card export is untouched — only the chrome
+ * around it moved to the new design system.
+ */
 function LoveLetter() {
   const navigate = useNavigate();
   const { loveMessage, setLoveMessage } = useDateStore();
@@ -261,67 +273,62 @@ function LoveLetter() {
    */
 
   return (
-    <PageShell>
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-gradient mb-2">💌 Your Love Letter 💌</h1>
-          <p className="text-lg text-muted-foreground">
-            {CATEGORY_LABELS[category]} — choose, shuffle, or write your own.
-          </p>
-        </div>
+    <PageShell width="default">
+      <Eyebrow>A love letter</Eyebrow>
 
-        {/* Letter selector - only the six letters for the active category */}
-        <div className="mb-4">
-          <div className="flex flex-wrap justify-center gap-2">
-            {availableLetters.map((letter) => {
-              const isCurrent = currentLetter?.id === letter.id;
-              return (
-                <button
-                  key={letter.id}
-                  onClick={() => chooseLetter(letter)}
-                  className={`px-3 py-1.5 rounded-full border border-border/50 text-sm font-medium transition-colors ${
-                    isCurrent
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card/60 hover:bg-primary/10"
-                  }`}
-                >
-                  {letter.title}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl"
+      >
+        Your love letter
+      </motion.h1>
 
-        {/* Toolbar: shuffle / info */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div className="text-xs text-muted-foreground">
-            <span className="font-semibold">Category</span>{" "}
-            <span className="uppercase tracking-wide">{category}</span>{" "}
-            <span className="opacity-70">|</span> <span className="font-semibold">Font</span>{" "}
-            <span className="italic">{currentLetter?.font}</span>
-          </div>
-          <AnimatedButton variant="no" size="sm" onClick={handleShuffle}>
-            <Shuffle className="h-4 w-4" />
-            Another letter
-          </AnimatedButton>
-        </div>
+      <p className="mt-4 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+        {CATEGORY_LABELS[category]} &mdash; choose, shuffle, or write your own.
+      </p>
 
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/50">
+      {/* Letter selector — the curated letters for the active category. */}
+      <div className="mt-8 flex w-full max-w-xl flex-col gap-2.5">
+        <span className="text-eyebrow">Choose one</span>
+        <div className="flex flex-wrap gap-2">
+          {availableLetters.map((letter) => (
+            <Chip
+              key={letter.id}
+              selected={currentLetter?.id === letter.id}
+              onSelect={() => chooseLetter(letter)}
+            >
+              {letter.title}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
+      {/* Reading panel — holds the letter, or the inline editor. */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-6 w-full max-w-xl"
+      >
+        <Surface pad="loose" className="text-left">
           {editMode ? (
-            <div className="space-y-4">
-              <textarea
+            <div className="flex flex-col gap-4">
+              <TextArea
                 value={inputValue}
                 onChange={handleInputChange}
                 placeholder="Write your love message here..."
-                className="w-full min-h-[120px] rounded-xl p-3 border-border focus:outline-none focus:ring-2 focus:ring-ring text-lg"
+                aria-label="Love message"
+                className="min-h-[10rem] text-left"
               />
-              <div className="flex justify-end space-x-3">
-                <AnimatedButton variant="ghost" size="sm" onClick={handleCancel}>
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" size="sm" onClick={handleCancel}>
                   Cancel
-                </AnimatedButton>
-                <AnimatedButton variant="yes" size="sm" onClick={handleSave}>
+                </Button>
+                <Button variant="primary" size="sm" onClick={handleSave}>
                   Save
-                </AnimatedButton>
+                </Button>
               </div>
             </div>
           ) : (
@@ -330,7 +337,7 @@ function LoveLetter() {
                 key={currentLetter.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 className="whitespace-pre-line text-center text-lg font-medium leading-relaxed text-card-foreground"
                 style={{ fontFamily: currentLetter.font }}
               >
@@ -338,31 +345,40 @@ function LoveLetter() {
               </motion.div>
             )
           )}
-        </div>
+        </Surface>
 
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <AnimatedButton variant="no" size="md" onClick={handleShareLoveCard} disabled={isSharing}>
-            {isSharing ? "Sharing..." : "Share Love Card 💖"}
-          </AnimatedButton>
-          <AnimatedButton
-            variant={editMode ? "ghost" : "yes"}
-            size="md"
-            onClick={() => setEditMode(!editMode)}
-          >
-            {editMode ? "Exit Edit" : "Edit Message"}
-          </AnimatedButton>
-          <AnimatedButton variant="gold" size="md" onClick={() => navigate({ to: "/summary" })}>
-            Back to Date Plan <ArrowRight className="h-4 w-4" />
-          </AnimatedButton>
+        {/* Slim toolbar: the letters font + a shuffle shortcut. */}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Set in <span className="italic">{currentLetter?.font}</span>
+          </p>
+          <Button variant="outline" size="sm" onClick={handleShuffle}>
+            <Shuffle className="h-4 w-4" aria-hidden /> Another letter
+          </Button>
         </div>
+      </motion.div>
 
-        <div className="mt-8 flex items-center justify-center gap-2 text-muted-foreground">
-          <HeartBurst active={false} pieces={10} />
-          <Heart className="h-5 w-5 text-primary/50" />
-          <span className="text-xs">Edit any time to keep your words fresh</span>
-          <Heart className="h-5 w-5 text-primary/50" />
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-8 flex w-full max-w-md flex-col gap-3"
+      >
+        <Button variant="primary" onClick={handleShareLoveCard} disabled={isSharing}>
+          {isSharing ? "Sharing…" : "Share love card"}
+        </Button>
+        <div className="flex flex-wrap gap-3">
+          {!editMode ? (
+            <Button variant="outline" onClick={() => setEditMode(true)} className="flex-1">
+              Edit message
+            </Button>
+          ) : null}
+          <Button variant="ghost" onClick={() => navigate({ to: "/summary" })} className="flex-1">
+            Back to date plan
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Button>
         </div>
-      </div>
+      </motion.div>
     </PageShell>
   );
 }

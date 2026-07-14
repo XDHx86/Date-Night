@@ -1,24 +1,34 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format, parse, parseISO } from "date-fns";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Share2, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
-import { AnimatedButton } from "@/components/AnimatedButton";
+import { Eyebrow } from "@/components/eyebrow";
+import { MovieBackdropBackground } from "@/components/MovieBackdropBackground";
+import { MoviePoster } from "@/components/MoviePoster";
+import { Button } from "@/components/ui/button";
+import { Surface } from "@/components/ui/card";
 import { HeartBurst } from "@/components/HeartBurst";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
-import { MovieBackdropBackground } from "@/components/MovieBackdropBackground";
-import { MoviePoster } from "@/components/MoviePoster";
 import { toast } from "sonner";
-import { useEffect } from "react";
 
 export const Route = createFileRoute("/success")({
   component: SuccessPage,
 });
 
+/**
+ * Success — the closing moment (Step 6).
+ *
+ * The movie's backdrop stays behind as atmosphere; a single card
+ * collects the poster, the countdown, and the when/what. This screen
+ * owns its own restart (the progress bar hides here), so "Plan another
+ * date" is the prominent primary and the share/letter actions sit
+ * beside it as quieter equals.
+ */
 function SuccessPage() {
   const navigate = useNavigate();
   const { date, time, movie, reset } = useDateStore();
@@ -29,7 +39,6 @@ function SuccessPage() {
     navigate({ to: "/" });
   };
 
-  // Get a celebratory message
   const celebrationMessage = useRandomMessage("celebration");
 
   const handleShare = async () => {
@@ -55,10 +64,9 @@ function SuccessPage() {
         await navigator.clipboard.writeText(shareUrl);
         toast.success("Link copied to clipboard!");
       }
-    } catch (err) {
-      // fallback to clipboard if share failed
+    } catch {
       await navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard! (fallback)");
+      toast.success("Link copied to clipboard!");
     }
   };
 
@@ -66,80 +74,97 @@ function SuccessPage() {
   const formattedTime = time ? format(parse(time, "HH:mm", new Date()), "h:mm a") : "";
 
   return (
-    <PageShell>
-      {/* Full-page blurred backdrop from the selected movie's artwork */}
+    <PageShell width="default">
+      {/* Atmosphere only — blurred film wash behind the content. */}
       <MovieBackdropBackground movie={movie} />
 
-      <div className="mb-6">
-        <HeartBurst active pieces={40} />
+      {/* One composed celebratory burst, then it leaves. */}
+      <div className="mb-2 flex justify-center">
+        <HeartBurst active pieces={18} />
       </div>
 
-      {/* Glassmorphism content panel for excellent text readability */}
-      <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 180, damping: 14 }}
-        className="relative z-[10] w-full max-w-xl rounded-3xl border border-border/30 bg-card/60 px-6 py-8 shadow-[var(--shadow-card)] backdrop-blur-xl sm:px-8 sm:py-10"
+      <Eyebrow>Done</Eyebrow>
+
+      <motion.h1
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="text-display text-balance text-5xl tracking-[-0.03em] sm:text-6xl"
       >
-        {/* High-resolution poster (acts as the movie logo) */}
-        <MoviePoster
-          movie={movie}
-          className="mx-auto mb-6 h-48 w-32 rounded-2xl shadow-[var(--shadow-glow)] sm:h-56 sm:w-40"
-        />
+        It&rsquo;s a date.
+      </motion.h1>
 
-        <h1 className="text-4xl font-bold text-gradient sm:text-5xlxl">I can't wait ❤️</h1>
-        <p className="mt-4 text-xl text-muted-foreground">See you soon. Love you 🥰</p>
+      {date && time ? (
+        <p className="mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+          See you {formattedDate} at {formattedTime}. Can&rsquo;t wait.
+        </p>
+      ) : (
+        <p className="mt-5 max-w-md text-pretty text-base text-muted-foreground sm:text-lg">
+          See you soon.
+        </p>
+      )}
 
-        {/* Celebration message */}
-        {celebrationMessage && (
-          <p className="mt-4 text-center text-muted-foreground italic max-w-xl">
-            "{celebrationMessage}"
-          </p>
-        )}
+      {celebrationMessage ? (
+        <p className="mt-4 max-w-md text-pretty text-base italic text-muted-foreground/80">
+          &ldquo;{celebrationMessage}&rdquo;
+        </p>
+      ) : null}
 
-        {date && time && movie && (
-          <div className="mt-8 space-y-4 text-center">
-            <div className="mb-2">
-              <p className="text-lg font-medium text-muted-foreground">Countdown to our date</p>
-              {/* Combine date and time for accurate countdown */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-10 w-full"
+      >
+        <Surface pad="loose" elevate className="flex flex-col items-center gap-6 text-center">
+          {movie ? <MoviePoster movie={movie} className="h-52 w-36 sm:h-56 sm:w-40" /> : null}
+
+          {movie ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-eyebrow">Watching</span>
+              <h2 className="text-display text-2xl tracking-tight text-card-foreground">
+                {movie.title}
+              </h2>
+            </div>
+          ) : null}
+
+          {date && time && movie ? (
+            <div className="flex w-full flex-col gap-2.5 border-t border-border pt-6 text-left">
+              <span className="text-eyebrow">Countdown to our date</span>
               <CountdownTimer dateTimeString={`${date}T${time}:00`} />
             </div>
+          ) : null}
+        </Surface>
+      </motion.div>
 
-            <div className="mt-4">
-              <p className="text-sm font-medium text-muted-foreground">
-                On {formattedDate} at {formattedTime}
-              </p>
-            </div>
-
-            <div className="mt-4">
-              <p className="text-sm font-medium text-muted-foreground">Watching {movie.title} 🍿</p>
-            </div>
-          </div>
-        )}
-
-        {/* Love Letter link */}
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <AnimatedButton variant="no" size="md" onClick={handleShare}>
-            Share our date plan 📤
-          </AnimatedButton>
-          <AnimatedButton
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="mt-8 flex w-full max-w-md flex-col gap-3"
+      >
+        <Button size="lg" variant="primary" onClick={handleReset}>
+          Plan another date
+          <ArrowRight className="h-4 w-4" aria-hidden />
+        </Button>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={handleShare} className="flex-1">
+            <Share2 className="h-4 w-4" aria-hidden /> Share plan
+          </Button>
+          <Button
             variant="ghost"
-            size="sm"
+            size="md"
             onClick={() => navigate({ to: "/love-letter" })}
+            className="flex-1"
           >
-            View our love letter 💌
-          </AnimatedButton>
-        </div>
-
-        {/* Spotify Embed (if configured) */}
-        <SpotifyEmbed />
-
-        <div className="mt-8">
-          <AnimatedButton variant="gold" size="md" onClick={handleReset}>
-            Plan another date <ArrowRight className="h-4 w-4" />
-          </AnimatedButton>
+            <Mail className="h-4 w-4" aria-hidden /> Love letter
+          </Button>
         </div>
       </motion.div>
+
+      <div className="mt-8 w-full max-w-xl">
+        <SpotifyEmbed />
+      </div>
     </PageShell>
   );
 }
