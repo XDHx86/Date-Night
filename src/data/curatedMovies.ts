@@ -9,6 +9,8 @@ export const CURATED_MOVIE_IDS = [
   1198994, // Send help
   157350, // Divergent
   70160, // The hunger games
+  568091, // Fractured
+  678512, // Sound of Freedom
   // Additional classic date-night movies
   // 199,     // Amélie
   // 597,     // Titanic

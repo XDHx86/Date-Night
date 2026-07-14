@@ -33,7 +33,12 @@ interface Particle {
 }
 
 /** Build a frozen, randomized particle field (no per-render randomness drift). */
-function buildField(count: number, glyphs: string[], colors: string[], seasonalBias: number): Particle[] {
+function buildField(
+  count: number,
+  glyphs: string[],
+  colors: string[],
+  seasonalBias: number,
+): Particle[] {
   return Array.from({ length: count }, (_, i) => {
     const useSeasonal = seasonalBias > 0 && Math.random() < seasonalBias;
     return {

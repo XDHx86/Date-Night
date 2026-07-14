@@ -51,7 +51,8 @@ const ROUTE_VARIANT: Record<string, RouteVariant> = {
 
 const PALETTES: Record<RouteVariant, string> = {
   love: "linear-gradient(125deg, oklch(0.9 0.06 20), oklch(0.92 0.05 50), oklch(0.9 0.06 340), oklch(0.91 0.05 295))",
-  begging: "linear-gradient(130deg, oklch(0.89 0.07 8), oklch(0.92 0.05 340), oklch(0.9 0.06 295), oklch(0.91 0.05 25))",
+  begging:
+    "linear-gradient(130deg, oklch(0.89 0.07 8), oklch(0.92 0.05 340), oklch(0.9 0.06 295), oklch(0.91 0.05 25))",
   confirmation:
     "linear-gradient(135deg, oklch(0.91 0.05 160), oklch(0.93 0.045 70), oklch(0.9 0.06 340), oklch(0.92 0.05 295))",
   date: "linear-gradient(125deg, oklch(0.92 0.07 45), oklch(0.9 0.06 25), oklch(0.92 0.05 60), oklch(0.91 0.06 340))",

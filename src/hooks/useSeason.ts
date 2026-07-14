@@ -30,31 +30,56 @@ export const SEASONS: Record<Season, SeasonTheme> = {
   valentine: {
     season: "valentine",
     glyphs: ["\u{1F49D}", "\u{1F339}", "\u{1F498}", "\u{1F49E}", "\u{1F380}", "\u{1F56F}"],
-    colors: ["oklch(0.66 0.2 8)", "oklch(0.7 0.17 20)", "oklch(0.72 0.16 340)", "oklch(0.8 0.13 40)"],
+    colors: [
+      "oklch(0.66 0.2 8)",
+      "oklch(0.7 0.17 20)",
+      "oklch(0.72 0.16 340)",
+      "oklch(0.8 0.13 40)",
+    ],
     label: "Valentine's flair",
   },
   spring: {
     season: "spring",
     glyphs: ["\u{1F338}", "\u{1F337}", "\u{1F33C}", "\u{1F98B}", "\u{1F343}", "\u{1F33A}"],
-    colors: ["oklch(0.84 0.1 350)", "oklch(0.83 0.1 5)", "oklch(0.85 0.09 20)", "oklch(0.82 0.1 95)"],
+    colors: [
+      "oklch(0.84 0.1 350)",
+      "oklch(0.83 0.1 5)",
+      "oklch(0.85 0.09 20)",
+      "oklch(0.82 0.1 95)",
+    ],
     label: "Cherry-blossom spring",
   },
   summer: {
     season: "summer",
     glyphs: ["☀️", "✨", "\u{1F319}", "\u{1F31E}", "\u{1F30A}", "\u{1F33B}"],
-    colors: ["oklch(0.86 0.12 75)", "oklch(0.82 0.13 40)", "oklch(0.8 0.1 230)", "oklch(0.85 0.11 95)"],
+    colors: [
+      "oklch(0.86 0.12 75)",
+      "oklch(0.82 0.13 40)",
+      "oklch(0.8 0.1 230)",
+      "oklch(0.85 0.11 95)",
+    ],
     label: "Golden summer",
   },
   autumn: {
     season: "autumn",
     glyphs: ["\u{1F342}", "\u{1F341}", "\u{1F330}", "\u{1F33E}", "\u{1F994}", "\u{1FAB5}"],
-    colors: ["oklch(0.66 0.15 45)", "oklch(0.6 0.16 30)", "oklch(0.55 0.13 25)", "oklch(0.7 0.1 60)"],
+    colors: [
+      "oklch(0.66 0.15 45)",
+      "oklch(0.6 0.16 30)",
+      "oklch(0.55 0.13 25)",
+      "oklch(0.7 0.1 60)",
+    ],
     label: "Amber autumn",
   },
   winter: {
     season: "winter",
     glyphs: ["❄️", "⛄", "✨", "\u{1F328}️", "\u{1FA90}", "\u{1F319}"],
-    colors: ["oklch(0.86 0.06 240)", "oklch(0.88 0.05 200)", "oklch(0.82 0.1 295)", "oklch(0.85 0.08 230)"],
+    colors: [
+      "oklch(0.86 0.06 240)",
+      "oklch(0.88 0.05 200)",
+      "oklch(0.82 0.1 295)",
+      "oklch(0.85 0.08 230)",
+    ],
     label: "Snowflake winter",
   },
 };
