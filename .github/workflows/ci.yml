@@ -83,6 +83,13 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Debug build env
+        run: |
+          node -e "console.log({
+            apiKey: !!process.env.VITE_TMDB_API_KEY,
+            token: !!process.env.VITE_TMDB_READ_ACCESS_TOKEN
+          })"
+
       - name: Build for GitHub Pages
         run: bun run build:gh-pages
 
