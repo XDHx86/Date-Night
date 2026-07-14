@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -44,13 +44,9 @@ jobs:
       - name: Run Prettier format check
         run: bunx prettier --check .
 
+      # Uncomment when tests are fixed
       # - name: Run tests
       #   run: bun test
-
-      - name: Debug VITE env
-        run: |
-          echo "API key present: ${{ secrets.VITE_TMDB_API_KEY != '' }}"
-          echo "Token present: ${{ secrets.VITE_TMDB_READ_ACCESS_TOKEN != '' }}"
 
   build:
     name: Build (Pages artifact)
@@ -58,6 +54,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    environment:
+      name: github-pages
 
     permissions:
       contents: read
@@ -83,11 +82,15 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Debug build env
+      - name: Verify build environment
         run: |
+          echo "API key present: ${{ secrets.VITE_TMDB_API_KEY != '' }}"
+          echo "Read token present: ${{ secrets.VITE_TMDB_READ_ACCESS_TOKEN != '' }}"
+
           node -e "console.log({
             apiKey: !!process.env.VITE_TMDB_API_KEY,
-            token: !!process.env.VITE_TMDB_READ_ACCESS_TOKEN
+            token: !!process.env.VITE_TMDB_READ_ACCESS_TOKEN,
+            spotify: !!process.env.VITE_SPOTIFY_PLAYLIST_ID
           })"
 
       - name: Build for GitHub Pages
@@ -104,6 +107,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
