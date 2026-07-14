@@ -20,7 +20,7 @@ function syncStateFromUrl(): void {
   if (typeof window === "undefined") return;
 
   const { setDate, setTime, setMovie, setLoveMessage, setDarkMode } = useDateStore.getState();
-  const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(location.search);
 
   const urlDate = urlParams.get("date");
   const urlTime = urlParams.get("time");
@@ -97,7 +97,7 @@ export function useUrlSync() {
     if (typeof window === "undefined") return;
 
     const { setDate, setTime, setLoveMessage, setDarkMode } = useDateStore.getState();
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
     const currentState = useDateStore.getState();
 
     const urlDate = urlParams.get("date");
@@ -139,7 +139,7 @@ export function useUrlSync() {
     updatePendingRef.current = true;
 
     try {
-      const currentParams = new URLSearchParams(window.location.search);
+      const currentParams = new URLSearchParams(location.search);
       const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
 
       // Remove managed keys first to preserve non-managed params
@@ -152,13 +152,11 @@ export function useUrlSync() {
       if (loveMessage) currentParams.set("love", loveMessage);
       if (isDarkMode) currentParams.set("theme", "dark");
 
-      const queryString = currentParams.toString();
-      const newUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+      const query = Object.fromEntries(currentParams.entries());
 
-      // Use router's navigate API instead of window.history.replaceState
-      // This ensures TanStack Router is aware of the URL change
       navigate({
-        to: newUrl,
+        to: ".",
+        search: query,
         replace: true,
       });
     } finally {
@@ -200,10 +198,10 @@ export function useUrlSync() {
  * This is a standalone utility that doesn't trigger navigation.
  */
 export function createShareableUrl(): string {
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const origin = typeof window === "undefined" ? "" : location.origin;
 
   const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
-  const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
+  const params = new URLSearchParams(typeof window === "undefined" ? "" : location.search);
 
   if (date) params.set("date", date);
   if (time) params.set("time", time);
@@ -211,7 +209,7 @@ export function createShareableUrl(): string {
   if (loveMessage) params.set("love", loveMessage);
   if (isDarkMode) params.set("theme", "dark");
 
-  return `${origin}${typeof window === "undefined" ? "/" : window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+  return `${origin}${typeof window === "undefined" ? "/" : location.pathname}${params.toString() ? `?${params}` : ""}`;
 }
 
 /**
@@ -219,7 +217,7 @@ export function createShareableUrl(): string {
  */
 export function getMovieIdFromUrl(): number | null {
   if (typeof window === "undefined") return null;
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(location.search);
   const movieId = params.get("movie");
   return movieId ? parseInt(movieId, 10) : null;
 }
