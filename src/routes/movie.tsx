@@ -229,7 +229,7 @@ function MoviePickerPage() {
   const awaitingResults = results.length === 0;
 
   return (
-    <PageShell width="wide">
+    <PageShell width="wide" className="max-w-5xl">
       <Eyebrow>Step 4 — Movie</Eyebrow>
 
       <h1 className="text-display text-balance text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl">
@@ -244,7 +244,7 @@ function MoviePickerPage() {
         <p className="mt-6 max-w-sm text-xs italic text-muted-foreground/80">{randomMessage}</p>
       ) : null}
 
-      <div className="mt-10 flex w-full max-w-2xl flex-col gap-4">
+      <div className="mt-10 w-full max-w-2xl">
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -267,84 +267,84 @@ function MoviePickerPage() {
             />
           ) : null}
         </div>
+      </div>
 
-        {error && awaitingResults ? (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
-            role="alert"
+      {error && awaitingResults ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
+          role="alert"
+        >
+          <span className="text-4xl" aria-hidden>
+            🎞️
+          </span>
+          <p className="max-w-sm text-sm text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" onClick={reload}>
+            <RefreshCw className="h-4 w-4" aria-hidden /> Try again
+          </Button>
+        </motion.div>
+      ) : loading && awaitingResults ? (
+        <div className="mt-6 flex w-full max-w-2xl flex-col items-center gap-5 rounded-2xl glass px-6 py-16 text-center">
+          <Loader2 className="h-7 w-7 animate-spin text-primary" aria-hidden />
+          <span
+            key={loadingMessage}
+            className="animate-fade-in text-play text-base text-foreground"
           >
-            <span className="text-4xl" aria-hidden>
-              🎞️
+            {loadingMessage}
+          </span>
+        </div>
+      ) : awaitingResults ? (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 flex w-full max-w-2xl flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
+        >
+          {/* Hidden interaction: tapping the reel plays a sparkle and refetches. */}
+          <motion.button
+            type="button"
+            onClick={() => {
+              sounds.sparkle();
+              reload();
+            }}
+            whileTap={{ scale: 0.88, rotate: -12 }}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
+            className="cursor-pointer select-none text-5xl"
+            aria-label="Surprise me — reload films"
+          >
+            <span aria-hidden>🎬</span>
+          </motion.button>
+          <p className="max-w-sm text-sm text-muted-foreground">{emptyMessage}</p>
+          <Button variant="outline" size="sm" onClick={reload}>
+            <RefreshCw className="h-4 w-4" aria-hidden /> Try again
+          </Button>
+        </motion.div>
+      ) : (
+        <div className="mt-6 w-full">
+          <div className="flex items-baseline justify-between">
+            <span className="text-eyebrow">
+              {query.trim() ? "Search results" : "Recommended for tonight"}
             </span>
-            <p className="max-w-sm text-sm text-muted-foreground">{error}</p>
-            <Button variant="outline" size="sm" onClick={reload}>
-              <RefreshCw className="h-4 w-4" aria-hidden /> Try again
-            </Button>
-          </motion.div>
-        ) : loading && awaitingResults ? (
-          <div className="flex flex-col items-center gap-5 rounded-2xl glass px-6 py-16 text-center">
-            <Loader2 className="h-7 w-7 animate-spin text-primary" aria-hidden />
-            <span
-              key={loadingMessage}
-              className="animate-fade-in text-play text-base text-foreground"
-            >
-              {loadingMessage}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {results.length} {results.length === 1 ? "film" : "films"}
             </span>
           </div>
-        ) : awaitingResults ? (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-4 rounded-2xl glass px-6 py-12 text-center"
-          >
-            {/* Hidden interaction: tapping the reel plays a sparkle and refetches. */}
-            <motion.button
-              type="button"
-              onClick={() => {
-                sounds.sparkle();
-                reload();
-              }}
-              whileTap={{ scale: 0.88, rotate: -12 }}
-              transition={{ type: "spring", stiffness: 500, damping: 18 }}
-              className="cursor-pointer select-none text-5xl"
-              aria-label="Surprise me — reload films"
-            >
-              <span aria-hidden>🎬</span>
-            </motion.button>
-            <p className="max-w-sm text-sm text-muted-foreground">{emptyMessage}</p>
-            <Button variant="outline" size="sm" onClick={reload}>
-              <RefreshCw className="h-4 w-4" aria-hidden /> Try again
-            </Button>
-          </motion.div>
-        ) : (
-          <>
-            <div className="flex items-baseline justify-between">
-              <span className="text-eyebrow">
-                {query.trim() ? "Search results" : "Recommended for tonight"}
-              </span>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {results.length} {results.length === 1 ? "film" : "films"}
-              </span>
-            </div>
 
-            <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {results.map((m, idx) => (
-                <MovieCard
-                  key={m.id}
-                  movie={m}
-                  selected={movie?.id === m.id}
-                  onChoose={choose}
-                  category={
-                    idx < 2 ? "recommended" : idx >= results.length - 2 ? "classic" : undefined
-                  }
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+          <div className="mt-4 grid w-full grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3">
+            {results.map((m, idx) => (
+              <MovieCard
+                key={m.id}
+                movie={m}
+                selected={movie?.id === m.id}
+                onChoose={choose}
+                category={
+                  idx < 2 ? "recommended" : idx >= results.length - 2 ? "classic" : undefined
+                }
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {movie ? (
         <motion.div

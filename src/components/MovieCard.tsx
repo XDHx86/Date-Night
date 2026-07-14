@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { Check, Star, Clock, Calendar, Sparkles } from "lucide-react";
+import { Check, Star, Clock, Calendar, Sparkles, Crown } from "lucide-react";
 import type { Movie } from "@/lib/movies";
 import { AnimatedButton } from "./AnimatedButton";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ function Poster({ movie, zoom }: { movie: Movie; zoom: boolean }) {
           loading="lazy"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/5"
           aria-hidden
         />
       </div>
@@ -53,7 +53,7 @@ function Poster({ movie, zoom }: { movie: Movie; zoom: boolean }) {
       style={{ backgroundImage: FALLBACK_GRADIENT }}
     >
       <div
-        className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"
+        className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/5"
         aria-hidden
       />
     </div>
@@ -73,13 +73,15 @@ interface MovieCardProps {
 /**
  * Movie card — the rich, poster-led picker tile.
  *
- * Glass surface, a "Recommended" / "Classic" editorial badge, a corner rating
- * chip, poster hover-zoom, and a per-card pointer-follow tilt (sprang, ±6°)
- * that stays frozen on touch and under reduced-motion. The selected card
- * swaps the thin ring for a pulsing rose-glow halo.
+ * Glass surface, a "Recommended" (Sparkles) / "Classic" (Crown) editorial
+ * badge top-left, a bold rating seal bottom-right, poster hover-zoom, and a
+ * per-card pointer-follow tilt (sprang, ±6°) that stays frozen on touch and
+ * under reduced-motion. The selected card swaps the thin ring for a pulsing
+ * rose-glow halo.
  *
- * `compact` keeps the option to hide the description in a dense grid — the
- * route just doesn't pass it, so descriptions read by default.
+ * The badge and rating live in opposite poster corners so they never crowd
+ * each other on narrow cards; the Choose button is anchored to the card foot
+ * with `mt-auto` so a row of cards shares a clean baseline.
  */
 export function MovieCard({
   movie,
@@ -134,37 +136,62 @@ export function MovieCard({
         {category ? (
           <span
             className={cn(
-              "absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] text-play shadow-[var(--shadow-sm)]",
+              "absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full py-1.5 pl-1.5 pr-3 text-xs font-semibold text-play shadow-[var(--shadow-md)] ring-1 ring-white/30",
               category === "recommended"
-                ? "bg-[image:var(--gradient-romance)] text-primary-foreground"
-                : "bg-accent text-accent-foreground",
+                ? "bg-[image:var(--gradient-romance)] text-primary-foreground ring-white/40"
+                : "bg-[image:linear-gradient(135deg,var(--color-accent),var(--color-accent-2))] text-accent-foreground",
             )}
           >
-            {category === "recommended" ? (
-              <>
-                <Sparkles className="h-3 w-3" aria-hidden /> Recommended
-              </>
-            ) : (
-              "Classic"
-            )}
+            <span
+              className={cn(
+                "grid h-5 w-5 place-items-center rounded-full",
+                category === "recommended"
+                  ? "bg-white/25 text-primary-foreground"
+                  : "bg-accent-foreground/15 text-accent-foreground",
+              )}
+              aria-hidden
+            >
+              {category === "recommended" ? (
+                <Sparkles className="h-3 w-3" />
+              ) : (
+                <Crown className="h-3 w-3" />
+              )}
+            </span>
+            {category === "recommended" ? "Recommended" : "Classic"}
           </span>
         ) : null}
 
-        <span className="absolute right-2 top-2 z-10 inline-flex shrink-0 items-center gap-1 rounded-full glass-strong px-2 py-0.5 text-xs font-semibold tabular-nums text-card-foreground shadow-[var(--shadow-sm)]">
-          <Star className="h-3 w-3 fill-current" aria-hidden /> {movie.rating.toFixed(1)}
+        <span
+          className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1 rounded-full glass-strong px-2.5 py-1 shadow-[var(--shadow-md)] ring-1 ring-white/30"
+          aria-label={`Rated ${movie.rating.toFixed(1)} out of 10`}
+        >
+          <Star
+            className="h-4 w-4 shrink-0 fill-accent-2 text-accent-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]"
+            aria-hidden
+          />
+          <span className="text-base font-bold leading-none tabular-nums text-card-foreground">
+            {movie.rating.toFixed(1)}
+          </span>
+          <span
+            className="text-[10px] font-semibold leading-none text-muted-foreground"
+            aria-hidden
+          >
+            /10
+          </span>
+          <span className="sr-only">out of 10</span>
         </span>
       </div>
 
       <div className="flex flex-1 flex-col gap-2">
-        <h3 className="text-display text-lg font-medium leading-tight text-card-foreground">
+        <h3 className="text-display text-balance break-words text-lg leading-tight text-card-foreground sm:text-xl">
           {movie.title}
         </h3>
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {movie.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="rounded-full glass px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+              className="rounded-full glass px-2 py-0.5 text-xs font-medium text-muted-foreground"
             >
               {tag}
             </span>
@@ -172,19 +199,24 @@ export function MovieCard({
         </div>
 
         {!compact && movie.description ? (
-          <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+          <p className="line-clamp-3 text-pretty text-sm leading-relaxed text-muted-foreground">
             {movie.description}
           </p>
         ) : null}
 
-        <div className="mt-1 flex items-center gap-3 text-xs font-medium text-muted-foreground">
+        <div className="mt-1 flex items-center gap-2.5 text-xs font-medium text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" aria-hidden /> {movie.year}
           </span>
           {movie.duration > 0 ? (
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" aria-hidden /> {movie.duration}m
-            </span>
+            <>
+              <span className="text-muted-foreground/40" aria-hidden>
+                ·
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" aria-hidden /> {movie.duration}m
+              </span>
+            </>
           ) : null}
         </div>
 
@@ -192,7 +224,7 @@ export function MovieCard({
           type="button"
           size="sm"
           variant={selected ? "soft" : "yes"}
-          className="mt-2 w-full"
+          className="mt-auto w-full"
           onClick={() => onChoose(movie)}
         >
           {selected ? (
