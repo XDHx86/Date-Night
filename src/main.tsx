@@ -23,8 +23,3 @@ createRoot(container).render(
   </StrictMode>,
 );
 
-console.log({
-  baseUrl: import.meta.env.BASE_URL,
-  pathname: window.location.pathname,
-  raw: import.meta.env,
-});
