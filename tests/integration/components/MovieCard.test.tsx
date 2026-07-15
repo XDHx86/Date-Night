@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MovieCard } from "../../../src/components/MovieCard";
 import { mockMovie, mockHighRatedMovie, mockMovieNoPoster } from "../../fixtures/movies";
@@ -170,5 +170,270 @@ describe("MovieCard", () => {
       renderWithProviders(<MovieCard movie={{ ...mockMovie, rating: 10 }} onChoose={() => {}} />);
       expect(screen.getByText("10.0")).toBeInTheDocument();
     });
+  });
+});
+
+describe("MovieCard — Read more link", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders a clearly visible 'Read more' link on each card", () => {
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+    // Presence + accessible name is asserted here; the card's entrance opacity
+    // is driven by framer-motion which stays at its initial frame in jsdom, so
+    // we assert membership in the document rather than computed visibility.
+    const readMore = screen.getByRole("button", { name: /Read more/i });
+    expect(readMore).toBeInTheDocument();
+    expect(readMore).toHaveTextContent(/Read more/i);
+  });
+
+  it("still shows the 'Read more' link when the card is compact", () => {
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} compact />);
+    expect(screen.getByRole("button", { name: /Read more/i })).toBeInTheDocument();
+  });
+
+  it("does not name the link after the title, so journey selectors that click a title-named button keep targeting Choose", () => {
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+    const readMore = screen.getByRole("button", { name: /Read more/i });
+    expect(readMore).toHaveAccessibleName("Read more");
+    // A title-based selector like /Test Movie/i finds no button at all.
+    expect(screen.queryByRole("button", { name: /Test Movie/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("MovieCard — details modal", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("opens an animated dialog when the 'Read more' link is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    // The modal's own visible heading re-presents the title.
+    expect(within(dialog).getByRole("heading", { name: mockMovie.title })).toBeInTheDocument();
+    // The full description is shown inside the dialog.
+    expect(within(dialog).getByText(mockMovie.description)).toBeInTheDocument();
+  });
+
+  it("opens the same modal when the card surface is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    // Click a non-interactive part (the title) — it bubbles to the card surface.
+    await user.click(screen.getByRole("heading", { name: mockMovie.title, level: 3 }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("expands to show every genre tag, not just the first three", async () => {
+    const user = userEvent.setup();
+    const manyTags = { ...mockMovie, tags: ["One", "Two", "Three", "Four", "Five"] };
+    renderWithProviders(<MovieCard movie={manyTags} onChoose={() => {}} />);
+
+    // The card truncates to the first three.
+    expect(screen.queryByText("Five")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    for (const tag of manyTags.tags) {
+      expect(within(dialog).getByText(tag)).toBeInTheDocument();
+    }
+  });
+
+  it("shows the full description, rating, year and duration in the modal", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(mockMovie.description)).toBeInTheDocument();
+    expect(within(dialog).getByText("7.5")).toBeInTheDocument();
+    expect(within(dialog).getByText(String(mockMovie.year))).toBeInTheDocument();
+    expect(within(dialog).getByText(`${mockMovie.duration}m`)).toBeInTheDocument();
+  });
+
+  it("also surfaces the editorial badge inside the modal when present", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} category="recommended" onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/Recommended/i)).toBeInTheDocument();
+  });
+
+  it("closes when the close button is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Close/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes when Escape is pressed", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+    await screen.findByRole("dialog");
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("falls back to a gradient when the movie has no poster", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovieNoPoster} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).queryByAltText(`${mockMovieNoPoster.title} poster`),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the cinematic backdrop as a hero image when a backdrop is available", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    const backdrop = within(dialog).getByAltText(`${mockMovie.title} backdrop`);
+    expect(backdrop).toHaveAttribute(
+      "src",
+      `https://image.tmdb.org/t/p/w1280${mockMovie.backdrop_path}`,
+    );
+    // The poster column still carries the poster alongside the backdrop hero.
+    expect(within(dialog).getByAltText(`${mockMovie.title} poster`)).toBeInTheDocument();
+  });
+
+  it("shows no backdrop hero but keeps the poster when the movie has no backdrop", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <MovieCard movie={{ ...mockMovie, backdrop_path: null }} onChoose={() => {}} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByAltText(`${mockMovie.title} backdrop`)).not.toBeInTheDocument();
+    expect(within(dialog).getByAltText(`${mockMovie.title} poster`)).toBeInTheDocument();
+  });
+
+  it("shows the full release date and original language when available", async () => {
+    const user = userEvent.setup();
+    const richMovie = { ...mockMovie, releaseDate: "2024-07-12", originalLanguage: "en" };
+    renderWithProviders(<MovieCard movie={richMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    // Full date instead of the bare year, and a human-readable language name.
+    expect(within(dialog).getByText("Jul 12, 2024")).toBeInTheDocument();
+    expect(within(dialog).getByText("English")).toBeInTheDocument();
+    expect(within(dialog).getByText(`${mockMovie.duration}m`)).toBeInTheDocument();
+  });
+
+  it("falls back to the release year and omits the language row when those fields are missing", async () => {
+    const user = userEvent.setup();
+    // mockMovie carries no releaseDate / originalLanguage, so the modal must
+    // degrade to the year and skip the language row — never an empty chip.
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(String(mockMovie.year))).toBeInTheDocument();
+    expect(within(dialog).queryByText("Jul 12, 2024")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("English")).not.toBeInTheDocument();
+  });
+
+  it("does not render an overview placeholder when the movie has a description", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(mockMovie.description)).toBeInTheDocument();
+    expect(
+      within(dialog).queryByText(/No overview available for this title/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("stays populated with a screen-reader overview fallback when there is no overview", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <MovieCard movie={{ ...mockMovie, description: "" }} onChoose={() => {}} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: mockMovie.title })).toBeInTheDocument();
+    expect(within(dialog).getByText("7.5")).toBeInTheDocument();
+    // No *visible* empty-state — the placeholder is screen-reader-only.
+    expect(within(dialog).getByText(/No overview available for this title/i)).toBeInTheDocument();
+  });
+});
+
+describe("MovieCard — modal + Choose interaction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("does NOT open the modal when 'Choose' is clicked on the card", async () => {
+    const user = userEvent.setup();
+    const onChoose = vi.fn();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={onChoose} />);
+
+    await user.click(screen.getByRole("button", { name: /Choose/i }));
+
+    expect(onChoose).toHaveBeenCalledTimes(1);
+    expect(onChoose).toHaveBeenCalledWith(mockMovie);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("selects the film and closes when 'Choose this film' is clicked from inside the modal", async () => {
+    const user = userEvent.setup();
+    const onChoose = vi.fn();
+    renderWithProviders(<MovieCard movie={mockMovie} onChoose={onChoose} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: /Choose this film/i }));
+
+    expect(onChoose).toHaveBeenCalledTimes(1);
+    expect(onChoose).toHaveBeenCalledWith(mockMovie);
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("reflects the chosen state inside the modal once selected", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<MovieCard movie={mockMovie} selected onChoose={() => {}} />);
+
+    await user.click(screen.getByRole("button", { name: /Read more/i }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("button", { name: /Chosen/i })).toBeInTheDocument();
   });
 });

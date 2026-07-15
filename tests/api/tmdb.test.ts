@@ -19,7 +19,7 @@ import { defaultHandlers, tmdbHandlers, createFailingMswServer } from "../__mock
 process.env.VITE_TMDB_API_KEY = "test-api-key";
 process.env.VITE_TMDB_READ_ACCESS_TOKEN = "test-bearer-token";
 
-import { searchMovies, getMovieById, fetchOriginalRecommendations } from "@/lib/movies";
+import { searchMovies, getMovieById, fetchOriginalRecommendations, clearMovieDetailsCache } from "@/lib/movies";
 import { CURATED_MOVIE_IDS } from "@/data/curatedMovies";
 
 const failingServer = createFailingMswServer();
@@ -54,6 +54,10 @@ afterAll(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  // The in-memory movie-details cache (movies.ts module state) must not leak
+  // across tests — otherwise a cache hit skips the network and a fetch spy
+  // sees no calls.
+  clearMovieDetailsCache();
 });
 
 describe("API — searchMovies", () => {
@@ -97,9 +101,43 @@ describe("API — searchMovies", () => {
     expect(scary!.tags).toEqual(expect.arrayContaining(["Comedy", "Horror"]));
   });
 
-  it("truncates to at most 6 results regardless of upstream payload", async () => {
+  it("truncates to at most 8 results regardless of upstream payload", async () => {
     const result = await searchMovies("scary");
-    expect(result.length).toBeLessThanOrEqual(6);
+    expect(result.length).toBeLessThanOrEqual(8);
+  });
+
+  it("caps an oversized upstream payload at exactly 8", async () => {
+    // A search handler that returns 12 movies must be cut down to the 8 we
+    // render — the lightweight search endpoint stays a single bounded request.
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: 4000 + i,
+      title: `Scary ${i}`,
+      release_date: "2026-01-15",
+      vote_average: 7,
+      runtime: null,
+      genre_ids: [35, 27],
+      overview: "A comedic horror spoof.",
+      poster_path: `/p${i}.jpg`,
+      backdrop_path: `/b${i}.jpg`,
+      popularity: 1,
+    }));
+    startWith(
+      http.get("https://api.themoviedb.org/3/search/movie", () =>
+        HttpResponse.json({
+          page: 1,
+          results: many,
+          total_pages: 1,
+          total_results: 12,
+        }),
+      ),
+      ...defaultHandlers,
+    );
+    try {
+      const result = await searchMovies("scary");
+      expect(result).toHaveLength(8);
+    } finally {
+      startWith(...defaultHandlers);
+    }
   });
 
   it("respects case-insensitive matching", async () => {
@@ -198,6 +236,40 @@ describe("API — getMovieById", () => {
     const movie = await getMovieById("597");
     expect(movie?.tags).toEqual(expect.arrayContaining(["Drama", "Romance"]));
   });
+
+  it("caches a fetched movie so reopening the same id never refetches", async () => {
+    // The in-memory cache is the performance guard for on-demand detail
+    // enrichment: opening a search-result modal fetches once, reopening it
+    // (and the subsequent "Choose" detail fetch) is a cache hit.
+    clearMovieDetailsCache();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const first = await getMovieById("199");
+    expect(first).not.toBeNull();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const second = await getMovieById("199");
+    expect(second).toEqual(first);
+    // Still one network call — the second lookup was served from cache.
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    // A different id still hits the network.
+    await getMovieById("597");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not cache a miss (404)", async () => {
+    clearMovieDetailsCache();
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+
+    const first = await getMovieById("9999999");
+    expect(first).toBeNull();
+
+    // A miss must not be cached — retrying still asks the network so a
+    // transient 404 doesn't pin a movie as "not found" for the session.
+    await getMovieById("9999999");
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("API — fetchOriginalRecommendations", () => {
@@ -206,10 +278,10 @@ describe("API — fetchOriginalRecommendations", () => {
     expect(Array.isArray(recs)).toBe(true);
   });
 
-  it("returns up to 6 movies from the curated list when cache cold", async () => {
+  it("returns up to 8 movies from the curated list when cache cold", async () => {
     (globalThis as { localStorage?: Storage }).localStorage?.clear();
     const recs = await fetchOriginalRecommendations();
-    expect(recs.length).toBeLessThanOrEqual(6);
+    expect(recs.length).toBeLessThanOrEqual(8);
     expect(recs.length).toBeGreaterThan(0);
   });
 

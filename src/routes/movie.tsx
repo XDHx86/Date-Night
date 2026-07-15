@@ -1,15 +1,29 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Search, Loader2, Share2, ArrowRight, RefreshCw } from "lucide-react";
+import { Search, Loader2, Share2, ArrowRight, RefreshCw, ArrowDownUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageShell } from "@/components/PageShell";
 import { Eyebrow } from "@/components/eyebrow";
 import { Button } from "@/components/ui/button";
 import { MovieCard } from "@/components/MovieCard";
 import { TextInput } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDateStore } from "@/lib/store";
 import { useUrlSync, getMovieIdFromUrl, createShareableUrl } from "@/hooks/useUrlSync";
 import { searchMovies, getMovieById, type Movie, fetchOriginalRecommendations } from "@/lib/movies";
+import {
+  SORT_OPTIONS,
+  SORT_STORAGE_KEY,
+  isValidSortKey,
+  sortMovies,
+  type SortKey,
+} from "@/lib/movieSort";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { useRotatingMessage } from "@/hooks/useRotatingMessage";
 import { messages } from "@/lib/messages";
@@ -54,6 +68,14 @@ function MoviePickerPage() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Chosen sort for search results. Persisted in sessionStorage so it survives a
+  // reload within the tab and auto-reapplies on every new search; curated
+  // recommendations are never reordered, so the key is ignored outside search
+  // mode. Defaults to "best-match" (TMDB relevance order) until the user opts
+  // into a concrete sort.
+  const [sortKey, setSortKey] = useState<SortKey>("best-match");
+  const isSearchMode = query.trim().length > 0;
+
   const { syncUrl, syncState } = useUrlSync();
   const randomMessage = useRandomMessage("playful");
   const loadingMessage = useRotatingMessage(messages.loading);
@@ -80,6 +102,22 @@ function MoviePickerPage() {
   useEffect(() => {
     syncState();
   }, [syncState]);
+
+  // Hydrate the chosen sort once from sessionStorage so a mid-session reload
+  // remembers the user's preference. An unrecognized stored value is ignored
+  // (falls back to "best-match") rather than feeding the dropdown garbage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.sessionStorage.getItem(SORT_STORAGE_KEY);
+    if (stored && isValidSortKey(stored)) setSortKey(stored);
+  }, []);
+
+  // Persist the chosen sort for the tab lifetime (sessionStorage), so it
+  // survives a reload and reapplies on the next search.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(SORT_STORAGE_KEY, sortKey);
+  }, [sortKey]);
 
   // Hydrate the movie from `?movie=` on deep-links.
   useEffect(() => {
@@ -228,6 +266,16 @@ function MoviePickerPage() {
 
   const awaitingResults = results.length === 0;
 
+  // What we actually render: curated recommendations keep their editorial order;
+  // search results are reordered only when the user has picked a concrete sort
+  // (best-match leaves TMDB relevance untouched). Recomputed whenever the raw
+  // results, the chosen sort, or the mode change — so a new search picks up the
+  // persisted sort automatically.
+  const displayResults = useMemo(
+    () => (isSearchMode ? sortMovies(results, sortKey) : results),
+    [results, sortKey, isSearchMode],
+  );
+
   return (
     <PageShell width="wide" className="max-w-5xl">
       <Eyebrow>Step 4 — Movie</Eyebrow>
@@ -321,24 +369,59 @@ function MoviePickerPage() {
         </motion.div>
       ) : (
         <div className="mt-6 w-full">
-          <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline justify-between gap-3">
             <span className="text-eyebrow">
-              {query.trim() ? "Search results" : "Recommended for tonight"}
+              {isSearchMode ? "Search results" : "Recommended for tonight"}
             </span>
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {results.length} {results.length === 1 ? "film" : "films"}
-            </span>
+            <div className="flex items-center gap-3">
+              {/* Sort control — only in search mode. A segmented/dropdown choice
+                  that persists for the session and reapplies on each new search. */}
+              {isSearchMode ? (
+                <Select
+                  value={sortKey}
+                  onValueChange={(v) => {
+                    if (isValidSortKey(v)) setSortKey(v);
+                  }}
+                >
+                  <SelectTrigger
+                    aria-label="Sort search results"
+                    className="h-7 w-[160px] gap-1 rounded-full border-primary/25 bg-primary/5 text-xs sm:w-[180px]"
+                  >
+                    <ArrowDownUp className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {displayResults.length} {displayResults.length === 1 ? "film" : "films"}
+              </span>
+            </div>
           </div>
 
           <div className="mt-4 grid w-full grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3">
-            {results.map((m, idx) => (
+            {displayResults.map((m, idx) => (
               <MovieCard
                 key={m.id}
                 movie={m}
                 selected={movie?.id === m.id}
                 onChoose={choose}
                 category={
-                  idx < 2 ? "recommended" : idx >= results.length - 2 ? "classic" : undefined
+                  // Editorial badges are exclusive to the curated list — search
+                  // results never carry them so users can tell the two apart.
+                  isSearchMode
+                    ? undefined
+                    : idx < 2
+                      ? "recommended"
+                      : idx >= displayResults.length - 2
+                        ? "classic"
+                        : undefined
                 }
               />
             ))}

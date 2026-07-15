@@ -158,6 +158,54 @@ describe("movies.ts", () => {
       expect(movie.duration).toBe(120);
     });
 
+    it("carries vote count, popularity, and original title through to the Movie", () => {
+      const tmdbMovie = {
+        id: 123,
+        title: "Local Title",
+        release_date: "2024-07-12",
+        vote_average: 7.5,
+        runtime: 120,
+        overview: "A test overview",
+        poster_path: "/test-poster.jpg",
+        backdrop_path: "/test-backdrop.jpg",
+        genre_ids: [],
+        vote_count: 1234,
+        popularity: 88.5,
+        original_title: "Original Title",
+        original_language: "ja",
+      };
+
+      const movie = mapTmdbToMovie(tmdbMovie);
+
+      expect(movie.voteCount).toBe(1234);
+      expect(movie.popularity).toBe(88.5);
+      expect(movie.originalTitle).toBe("Original Title");
+      expect(movie.originalLanguage).toBe("ja");
+    });
+
+    it("nulls the extra fields when the TMDB payload omits them", () => {
+      const tmdbMovie = {
+        id: 9,
+        title: "Sparse",
+        release_date: "2024-01-01",
+        vote_average: 6,
+        runtime: 90,
+        overview: "x",
+        poster_path: "/p.jpg",
+        backdrop_path: "/b.jpg",
+        genre_ids: [],
+      } as any;
+
+      const movie = mapTmdbToMovie(tmdbMovie);
+
+      // Graceful omission: null, not undefined and not a placeholder, so the
+      // modal and sort just skip these fields.
+      expect(movie.voteCount).toBeNull();
+      expect(movie.popularity).toBeNull();
+      expect(movie.originalTitle).toBeNull();
+      expect(movie.originalLanguage).toBeNull();
+    });
+
     it("should handle null runtime by defaulting to 0", () => {
       const tmdbMovie = {
         id: 123,

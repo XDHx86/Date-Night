@@ -13,35 +13,69 @@ export interface Movie {
   title: string;
   description: string; // from overview
   poster_path: string | null; // TMDB poster_path (for building URLs)
-  backdrop_path: string | null; // TMDB backdrop_path (for possible future use)
+  backdrop_path: string | null; // TMDB backdrop_path (modal hero image)
   rating: number; // out of 10 (vote_average)
   tags: string[]; // Genre names
   year: number; // Year from release_date
   duration: number; // Runtime in minutes
+  /**
+   * Full TMDB release date (`YYYY-MM-DD`). Optional + nullable so entries
+   * cached before the field existed keep loading and callers can omit it; the
+   * details modal falls back to `year` for display when it's missing.
+   */
+  releaseDate?: string | null;
+  /**
+   * TMDB original-language code (e.g. "en", "ja"). Optional + nullable for the
+   * same back-compat reasons; the modal simply omits the language row when it's
+   * unknown rather than rendering an empty chip.
+   */
+  originalLanguage?: string | null;
+  /**
+   * TMDB `vote_count` — how many ratings contribute to `rating`. Optional +
+   * nullable so entries cached in localStorage before this field existed keep
+   * loading; the modal omits the "N votes" chip when it's null or 0.
+   */
+  voteCount?: number | null;
+  /**
+   * TMDB `popularity` — a non-negative float. Optional + nullable for the same
+   * back-compat reasons; used both as a search sort key and a subtle modal chip.
+   */
+  popularity?: number | null;
+  /**
+   * TMDB `original_title` — surfaced in the modal only when it differs from the
+   * localized `title` (e.g. foreign titles shown under the English one).
+   * Optional + nullable for back-compat.
+   */
+  originalTitle?: string | null;
 }
 
 /**
- * TMDB API response types
+ * TMDB API response types. Exported so the MSW test handlers can stay
+ * type-aligned with the production client; search results simply omit the
+ * details-only `genres`/`runtime` members.
  */
-interface TmdbMovie {
+export interface TmdbMovie {
   id: number;
   title: string;
   release_date: string;
   vote_average: number;
-  runtime: number | null; // Can be null in API response
+  runtime: number | null; // Can be null in API response; absent on /search/movie
   genres: { id: number; name: string }[]; // Only in movie details, not in search
   genre_ids: number[]; // Only in search results
   overview: string;
   poster_path: string | null;
   backdrop_path: string | null;
   popularity: number;
+  original_language?: string; // e.g. "en". Optional — older mocked responses may omit it.
+  original_title?: string; // Optional on /search/movie; present on /movie/{id}.
+  vote_count?: number; // Optional on older mocked responses.
 }
 
-interface TmdbGenreResponse {
+export interface TmdbGenreResponse {
   genres: { id: number; name: string }[];
 }
 
-interface TmdbSearchResponse {
+export interface TmdbSearchResponse {
   page: number;
   results: TmdbMovie[];
   total_pages: number;
@@ -106,7 +140,7 @@ async function getGenreMap(): Promise<Map<number, string>> {
 /**
  * Maps TMDB genre IDs to genre names using the cached genre map
  */
-async function mapGenreIdsToNames(genreIds: number[]): Promise<string[]> {
+export async function mapGenreIdsToNames(genreIds: number[]): Promise<string[]> {
   const genreMap = await getGenreMap();
   return genreIds
     .map((id) => genreMap.get(id))
@@ -117,7 +151,7 @@ async function mapGenreIdsToNames(genreIds: number[]): Promise<string[]> {
  * Maps a TMDB movie object (from search or details) to our normalized Movie format
  * Note: tags are left as empty array and will be filled by the caller
  */
-function mapTmdbToMovie(tmdbMovie: TmdbMovie): Movie {
+export function mapTmdbToMovie(tmdbMovie: TmdbMovie): Movie {
   const releaseDate = new Date(tmdbMovie.release_date);
   const year = isNaN(releaseDate.getTime()) ? 0 : releaseDate.getFullYear();
 
@@ -134,13 +168,24 @@ function mapTmdbToMovie(tmdbMovie: TmdbMovie): Movie {
     tags: [], // placeholder, will be replaced by caller
     year: year,
     duration: duration,
+    // Carry the full release date + language through so the details modal can
+    // surface richer metadata than the card does; null when TMDB omits them or
+    // the date string is blank.
+    releaseDate: tmdbMovie.release_date || null,
+    originalLanguage: tmdbMovie.original_language ?? null,
+    // Carry through the extra TMDB metadata the modal surfaces (vote count,
+    // popularity, original title). `?? null` so a cached/older entry without
+    // them still loads and the modal omits the rows cleanly.
+    voteCount: tmdbMovie.vote_count ?? null,
+    popularity: tmdbMovie.popularity ?? null,
+    originalTitle: tmdbMovie.original_title ?? null,
   };
 }
 
 /**
  * Fetches movies from TMDB API (search endpoint)
  * @param query The search query
- * @returns Promise of Movie[] (limited to 6 results)
+ * @returns Promise of Movie[] (limited to 8 results)
  */
 export async function searchMovies(query: string): Promise<Movie[]> {
   const q = query.trim();
@@ -166,10 +211,13 @@ export async function searchMovies(query: string): Promise<Movie[]> {
 
     const data: TmdbSearchResponse = await response.json();
 
-    // Process results: map genres and create Movie objects, then limit to 6
+    // Process results: map genres and create Movie objects, then limit to 8.
+    // The cap keeps the lightweight search response bounded; sorting and
+    // on-demand detail enrichment happen client-side, not by expanding the
+    // request.
     const moviesWithGenres = await Promise.all(
       data.results
-        .slice(0, 6) // Limit to 6 results
+        .slice(0, 8) // Limit to 8 results
         .map(async (tmdbMovie) => {
           // Get genre names from genre_ids
           const tags = await mapGenreIdsToNames(tmdbMovie.genre_ids);
@@ -193,7 +241,24 @@ export async function searchMovies(query: string): Promise<Movie[]> {
 }
 
 /**
- * Get movie by ID - fetches detailed movie information
+ * In-memory cache of movie details keyed by the numeric TMDB id. Opening the
+ * details modal for a `/search` result triggers a single `/movie/{id}` fetch
+ * (the search payload lacks runtime); caching the result means reopening the
+ * same modal — and the `choose()` detail fetch that follows — is a cache hit,
+ * so we never refetch within a session. Failures (404/error) are not cached.
+ */
+const movieDetailsCache = new Map<string, Movie>();
+
+/** Clear the in-memory movie-details cache (test seam for isolation). */
+export function clearMovieDetailsCache(): void {
+  movieDetailsCache.clear();
+}
+
+/**
+ * Get movie by ID - fetches detailed movie information.
+ * Results for a given id are cached in memory for the session; see
+ * `movieDetailsCache`. Returns the cached copy on subsequent calls without
+ * hitting the network.
  * @param id The movie ID
  * @returns Promise of Movie | null
  */
@@ -201,6 +266,12 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
   const movieId = parseInt(id, 10);
   if (isNaN(movieId)) {
     return null;
+  }
+
+  const cacheKey = String(movieId);
+  const cached = movieDetailsCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   try {
@@ -229,10 +300,13 @@ export const getMovieById = async (id: string): Promise<Movie | null> => {
     // Map to our Movie format
     const movie = mapTmdbToMovie(tmdbMovie);
 
-    return {
+    const result = {
       ...movie,
       tags: tags,
     };
+
+    movieDetailsCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     console.warn(`Failed to fetch movie ${id} from TMDB:`, error);
     return null;
