@@ -1,17 +1,23 @@
 /**
- * Tiny self-contained sound engine using the Web Audio API.
+ * Tiny self-contained sound engine.
  *
- * No audio files needed — every effect is synthesized on the fly. Two
- * concerns live here:
+ * Two concerns live here, both driven from the `isAudioEnabled` Zustand slice
+ * (the single sound source of truth — callers keep them in sync via the
+ * `useBackgroundAudio` hook):
  *
- *   1. SFX blips  — `sounds.{click,pop,celebrate,whoosh,twinkle,sparkle}`
- *   2. Ambient pad — `setAmbient(enabled)` builds a gentle, evolving chord
- *      (a few detuned oscillators → lowpass → slow LFO → master gain) that
- *      supplies the app's on-brand "magical" background hum. No binary asset.
+ *   1. SFX blips — `sounds.{click,pop,celebrate,whoosh,twinkle,sparkle}`,
+ *      short synthesized tones via the Web Audio API (no files needed).
+ *   2. Background playlist — a single, DOM-less `<audio>` element that shuffles
+ *      through every track Vite discovers under `src/assets/audio/*`. Adding
+ *      or removing a file needs no code change here: the glob below auto-updates.
+ *      On enable it picks a track at random; when a track ends it picks
+ *      another, avoiding an immediate repeat when more than one exists.
  *
- * `muted` gates everything: when muted, SFX are silent and the pad is not
- * running (or fades back out). The store-driven audio toggle is the single
- * source of truth; callers keep it in sync via `setAmbient` + `setMuted`.
+ * Browsers gate playback behind a user gesture, so `unlockAudio()` (fired by
+ * the hook on the first pointerdown / keydown) both resumes the SFX
+ * AudioContext and re-attempts a previously autoplay-blocked playlist.
+ *
+ * `muted` gates the SFX; the playlist is gated by `setBackgroundPlaylist`.
  */
 
 let ctx: AudioContext | null = null;
@@ -22,16 +28,18 @@ function getCtx(): AudioContext | null {
   if (!ctx) {
     const AC =
       window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
     ctx = new AC();
   }
   return ctx;
 }
 
-/** Resume the AudioContext after a user gesture (autoplay unlock). */
+/** Resume the AudioContext after a user gesture, and re-attempt a background
+ * playlist that was autoplay-blocked on the first enable. */
 export function unlockAudio() {
   void getCtx()?.resume();
+  backgroundPlaylist.unlock();
 }
 
 export function isMuted() {
@@ -44,12 +52,8 @@ export function setMuted(value: boolean) {
     window.localStorage.setItem("sound-muted", value ? "1" : "0");
   }
   if (!value) {
+    // Unmuting also resumes the AudioContext so the next SFX is ready.
     void getCtx()?.resume();
-    // If the ambient pad was requested while muted, bring it up now.
-    if (ambient.wanted && !ambient.running) startAmbient();
-  } else {
-    // Muting pulls the pad back down so it's not audible.
-    teardownAmbient(1200);
   }
 }
 
@@ -111,161 +115,139 @@ export const sounds = {
 };
 
 /* ---------------------------------------------------------------------------
- * Ambient pad — a slow, dreamy chord that breathes in the background.
- * Built lazily; start/stop interleaved cleanly with `muted`.
+ * Background playlist — shuffled background music auto-discovered from
+ * `src/assets/audio/`. One <audio> element, advanced on "ended".
  * ------------------------------------------------------------------------- */
 
-interface AmbientState {
-  wanted: boolean; // caller asked for the pad to be audible
-  running: boolean; // the graph is alive right now
-  master: GainNode | null;
-  sources: OscillatorNode[];
-  nodes: AudioNode[];
-  teardown: number | null; // pending teardown timeout
-  lfoInterval: number | null; // JS-driven slow modulation timer
+// Every audio file under the folder, discovered at build time. `?url` resolves
+// each to its final, base-aware (dev / prod / custom `base`) URL, so a single
+// `src` works everywhere. An empty folder yields an empty array — the playlist
+// simply stays silent and never errors.
+const TRACK_URLS = Object.values(
+  import.meta.glob("/src/assets/audio/*.{mp3,wav,ogg,m4a}", {
+    eager: true,
+    query: "?url",
+    import: "default",
+  }),
+) as string[];
+
+/** Background music sits a touch under full volume — atmosphere, not a feature. */
+const BACKGROUND_VOLUME = 0.45;
+
+/**
+ * Choose the index of the next track. `current` is the just-played index (or
+ * `-1` for the first pick). With more than one track we avoid an immediate
+ * repeat by nudging one slot when the random draw lands on `current`.
+ */
+export function pickBackgroundTrack(
+  current: number,
+  count: number,
+  random: () => number = Math.random,
+): number {
+  if (count <= 0) return -1;
+  if (count === 1) return 0;
+  let next = Math.floor(random() * count);
+  if (next === current) next = (next + 1) % count;
+  return next;
 }
 
-const ambient: AmbientState = {
-  wanted: false,
-  running: false,
-  master: null,
-  sources: [],
-  nodes: [],
-  teardown: null,
-  lfoInterval: null,
-};
-
-/** The voices of the pad — a warm A-minor-ish stack with an airy top. */
-const PAD_VOICES: Array<{ freq: number; type: OscillatorType; detune: number; gain: number }> = [
-  { freq: 130.81, type: "sine", detune: -5, gain: 0.9 }, // C3
-  { freq: 196.0, type: "sine", detune: 5, gain: 0.75 }, // G3
-  { freq: 261.63, type: "triangle", detune: -3, gain: 0.42 }, // C4
-  { freq: 392.0, type: "sine", detune: 4, gain: 0.22 }, // G4 (airy)
-];
-
-function teardownAmbient(fadeMs: number) {
-  if (!ambient.running) return;
-  const audio = getCtx();
-  if (audio && ambient.master) {
-    // Fade the master out, then stop/disconnect the nodes a beat later.
-    const now = audio.currentTime;
-    try {
-      ambient.master.gain.cancelScheduledValues(now);
-      ambient.master.gain.setValueAtTime(Math.max(ambient.master.gain.value, 0.0001), now);
-      ambient.master.gain.exponentialRampToValueAtTime(0.0001, now + fadeMs / 1000);
-    } catch {
-      /* ignore */
-    }
-  }
-  if (ambient.lfoInterval !== null) {
-    window.clearInterval(ambient.lfoInterval);
-    ambient.lfoInterval = null;
-  }
-  ambient.running = false; // considered stopped for `startAmbient` purposes
-  if (ambient.teardown !== null) window.clearTimeout(ambient.teardown);
-  ambient.teardown = window.setTimeout(() => {
-    for (const osc of ambient.sources) {
-      try {
-        osc.stop();
-      } catch {
-        /* already stopped */
-      }
-    }
-    for (const n of ambient.nodes) {
-      try {
-        n.disconnect();
-      } catch {
-        /* ignore */
-      }
-    }
-    ambient.sources = [];
-    ambient.nodes = [];
-    ambient.master = null;
-    ambient.teardown = null;
-  }, fadeMs);
+export interface BackgroundPlaylist {
+  /** Number of discovered tracks (0 when the folder is empty). */
+  readonly trackCount: number;
+  /** Start/resume or stop the playlist. */
+  setEnabled(enabled: boolean): void;
+  /** Re-attempt playback if the last `play()` was autoplay-blocked. */
+  unlock(): void;
 }
 
-function startAmbient() {
-  if (ambient.running) return;
-  const audio = getCtx();
-  if (!audio) return;
+/**
+ * Build a shuffled background playlist over the given tracks. A parametric
+ * factory — rather than reading the glob directly inside the player — keeps the
+ * empty / single / multi-track cases and the "no immediate repeat" rule cleanly
+ * unit-testable. The app uses a single module-level instance bound to the
+ * auto-discovered tracks (see `setBackgroundPlaylist`).
+ */
+export function createBackgroundPlaylist(tracks: string[]): BackgroundPlaylist {
+  const state = { wanted: false, current: -1, blocked: false };
+  let el: HTMLAudioElement | null = null;
 
-  // Cancel any in-flight teardown so a quick restart doesn't yank nodes.
-  if (ambient.teardown !== null) {
-    window.clearTimeout(ambient.teardown);
-    ambient.teardown = null;
-    for (const osc of ambient.sources) {
-      try {
-        osc.stop();
-      } catch {
-        /* ignore */
-      }
+  function ensureEl(): HTMLAudioElement | null {
+    if (typeof window === "undefined" || typeof document === "undefined") return null;
+    if (!el) {
+      const audio = new Audio();
+      audio.preload = "auto";
+      // We advance ourselves so the `ended` event fires; per-track looping is
+      // off (the single-track case re-picks index 0 on end instead).
+      audio.loop = false;
+      audio.volume = BACKGROUND_VOLUME;
+      audio.addEventListener("ended", onEnded);
+      el = audio;
     }
-    for (const n of ambient.nodes) {
-      try {
-        n.disconnect();
-      } catch {
-        /* ignore */
-      }
-    }
-    ambient.sources = [];
-    ambient.nodes = [];
-    ambient.master = null;
+    return el;
   }
 
-  const now = audio.currentTime;
-
-  // Master gain — fades in slowly so the pad never clicks in.
-  const master = audio.createGain();
-  master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(0.09, now + 2.5);
-  master.connect(audio.destination);
-  ambient.master = master;
-  ambient.nodes.push(master);
-
-  // Lowpass with a slow LFO on the cutoff — the pad "breathes" timbrally.
-  const filter = audio.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.setValueAtTime(700, now);
-  filter.Q.value = 0.6;
-  filter.connect(master);
-  ambient.nodes.push(filter);
-
-  for (const v of PAD_VOICES) {
-    const osc = audio.createOscillator();
-    osc.type = v.type;
-    osc.frequency.setValueAtTime(v.freq, now);
-    osc.detune.value = v.detune;
-    const vg = audio.createGain();
-    vg.gain.value = v.gain * 0.5;
-    osc.connect(vg).connect(filter);
-    osc.start(now);
-    ambient.sources.push(osc);
-    ambient.nodes.push(osc, vg);
+  // Track the promise so a rejected autoplay attempt is handled (not surfaced
+  // as an unhandled rejection) and so we know to retry on the next gesture.
+  function handlePlay(p: Promise<void> | undefined | void) {
+    if (!p || typeof p.then !== "function") return;
+    p.then(() => {
+      state.blocked = false;
+    }).catch(() => {
+      state.blocked = true;
+    });
   }
 
-  // Slow JS LFO modulating filter cutoff — keeps the timbre alive without a
-  // dedicated LFO oscillator node. ~11s cycle, very gentle.
-  ambient.lfoInterval = window.setInterval(() => {
-    if (!audio || muted) return;
-    const t = audio.currentTime;
-    const wobble = (Math.sin(t / 11) + 1) / 2; // 0..1
-    try {
-      filter.frequency.setTargetAtTime(480 + wobble * 520, t, 1.8);
-    } catch {
-      /* ignore */
-    }
-  }, 400);
+  function load(idx: number) {
+    const audio = ensureEl();
+    if (!audio) return;
+    state.current = idx;
+    audio.src = tracks[idx];
+    handlePlay(audio.play());
+  }
 
-  ambient.running = true;
+  function onEnded() {
+    if (!state.wanted) return;
+    const next = pickBackgroundTrack(state.current, tracks.length);
+    if (next < 0) return;
+    load(next);
+  }
+
+  return {
+    trackCount: tracks.length,
+    setEnabled(enabled: boolean) {
+      state.wanted = enabled;
+      if (!enabled) {
+        el?.pause();
+        return;
+      }
+      if (tracks.length === 0) return; // empty folder — nothing to play, no error
+      if (state.current < 0) {
+        load(pickBackgroundTrack(state.current, tracks.length));
+      } else {
+        // Re-enable while a track is loaded: resume from where it paused.
+        const audio = ensureEl();
+        if (audio) handlePlay(audio.play());
+      }
+    },
+    unlock() {
+      if (state.wanted && state.blocked && el) {
+        handlePlay(el.play());
+      }
+    },
+  };
 }
 
-/** Start/stop the ambient pad. Respects `muted` (a muted pad stays silent). */
-export function setAmbient(enabled: boolean) {
-  ambient.wanted = enabled;
-  if (enabled) {
-    if (!muted) startAmbient();
-  } else {
-    teardownAmbient(1200);
-  }
+/** The single app-wide playlist instance, bound to the discovered tracks. */
+let backgroundPlaylist: BackgroundPlaylist = createBackgroundPlaylist(TRACK_URLS);
+
+/** Start/resume or stop the app's background playlist. */
+export function setBackgroundPlaylist(enabled: boolean) {
+  backgroundPlaylist.setEnabled(enabled);
+}
+
+/** Recreate the background playlist from the discovered tracks. Used to reset
+ * player state (e.g. between tests); the normal app lifecycle never needs it. */
+export function resetBackgroundAudio() {
+  backgroundPlaylist.setEnabled(false);
+  backgroundPlaylist = createBackgroundPlaylist(TRACK_URLS);
 }

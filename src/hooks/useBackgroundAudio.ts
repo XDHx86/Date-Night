@@ -1,16 +1,18 @@
 import { useEffect } from "react";
 import { useDateStore } from "@/lib/store";
-import { setAmbient, setMuted, unlockAudio } from "@/lib/sound";
+import { setBackgroundPlaylist, setMuted, unlockAudio } from "@/lib/sound";
 
 /**
- * Background audio — drives the synthesized ambient pad + SFX mute gate from
- * the `isAudioEnabled` slice of the Zustand store (the single sound source of
- * truth). No binary asset is loaded: the pad is generated live in `lib/sound`
- * via the Web Audio API.
+ * Background audio — a shuffled playlist of the tracks auto-discovered in
+ * `src/assets/audio/*`, plus the SFX mute gate. Both follow the `isAudioEnabled`
+ * slice of the Zustand store (the single sound source of truth). The playlist
+ * itself is a DOM-less `<audio>` element managed centrally in `lib/sound`; this
+ * hook just wires the store flag to it.
  *
- *   - The pad + SFX gate follow `isAudioEnabled` automatically.
+ *   - The playlist + SFX gate follow `isAudioEnabled` automatically.
  *   - Browsers gate audio behind a user gesture, so a one‑shot listener resumes
- *     the AudioContext on the first pointerdown / keydown (no autoplay error).
+ *     the AudioContext and unblocks a blocked playlist on the first pointerdown /
+ *     keydown (no autoplay error).
  *
  * Designed to be called once at the application root. Returns the store flag so
  * callers can read it without re-subscribing.
@@ -22,11 +24,11 @@ export function useBackgroundAudio() {
   // load, persisted preference, and any programmatic store change.
   useEffect(() => {
     setMuted(!isAudioEnabled);
-    setAmbient(isAudioEnabled);
+    setBackgroundPlaylist(isAudioEnabled);
   }, [isAudioEnabled]);
 
-  // Unlock the AudioContext on the first interaction (autoplay policy). After
-  // this fires once the browser lets the ambient pad actually sound.
+  // Unlock playback on the first interaction (autoplay policy). After this
+  // fires once the browser lets the background music actually sound.
   useEffect(() => {
     const onFirst = () => unlockAudio();
     window.addEventListener("pointerdown", onFirst, { once: true, passive: true });

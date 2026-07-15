@@ -172,8 +172,9 @@ function RootComponent() {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  // Background audio — the synthesized ambient pad + SFX gate, driven from
-  // the store's audio flag, with an unlock-after-first-interaction fallback.
+  // Background audio — a shuffled playlist of the tracks discovered under
+  // `src/assets/audio/*` + the SFX gate, driven from the store's audio flag,
+  // with an unlock-after-first-interaction fallback.
   useBackgroundAudio();
 
   return (
