@@ -208,7 +208,10 @@ describe("sound.ts", () => {
     it("loads a random track and plays on enable", () => {
       const tracks = ["/a.mp3", "/b.mp3", "/c.mp3"];
       const fake = makeFakeAudio();
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       createBackgroundPlaylist(tracks).setEnabled(true);
 
@@ -223,7 +226,10 @@ describe("sound.ts", () => {
       const rolls = [0.0, 0.5];
       let i = 0;
       const rand = vi.spyOn(Math, "random").mockImplementation(() => rolls[i++] ?? 0.5);
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       const list = createBackgroundPlaylist(tracks);
       list.setEnabled(true);
@@ -240,7 +246,10 @@ describe("sound.ts", () => {
       const tracks = ["/a.mp3", "/b.mp3"];
       const fake = makeFakeAudio();
       const rand = vi.spyOn(Math, "random").mockReturnValue(0.0); // index 0
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       const list = createBackgroundPlaylist(tracks);
       list.setEnabled(true);
@@ -256,7 +265,10 @@ describe("sound.ts", () => {
       const tracks = ["/a.mp3", "/b.mp3", "/c.mp3"];
       const fake = makeFakeAudio();
       const rand = vi.spyOn(Math, "random").mockReturnValue(0.0); // index 0
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       const list = createBackgroundPlaylist(tracks);
       list.setEnabled(true);
@@ -287,7 +299,10 @@ describe("sound.ts", () => {
 
     it("re-picks the only track when a single track ends", () => {
       const fake = makeFakeAudio();
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       const list = createBackgroundPlaylist(["/only.mp3"]);
       list.setEnabled(true);
@@ -304,11 +319,12 @@ describe("sound.ts", () => {
       let nth = 0;
       fake.play = vi.fn(() => {
         nth += 1;
-        return nth === 1
-          ? Promise.reject(new Error("autoplay blocked"))
-          : Promise.resolve();
+        return nth === 1 ? Promise.reject(new Error("autoplay blocked")) : Promise.resolve();
       });
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       const list = createBackgroundPlaylist(["/a.mp3", "/b.mp3"]);
       list.setEnabled(true); // play() #1 rejects -> blocked
@@ -324,7 +340,10 @@ describe("sound.ts", () => {
 
     it("does nothing on unlock() when the playlist is idle", () => {
       const fake = makeFakeAudio();
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       createBackgroundPlaylist(["/a.mp3"]).unlock(); // never enabled
 
@@ -336,7 +355,10 @@ describe("sound.ts", () => {
   describe("setBackgroundPlaylist / unlockAudio (singleton)", () => {
     it("plays a discovered track on enable and pauses on disable", () => {
       const fake = makeFakeAudio();
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       setBackgroundPlaylist(true);
       expect(fake.play).toHaveBeenCalledTimes(1);
@@ -354,11 +376,12 @@ describe("sound.ts", () => {
       let nth = 0;
       fake.play = vi.fn(() => {
         nth += 1;
-        return nth === 1
-          ? Promise.reject(new Error("autoplay blocked"))
-          : Promise.resolve();
+        return nth === 1 ? Promise.reject(new Error("autoplay blocked")) : Promise.resolve();
       });
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       setBackgroundPlaylist(true);
       await flush();
@@ -371,7 +394,10 @@ describe("sound.ts", () => {
 
     it("unlockAudio is a no-op when nothing is blocked", async () => {
       const fake = makeFakeAudio();
-      vi.stubGlobal("Audio", vi.fn(() => fake));
+      vi.stubGlobal(
+        "Audio",
+        vi.fn(() => fake),
+      );
 
       setBackgroundPlaylist(true);
       await flush();

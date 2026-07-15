@@ -138,8 +138,7 @@ describe("useBackgroundAudio", () => {
       const addSpy = vi.spyOn(window, "addEventListener");
       const { rerender } = renderHook(() => useBackgroundAudio());
 
-      const pointerCount = () =>
-        addSpy.mock.calls.filter((c) => c[0] === "pointerdown").length;
+      const pointerCount = () => addSpy.mock.calls.filter((c) => c[0] === "pointerdown").length;
       expect(pointerCount()).toBe(1);
 
       rerender();

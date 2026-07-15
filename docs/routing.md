@@ -189,7 +189,8 @@ numbered steps — they're treated as alternatives or schema pieces.
 ## Route Guards
 
 Some routes redirect away when prerequisites are missing. The pattern is
-consistent: **navigation always lives inside `useEffect`**.
+consistent: **navigation always lives inside `useEffect`**, and the guard
+validates the _reconstructed_ state — never the raw, possibly-empty store.
 
 ### `/time` and `/movie` require a date
 
@@ -201,15 +202,37 @@ useEffect(() => {
 }, [date, navigate]);
 ```
 
-### `/summary` requires date + time + movie
+### `/summary` and `/success` use a reconstruction checkpoint
+
+These routes are reachable via a **shared link**, where a fresh browser (another
+person, or a refresh after the store was cleared) arrives with the plan encoded
+in the URL and an empty store. Validating the empty store would bounce the visitor
+back to `/date` before any restoration happens — so both routes defer their guard
+to [`useDatePlanCheckpoint`](../src/hooks/useDatePlanCheckpoint.ts), which rebuilds
+the state first:
+
+1. Keep existing store state where the URL is silent.
+2. Reconstruct `date`/`time`/`love`/`theme` and the `movie` ID from the URL (the
+   URL is authoritative for any value it carries).
+3. Fetch the selected movie from TMDB by the ID in the URL when the store doesn't
+   already have it.
+4. Hydrate the store.
+5. Validate the completed state (`date` + `time` + `movie`).
+6. Redirect to `/date` only if required data is genuinely unavailable (e.g. the
+   URL's `movie` ID can't be fetched and isn't cached) — never while a fetch is
+   in flight.
+
+A brief loader ([`RouteCheckpointLoader`](../src/components/RouteCheckpointLoader.tsx))
+covers the restore window so the page doesn't flash a degraded "no movie" plan.
 
 ```tsx
-useEffect(() => {
-  if (!date || !time || !movie) {
-    navigate({ to: "/date" });
-  }
-}, [date, time, movie, navigate]);
+const { isFetching } = useDatePlanCheckpoint();
+// …other hooks…
+if (isFetching) return <RouteCheckpointLoader />;
 ```
+
+The redirect itself lives inside the hook, so the route never has to decide
+whether the store is "empty because a fetch is pending" or "empty for real".
 
 ## Adding a New Route
 

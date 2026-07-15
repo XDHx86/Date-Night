@@ -19,7 +19,12 @@ import { defaultHandlers, tmdbHandlers, createFailingMswServer } from "../__mock
 process.env.VITE_TMDB_API_KEY = "test-api-key";
 process.env.VITE_TMDB_READ_ACCESS_TOKEN = "test-bearer-token";
 
-import { searchMovies, getMovieById, fetchOriginalRecommendations, clearMovieDetailsCache } from "@/lib/movies";
+import {
+  searchMovies,
+  getMovieById,
+  fetchOriginalRecommendations,
+  clearMovieDetailsCache,
+} from "@/lib/movies";
 import { CURATED_MOVIE_IDS } from "@/data/curatedMovies";
 
 const failingServer = createFailingMswServer();

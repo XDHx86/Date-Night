@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/AnimatedButton";
 import { Surface } from "@/components/ui/card";
 import { HeartBurst } from "@/components/HeartBurst";
+import { RouteCheckpointLoader } from "@/components/RouteCheckpointLoader";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
 import { usePointerParallax } from "@/hooks/usePointerParallax";
+import { useDatePlanCheckpoint } from "@/hooks/useDatePlanCheckpoint";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
 import { toast } from "sonner";
 
@@ -38,11 +40,12 @@ export const Route = createFileRoute("/summary")({
 function SummaryPage() {
   const navigate = useNavigate();
   const { date, time, movie } = useDateStore();
-  useEffect(() => {
-    if (!date || !time || !movie) {
-      navigate({ to: "/date" });
-    }
-  }, [date, time, movie, navigate]);
+
+  // Shareable-link checkpoint: reconstruct the plan from the URL (and fetch the
+  // movie from TMDB when only an ID is present) before validating. The redirect
+  // on a genuinely-empty plan lives inside the hook, so we don't bounce based on
+  // an un-reconstructed store.
+  const { isFetching } = useDatePlanCheckpoint();
 
   // Pointer parallax for the cinematic poster — eased through springs so it
   // glides, and frozen under reduced-motion (calm fallback).
@@ -86,6 +89,14 @@ function SummaryPage() {
   };
 
   const romanticMessage = useRandomMessage("romantic");
+
+  // While the checkpoint restores the movie from TMDB, show the loader instead
+  // of a half-empty plan. Once settled, the hook redirects on its own if the
+  // plan is genuinely unavailable — so by the time we render here the state is
+  // either ready or about to bounce.
+  if (isFetching) {
+    return <RouteCheckpointLoader />;
+  }
 
   const handleShare = async () => {
     const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();

@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Surface } from "@/components/ui/card";
 import { HeartBurst } from "@/components/HeartBurst";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
+import { RouteCheckpointLoader } from "@/components/RouteCheckpointLoader";
 import { useDateStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { useRandomMessage } from "@/hooks/useRandomMessage";
+import { useDatePlanCheckpoint } from "@/hooks/useDatePlanCheckpoint";
 import { SpotifyEmbed } from "@/components/SpotifyEmbed";
 import { isLoveLetterFeatureEnabled } from "@/lib/loveLetterConfig";
 import { toast } from "sonner";
@@ -39,6 +41,12 @@ function SuccessPage() {
   const { date, time, movie, reset } = useDateStore();
   const loveLetterEnabled = isLoveLetterFeatureEnabled();
 
+  // Shareable-link checkpoint: rebuild the celebration from the URL (fetching the
+  // movie from TMDB when only an ID is present) before validating. Hides the
+  // redirect inside the hook, so a valid shared link never bounces because the
+  // local store happens to be empty.
+  const { isFetching } = useDatePlanCheckpoint();
+
   // One celebratory activation on mount — confetti avalanche + heart-rain,
   // then the overlays settle and leave.
   const [celebrate, setCelebrate] = useState(true);
@@ -55,6 +63,12 @@ function SuccessPage() {
   };
 
   const celebrationMessage = useRandomMessage("celebration");
+
+  // Restore the celebration from a shared link before showing it — a brief
+  // loader while the movie hydrates, then the full payoff.
+  if (isFetching) {
+    return <RouteCheckpointLoader />;
+  }
 
   const handleShare = async () => {
     const { date, time, movie, loveMessage, isDarkMode } = useDateStore.getState();
