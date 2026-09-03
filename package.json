@@ -106,7 +106,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^9.39.4",
-    "@faker-js/faker": "^9.5.0",
+    "@faker-js/faker": "^10.5.0",
     "@playwright/test": "^1.48.0",
     "@tanstack/router-plugin": "^1.168.19",
     "@testing-library/jest-dom": "^6.6.2",
